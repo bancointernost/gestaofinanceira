@@ -1076,7 +1076,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 const FB_CONFIGS = {
   teste: {
     label: '🧪 Teste',
-    apiKey: "SUA_API_KEY_TESTE_AQUI",
+    apiKey: localStorage.getItem('pfp_fb_apikey_teste') || "SUA_API_KEY_TESTE_AQUI",
     authDomain: "personal-finances-9ccb7.firebaseapp.com",
     projectId: "personal-finances-9ccb7",
     storageBucket: "personal-finances-9ccb7.firebasestorage.app",
@@ -1085,12 +1085,29 @@ const FB_CONFIGS = {
   },
   producao: {
     label: '🚀 Produção',
-    apiKey: "SUA_API_KEY_PRODUCAO_AQUI",
+    apiKey: localStorage.getItem('pfp_fb_apikey_producao') || "SUA_API_KEY_PRODUCAO_AQUI",
     authDomain: "personal-finances-prod-7b8ca.firebaseapp.com",
     projectId: "personal-finances-prod-7b8ca",
     storageBucket: "personal-finances-prod-7b8ca.firebasestorage.app",
     messagingSenderId: "130033393114",
     appId: "1:130033393114:web:e449f11cdddf3acdffb4e3"
+  }
+};
+
+// ── Função para salvar/atualizar API Key e reinicializar Firebase ──
+window._fbSaveApiKey = function(env, key) {
+  if (!key || !key.trim()) return;
+  key = key.trim();
+  localStorage.setItem('pfp_fb_apikey_' + env, key);
+  FB_CONFIGS[env].apiKey = key;
+  // Destrói app existente para forçar reinit com nova key
+  try {
+    const existing = getApps().find(a => a.name === 'pfp_' + env);
+    if (existing) deleteApp(existing);
+  } catch(e) {}
+  window._fb = _buildFb(env);
+  if (window._fb) {
+    window._fb.onAuth(_onFbAuthChange);
   }
 };
 
@@ -4511,6 +4528,11 @@ function openFbModal() {
       🚪 Sair da conta
     </button>`;
 
+  const savedApiKey = localStorage.getItem('pfp_fb_apikey_producao') || '';
+  const apiKeyIsSet = savedApiKey && !savedApiKey.startsWith('SUA_');
+  const apiKeyBorder = apiKeyIsSet ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
+  const apiKeyBg = apiKeyIsSet ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
+
   const disconnectedHTML = `
     <div style="background:${isDark?'#1a2235':'#F9FAFB'};border:1px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:4px">STATUS</div>
@@ -4518,6 +4540,24 @@ function openFbModal() {
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Faça login para sincronizar seus dados entre dispositivos.</p>
     <div id="fb-switch-form" style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:${apiKeyBg};border:1px solid ${apiKeyBorder};border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${apiKeyIsSet?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
+          🔑 API Key Firebase (Produção)${apiKeyIsSet?' · ✅ Configurada':' · ⚠️ Necessária'}
+        </div>
+        <div style="position:relative;display:flex;gap:6px">
+          <input id="fb-apikey-input" type="password" placeholder="Cole sua API Key aqui…" value="${savedApiKey}"
+            style="flex:1;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;min-width:0">
+          <button type="button"
+            onclick="const i=document.getElementById('fb-apikey-input');i.type=i.type==='password'?'text':'password'"
+            style="background:none;border:1px solid ${bdr};border-radius:8px;padding:0 8px;cursor:pointer;font-size:13px;color:#6B7280;white-space:nowrap">👁</button>
+          <button type="button"
+            onclick="(function(){const v=document.getElementById('fb-apikey-input').value.trim();if(!v){return;}window._fbSaveApiKey('producao',v);const d=document.getElementById('fb-apikey-status');if(d){d.textContent='✅ Salva!';d.style.color=\'${isDark?'#34D399':'#059669'}\';}setTimeout(()=>{openFbModal();openFbModal();},600);})()"
+            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
+        </div>
+        <div id="fb-apikey-status" style="font-size:11px;margin-top:5px;color:${apiKeyIsSet?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
+          ${apiKeyIsSet?'✅ API Key configurada — pronto para conectar':'Encontre no Console Firebase → Configurações do projeto → Suas apps'}
+        </div>
+      </div>
       <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
@@ -4559,12 +4599,34 @@ function _fbShowSwitchAccount() {
 
   const body = document.getElementById('fb-modal-body');
   if (!body) return;
+  const savedApiKeySw = localStorage.getItem('pfp_fb_apikey_producao') || '';
+  const apiKeyIsSetSw = savedApiKeySw && !savedApiKeySw.startsWith('SUA_');
+  const apiKeyBorderSw = apiKeyIsSetSw ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
+  const apiKeyBgSw = apiKeyIsSetSw ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
   body.innerHTML = `
     <div style="margin-bottom:14px">
       <button onclick="openFbModal();openFbModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:13px;font-family:inherit;padding:0;display:flex;align-items:center;gap:4px">← Voltar</button>
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Entre com outra conta Firebase. A sessão atual será encerrada.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:${apiKeyBgSw};border:1px solid ${apiKeyBorderSw};border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${apiKeyIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
+          🔑 API Key Firebase${apiKeyIsSetSw?' · ✅ Configurada':' · ⚠️ Necessária'}
+        </div>
+        <div style="display:flex;gap:6px">
+          <input id="fb-apikey-input" type="password" placeholder="Cole sua API Key aqui…" value="${savedApiKeySw}"
+            style="flex:1;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;min-width:0">
+          <button type="button"
+            onclick="const i=document.getElementById('fb-apikey-input');i.type=i.type==='password'?'text':'password'"
+            style="background:none;border:1px solid ${bdr};border-radius:8px;padding:0 8px;cursor:pointer;font-size:13px;color:#6B7280">👁</button>
+          <button type="button"
+            onclick="(function(){const v=document.getElementById('fb-apikey-input').value.trim();if(!v)return;window._fbSaveApiKey('producao',v);const d=document.getElementById('fb-apikey-status');if(d){d.textContent='✅ Salva!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},600);})()"
+            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:12px;font-weight:700;cursor:pointer">Salvar</button>
+        </div>
+        <div id="fb-apikey-status" style="font-size:11px;margin-top:5px;color:${apiKeyIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
+          ${apiKeyIsSetSw?'✅ Configurada':'Console Firebase → Configurações → Suas apps → firebaseConfig'}
+        </div>
+      </div>
       <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
