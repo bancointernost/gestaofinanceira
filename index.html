@@ -1073,42 +1073,84 @@ import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/fireb
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 // ── Configs dos ambientes ──
+// Campos carregados do localStorage (salvo como JSON pelo _fbSaveConfig)
+function _fbLoadConfig(env) {
+  try {
+    const raw = localStorage.getItem('pfp_fb_config_' + env);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {};
+}
+const _cfgTeste = _fbLoadConfig('teste');
+const _cfgProd  = _fbLoadConfig('producao');
 const FB_CONFIGS = {
   teste: {
     label: '🧪 Teste',
-    apiKey: localStorage.getItem('pfp_fb_apikey_teste') || "SUA_API_KEY_TESTE_AQUI",
-    authDomain: "personal-finances-9ccb7.firebaseapp.com",
-    projectId: "personal-finances-9ccb7",
-    storageBucket: "personal-finances-9ccb7.firebasestorage.app",
-    messagingSenderId: "299660948262",
-    appId: "1:299660948262:web:e4ed144b1e4c0af5a387e7"
+    apiKey:            _cfgTeste.apiKey            || localStorage.getItem('pfp_fb_apikey_teste') || "SUA_API_KEY_TESTE_AQUI",
+    authDomain:        _cfgTeste.authDomain        || "personal-finances-9ccb7.firebaseapp.com",
+    projectId:         _cfgTeste.projectId         || "personal-finances-9ccb7",
+    storageBucket:     _cfgTeste.storageBucket     || "personal-finances-9ccb7.firebasestorage.app",
+    messagingSenderId: _cfgTeste.messagingSenderId || "299660948262",
+    appId:             _cfgTeste.appId             || "1:299660948262:web:e4ed144b1e4c0af5a387e7"
   },
   producao: {
     label: '🚀 Produção',
-    apiKey: localStorage.getItem('pfp_fb_apikey_producao') || "SUA_API_KEY_PRODUCAO_AQUI",
-    authDomain: "personal-finances-prod-7b8ca.firebaseapp.com",
-    projectId: "personal-finances-prod-7b8ca",
-    storageBucket: "personal-finances-prod-7b8ca.firebasestorage.app",
-    messagingSenderId: "130033393114",
-    appId: "1:130033393114:web:e449f11cdddf3acdffb4e3"
+    apiKey:            _cfgProd.apiKey            || localStorage.getItem('pfp_fb_apikey_producao') || "SUA_API_KEY_PRODUCAO_AQUI",
+    authDomain:        _cfgProd.authDomain        || "personal-finances-prod-7b8ca.firebaseapp.com",
+    projectId:         _cfgProd.projectId         || "personal-finances-prod-7b8ca",
+    storageBucket:     _cfgProd.storageBucket     || "personal-finances-prod-7b8ca.firebasestorage.app",
+    messagingSenderId: _cfgProd.messagingSenderId || "130033393114",
+    appId:             _cfgProd.appId             || "1:130033393114:web:e449f11cdddf3acdffb4e3"
   }
 };
 
-// ── Função para salvar/atualizar API Key e reinicializar Firebase ──
-window._fbSaveApiKey = function(env, key) {
-  if (!key || !key.trim()) return;
-  key = key.trim();
-  localStorage.setItem('pfp_fb_apikey_' + env, key);
-  FB_CONFIGS[env].apiKey = key;
-  // Destrói app existente para forçar reinit com nova key
+// ── Função para salvar o firebaseConfig completo (JSON) e reinicializar ──
+window._fbSaveConfig = function(env, jsonStr) {
+  if (!jsonStr || !jsonStr.trim()) return { ok: false, err: 'JSON vazio' };
+  let cfg;
+  try {
+    // Extrai o objeto do firebaseConfig se colado com var/const/let ou como bloco JS
+    let clean = jsonStr.trim();
+    // Remove wrapper "const firebaseConfig = {...};" ou similar
+    clean = clean.replace(/^\s*(var|const|let)\s+\w+\s*=\s*/, '').replace(/;?\s*$/, '');
+    // Normaliza chaves sem aspas (JS object literal) para JSON válido
+    clean = clean.replace(/([{,]\s*)([a-zA-Z_]\w*)\s*:/g, '$1"$2":');
+    // Troca aspas simples por duplas
+    clean = clean.replace(/'/g, '"');
+    cfg = JSON.parse(clean);
+  } catch(e) {
+    return { ok: false, err: 'JSON inválido: ' + e.message };
+  }
+  const REQUIRED = ['apiKey', 'authDomain', 'projectId'];
+  const missing = REQUIRED.filter(k => !cfg[k]);
+  if (missing.length) return { ok: false, err: 'Campos obrigatórios ausentes: ' + missing.join(', ') };
+
+  // Persiste JSON completo
+  localStorage.setItem('pfp_fb_config_' + env, JSON.stringify(cfg));
+  // Compatibilidade retroativa com pfp_fb_apikey_*
+  localStorage.setItem('pfp_fb_apikey_' + env, cfg.apiKey);
+  // Atualiza FB_CONFIGS em memória
+  Object.assign(FB_CONFIGS[env], cfg);
+
+  // Destrói app existente e reinit com nova config
   try {
     const existing = getApps().find(a => a.name === 'pfp_' + env);
     if (existing) deleteApp(existing);
   } catch(e) {}
-  window._fb = _buildFb(env);
+  const instance = _buildFb(env);
+  window._fb = _makeFbApi(instance);
   if (window._fb) {
     window._fb.onAuth(_onFbAuthChange);
   }
+  return { ok: true };
+};
+
+// Retrocompatibilidade: _fbSaveApiKey continua funcionando
+window._fbSaveApiKey = function(env, key) {
+  if (!key || !key.trim()) return;
+  const existing = Object.assign({}, FB_CONFIGS[env] || {});
+  existing.apiKey = key.trim();
+  window._fbSaveConfig(env, JSON.stringify(existing));
 };
 
 // Ambiente salvo no localStorage (padrão: teste)
@@ -1117,7 +1159,7 @@ window._fbEnv = _fbEnv;
 
 function _buildFb(env) {
   const cfg = FB_CONFIGS[env];
-  if (!cfg || !cfg.apiKey) return null;
+  if (!cfg || !cfg.apiKey || cfg.apiKey.startsWith('SUA_')) return null;
   try {
     // Evita duplicar apps com mesmo nome
     const existing = getApps().find(a => a.name === 'pfp_' + env);
@@ -4528,36 +4570,26 @@ function openFbModal() {
       🚪 Sair da conta
     </button>`;
 
-  const savedApiKey = localStorage.getItem('pfp_fb_apikey_producao') || '';
-  const apiKeyIsSet = savedApiKey && !savedApiKey.startsWith('SUA_');
-  const apiKeyBorder = apiKeyIsSet ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
-  const apiKeyBg = apiKeyIsSet ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
+  const savedCfgRaw = localStorage.getItem('pfp_fb_config_producao') || '';
+  let savedCfgObj = {};
+  try { savedCfgObj = savedCfgRaw ? JSON.parse(savedCfgRaw) : {}; } catch(e) {}
+  // Verifica apiKey legada e também a config em memória (FB_CONFIGS via window._fbConfigs)
+  const legacyApiKey = localStorage.getItem('pfp_fb_apikey_producao') || '';
+  const liveApiKey   = (window._fbConfigs?.producao?.apiKey) || '';
+  const cfgIsSet = !!(
+    (savedCfgObj.apiKey && savedCfgObj.projectId && !savedCfgObj.apiKey.startsWith('SUA_')) ||
+    (legacyApiKey && !legacyApiKey.startsWith('SUA_')) ||
+    (liveApiKey   && !liveApiKey.startsWith('SUA_')   && window._fb)
+  );
 
-  const disconnectedHTML = `
+  // ── Tela A: login (quando projeto já está configurado) ──
+  const loginFormHTML = `
     <div style="background:${isDark?'#1a2235':'#F9FAFB'};border:1px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:16px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:4px">STATUS</div>
-      <div style="font-size:13px;font-weight:600;color:${clr}">Não conectado</div>
+      <div style="font-size:14px;font-weight:600;color:${clr}">Configurado, faça login</div>
     </div>
-    <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Faça login para sincronizar seus dados entre dispositivos.</p>
-    <div id="fb-switch-form" style="display:flex;flex-direction:column;gap:8px">
-      <div style="background:${apiKeyBg};border:1px solid ${apiKeyBorder};border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${apiKeyIsSet?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
-          🔑 API Key Firebase (Produção)${apiKeyIsSet?' · ✅ Configurada':' · ⚠️ Necessária'}
-        </div>
-        <div style="position:relative;display:flex;gap:6px">
-          <input id="fb-apikey-input" type="password" placeholder="Cole sua API Key aqui…" value="${savedApiKey}"
-            style="flex:1;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;min-width:0">
-          <button type="button"
-            onclick="const i=document.getElementById('fb-apikey-input');i.type=i.type==='password'?'text':'password'"
-            style="background:none;border:1px solid ${bdr};border-radius:8px;padding:0 8px;cursor:pointer;font-size:13px;color:#6B7280;white-space:nowrap">👁</button>
-          <button type="button"
-            onclick="(function(){const v=document.getElementById('fb-apikey-input').value.trim();if(!v){return;}window._fbSaveApiKey('producao',v);const d=document.getElementById('fb-apikey-status');if(d){d.textContent='✅ Salva!';d.style.color=\'${isDark?'#34D399':'#059669'}\';}setTimeout(()=>{openFbModal();openFbModal();},600);})()"
-            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Salvar</button>
-        </div>
-        <div id="fb-apikey-status" style="font-size:11px;margin-top:5px;color:${apiKeyIsSet?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
-          ${apiKeyIsSet?'✅ API Key configurada — pronto para conectar':'Encontre no Console Firebase → Configurações do projeto → Suas apps'}
-        </div>
-      </div>
+    <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Faça login para sincronizar seus dados entre dispositivos. O armazenamento local continua funcionando normalmente.</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
       <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
@@ -4570,10 +4602,52 @@ function openFbModal() {
       </div>
       <div id="fb-sw-err" style="display:none;padding:8px 10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#DC2626"></div>
       <button onclick="_fbSwitchLogin()" id="fb-sw-btn"
-        style="background:#2563EB;color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        style="background:#10B981;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
         Entrar
       </button>
+      <button onclick="_fbSwitchLogin('criar')" id="fb-sw-btn-criar"
+        style="background:${isDark?'#1f2937':'#F9FAFB'};color:${clr};border:1px solid ${bdr};border-radius:10px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">
+        Criar conta nova
+      </button>
+    </div>
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="_fbShowReconfig()" style="background:none;border:none;cursor:pointer;font-size:12px;color:${isDark?'#607090':'#94A3B8'};font-family:inherit;text-decoration:underline;text-underline-offset:2px">
+        ⚙️ Reconfigurar projeto deste ambiente
+      </button>
     </div>`;
+
+  // ── Tela B: configurar JSON (quando sem config ou ao reconfigurar) ──
+  const cfgPreview = (savedCfgObj.apiKey && savedCfgObj.projectId) ? JSON.stringify(savedCfgObj, null, 2) : '';
+  const reconfigHTML = `
+    <div style="background:${isDark?'#1a2235':'#F9FAFB'};border:1px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:4px">STATUS</div>
+      <div style="font-size:14px;font-weight:600;color:${clr}">Configurado, faça login</div>
+    </div>
+    <div style="background:${isDark?'#2D0A0A':'#FEF3C7'};border:1px solid ${isDark?'#7F1D1D':'#FDE68A'};border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#FCA5A5':'#92400E'};line-height:1.5">
+      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
+    </div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:6px">
+      Cole o objeto firebaseConfig (JSON)
+    </div>
+    <textarea id="fb-cfg-input" rows="6" placeholder='{\n  "apiKey": "...",\n  "authDomain": "...",\n  "projectId": "...",\n  "storageBucket": "...",\n  "messagingSenderId": "...",\n  "appId": "..."\n}'
+      style="width:100%;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:11px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;resize:vertical;line-height:1.5;min-height:110px">${cfgPreview}</textarea>
+    <div id="fb-cfg-status" style="font-size:11px;margin:5px 0 10px;color:${isDark?'#607090':'#94A3B8'}">
+      ${cfgPreview ? '✅ Configuração atual exibida acima — edite e salve para atualizar' : 'Cole o objeto firebaseConfig e clique em Salvar'}
+    </div>
+    <button type="button"
+      onclick="(function(){
+        const v=document.getElementById('fb-cfg-input').value.trim();
+        if(!v){return;}
+        const r=window._fbSaveConfig('producao',v);
+        const d=document.getElementById('fb-cfg-status');
+        if(r.ok){if(d){d.textContent='✅ Salvo!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},700);}
+        else{if(d){d.textContent='❌ '+r.err;d.style.color='${isDark?'#F87171':'#DC2626'}';}}
+      })()"
+      style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+      💾 Salvar configuração deste ambiente
+    </button>`;
+
+  const disconnectedHTML = cfgIsSet ? loginFormHTML : reconfigHTML;
 
   overlay.innerHTML = `
     <div onmousedown="event.stopPropagation()" style="background:${bg};border:1px solid ${bdr};border-radius:16px;padding:24px 24px;width:360px;max-width:calc(100vw - 32px);font-family:inherit;color:${clr};box-shadow:0 24px 60px rgba(0,0,0,.4)">
@@ -4599,32 +4673,41 @@ function _fbShowSwitchAccount() {
 
   const body = document.getElementById('fb-modal-body');
   if (!body) return;
-  const savedApiKeySw = localStorage.getItem('pfp_fb_apikey_producao') || '';
-  const apiKeyIsSetSw = savedApiKeySw && !savedApiKeySw.startsWith('SUA_');
-  const apiKeyBorderSw = apiKeyIsSetSw ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
-  const apiKeyBgSw = apiKeyIsSetSw ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
+  const savedCfgRawSw = localStorage.getItem('pfp_fb_config_producao') || '';
+  let savedCfgObjSw = {};
+  try { savedCfgObjSw = savedCfgRawSw ? JSON.parse(savedCfgRawSw) : {}; } catch(e) {}
+  const cfgIsSetSw = !!(savedCfgObjSw.apiKey && savedCfgObjSw.projectId && !savedCfgObjSw.apiKey.startsWith('SUA_'));
+  const cfgBorderSw = cfgIsSetSw ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
+  const cfgBgSw = cfgIsSetSw ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
+  const cfgPreviewSw = cfgIsSetSw ? JSON.stringify(savedCfgObjSw, null, 2) : '';
   body.innerHTML = `
     <div style="margin-bottom:14px">
       <button onclick="openFbModal();openFbModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:13px;font-family:inherit;padding:0;display:flex;align-items:center;gap:4px">← Voltar</button>
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Entre com outra conta Firebase. A sessão atual será encerrada.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="background:${apiKeyBgSw};border:1px solid ${apiKeyBorderSw};border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${apiKeyIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
-          🔑 API Key Firebase${apiKeyIsSetSw?' · ✅ Configurada':' · ⚠️ Necessária'}
+      <div style="background:${cfgBgSw};border:1px solid ${cfgBorderSw};border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${cfgIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
+          🔧 firebaseConfig (JSON)${cfgIsSetSw?' · ✅ Configurado':' · ⚠️ Necessário'}
         </div>
-        <div style="display:flex;gap:6px">
-          <input id="fb-apikey-input" type="password" placeholder="Cole sua API Key aqui…" value="${savedApiKeySw}"
-            style="flex:1;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:12px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;min-width:0">
+        <textarea id="fb-cfg-input" rows="5" placeholder='Cole o objeto firebaseConfig aqui…&#10;{&#10;  "apiKey": "...",&#10;  "authDomain": "...",&#10;  "projectId": "..."&#10;}'
+          style="width:100%;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:11px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;resize:vertical;line-height:1.5">${cfgIsSetSw ? cfgPreviewSw : ''}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+          <div id="fb-cfg-status" style="flex:1;font-size:11px;color:${cfgIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
+            ${cfgIsSetSw?'✅ Configuração salva':'Console Firebase → Configurações → Seus apps → firebaseConfig'}
+          </div>
           <button type="button"
-            onclick="const i=document.getElementById('fb-apikey-input');i.type=i.type==='password'?'text':'password'"
-            style="background:none;border:1px solid ${bdr};border-radius:8px;padding:0 8px;cursor:pointer;font-size:13px;color:#6B7280">👁</button>
-          <button type="button"
-            onclick="(function(){const v=document.getElementById('fb-apikey-input').value.trim();if(!v)return;window._fbSaveApiKey('producao',v);const d=document.getElementById('fb-apikey-status');if(d){d.textContent='✅ Salva!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},600);})()"
-            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:0 10px;font-size:12px;font-weight:700;cursor:pointer">Salvar</button>
-        </div>
-        <div id="fb-apikey-status" style="font-size:11px;margin-top:5px;color:${apiKeyIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
-          ${apiKeyIsSetSw?'✅ Configurada':'Console Firebase → Configurações → Suas apps → firebaseConfig'}
+            onclick="(function(){
+              const v=document.getElementById('fb-cfg-input').value.trim();
+              if(!v){return;}
+              const r=window._fbSaveConfig('producao',v);
+              const d=document.getElementById('fb-cfg-status');
+              if(r.ok){if(d){d.textContent='✅ Salvo!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},700);}
+              else{if(d){d.textContent='❌ '+r.err;d.style.color='${isDark?'#F87171':'#DC2626'}';}}
+            })()"
+            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+            💾 Salvar
+          </button>
         </div>
       </div>
       <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
@@ -4646,19 +4729,65 @@ function _fbShowSwitchAccount() {
   setTimeout(() => document.getElementById('fb-sw-pass')?.focus(), 80);
 }
 
+// ── Reconfigurar projeto (mostra tela JSON dentro do modal) ──
+function _fbShowReconfig() {
+  const body = document.getElementById('fb-modal-body');
+  if (!body) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  const clr = isDark ? '#F9FAFB' : '#111827';
+  const bdr = isDark ? '#2e3d55' : '#E5E7EB';
+  const inpBg = isDark ? '#111827' : '#F9FAFB';
+  const savedCfgRaw = localStorage.getItem('pfp_fb_config_producao') || '';
+  let savedCfgObj = {};
+  try { savedCfgObj = savedCfgRaw ? JSON.parse(savedCfgRaw) : {}; } catch(e) {}
+  const cfgPreview = (savedCfgObj.apiKey && savedCfgObj.projectId) ? JSON.stringify(savedCfgObj, null, 2) : '';
+  body.innerHTML = `
+    <div style="margin-bottom:14px">
+      <button onclick="openFbModal();openFbModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:13px;font-family:inherit;padding:0;display:flex;align-items:center;gap:4px">← Voltar</button>
+    </div>
+    <div style="background:${isDark?'#2D0A0A':'#FEF3C7'};border:1px solid ${isDark?'#7F1D1D':'#FDE68A'};border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#FCA5A5':'#92400E'};line-height:1.5">
+      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
+    </div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:6px">
+      Cole o objeto firebaseConfig (JSON)
+    </div>
+    <textarea id="fb-cfg-input" rows="7" placeholder='{\n  "apiKey": "...",\n  "authDomain": "...",\n  "projectId": "...",\n  "storageBucket": "...",\n  "messagingSenderId": "...",\n  "appId": "..."\n}'
+      style="width:100%;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:11px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;resize:vertical;line-height:1.5;min-height:120px">${cfgPreview}</textarea>
+    <div id="fb-cfg-status" style="font-size:11px;margin:5px 0 10px;color:${isDark?'#607090':'#94A3B8'}">
+      ${cfgPreview ? '✅ Configuração atual exibida — edite e salve para atualizar' : 'Cole o objeto firebaseConfig e clique em Salvar'}
+    </div>
+    <button type="button"
+      onclick="(function(){
+        const v=document.getElementById('fb-cfg-input').value.trim();
+        if(!v){return;}
+        const r=window._fbSaveConfig('producao',v);
+        const d=document.getElementById('fb-cfg-status');
+        if(r.ok){if(d){d.textContent='✅ Salvo!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},700);}
+        else{if(d){d.textContent='❌ '+r.err;d.style.color='${isDark?'#F87171':'#DC2626'}';}}
+      })()"
+      style="width:100%;background:#10B981;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+      💾 Salvar configuração deste ambiente
+    </button>`;
+}
+
 // ── Login/troca de conta a partir do modal ──
-async function _fbSwitchLogin() {
+async function _fbSwitchLogin(mode) {
   const email = (document.getElementById('fb-sw-email')?.value || '').trim();
   const pass  = document.getElementById('fb-sw-pass')?.value || '';
   const errEl = document.getElementById('fb-sw-err');
-  const btn   = document.getElementById('fb-sw-btn');
+  const btn   = mode === 'criar' ? document.getElementById('fb-sw-btn-criar') : document.getElementById('fb-sw-btn');
   if (errEl) errEl.style.display = 'none';
   if (!email || !pass) { if(errEl){errEl.style.display='block';errEl.textContent='Preencha e-mail e senha.';} return; }
+  if (mode === 'criar' && pass.length < 6) { if(errEl){errEl.style.display='block';errEl.textContent='A senha deve ter pelo menos 6 caracteres.';} return; }
   if (btn) { btn.textContent = '⏳ Conectando…'; btn.disabled = true; }
   try {
     // Faz logout da conta atual se houver
     if (window._fbUser && window._fb) { try { await window._fb.signOut(); } catch(e){} }
-    await window._fb.signIn(email, pass);
+    if (mode === 'criar') {
+      await window._fb.signUp(email, pass);
+    } else {
+      await window._fb.signIn(email, pass);
+    }
     localStorage.setItem('pfp_fb_last_email', email);
     // Aguarda onAuthStateChanged confirmar
     if (!window._fbUser) {
@@ -4688,18 +4817,20 @@ async function _fbSwitchLogin() {
     _sessionSet(window._appSession);
     _updateFbChip('synced');
     document.getElementById('fb-modal-overlay')?.remove();
-    toast('☁️ Conta trocada: ' + eml, '#2563EB', 4000);
-    render();
+    toast(mode === 'criar' ? '☁️ Conta criada! Dados sincronizando...' : '☁️ Conectado: ' + eml, mode === 'criar' ? '#059669' : '#2563EB', 4000);
+    if (mode === 'criar') dbSave(); else render();
   } catch(e) {
     const msgs = {
-      'auth/invalid-credential': 'E-mail ou senha incorretos.',
-      'auth/user-not-found':     'Usuário não encontrado.',
-      'auth/wrong-password':     'Senha incorreta.',
-      'auth/invalid-email':      'E-mail inválido.',
-      'auth/too-many-requests':  'Muitas tentativas. Aguarde.',
+      'auth/invalid-credential':    'E-mail ou senha incorretos.',
+      'auth/user-not-found':        'Usuário não encontrado.',
+      'auth/wrong-password':        'Senha incorreta.',
+      'auth/invalid-email':         'E-mail inválido.',
+      'auth/too-many-requests':     'Muitas tentativas. Aguarde.',
+      'auth/email-already-in-use':  'Este e-mail já está em uso.',
+      'auth/weak-password':         'Senha muito fraca (mín. 6 caracteres).',
     };
     if (errEl) { errEl.style.display='block'; errEl.textContent = msgs[e.code] || 'Erro: ' + e.message; }
-    if (btn) { btn.textContent = 'Trocar conta'; btn.disabled = false; }
+    if (btn) { btn.textContent = mode === 'criar' ? 'Criar conta nova' : 'Entrar'; btn.disabled = false; }
   }
 }
 
