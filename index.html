@@ -4666,50 +4666,18 @@ function openFbModal() {
 // ── Mostra formulário de troca de conta dentro do modal ──
 function _fbShowSwitchAccount() {
   const isDark = document.documentElement.classList.contains('dark');
-  const bg  = isDark ? '#1a2235' : '#fff';
   const clr = isDark ? '#F9FAFB' : '#111827';
   const bdr = isDark ? '#2e3d55' : '#E5E7EB';
   const inpBg = isDark ? '#111827' : '#F9FAFB';
 
   const body = document.getElementById('fb-modal-body');
   if (!body) return;
-  const savedCfgRawSw = localStorage.getItem('pfp_fb_config_producao') || '';
-  let savedCfgObjSw = {};
-  try { savedCfgObjSw = savedCfgRawSw ? JSON.parse(savedCfgRawSw) : {}; } catch(e) {}
-  const cfgIsSetSw = !!(savedCfgObjSw.apiKey && savedCfgObjSw.projectId && !savedCfgObjSw.apiKey.startsWith('SUA_'));
-  const cfgBorderSw = cfgIsSetSw ? (isDark?'#065F46':'#A7F3D0') : (isDark?'#78350F':'#FCD34D');
-  const cfgBgSw = cfgIsSetSw ? (isDark?'#0d2a1e':'#ECFDF5') : (isDark?'#1c1200':'#FFFBEB');
-  const cfgPreviewSw = cfgIsSetSw ? JSON.stringify(savedCfgObjSw, null, 2) : '';
   body.innerHTML = `
     <div style="margin-bottom:14px">
       <button onclick="openFbModal();openFbModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:13px;font-family:inherit;padding:0;display:flex;align-items:center;gap:4px">← Voltar</button>
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Entre com outra conta Firebase. A sessão atual será encerrada.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="background:${cfgBgSw};border:1px solid ${cfgBorderSw};border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${cfgIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#FCD34D':'#92400E')};margin-bottom:6px">
-          🔧 firebaseConfig (JSON)${cfgIsSetSw?' · ✅ Configurado':' · ⚠️ Necessário'}
-        </div>
-        <textarea id="fb-cfg-input" rows="5" placeholder='Cole o objeto firebaseConfig aqui…&#10;{&#10;  "apiKey": "...",&#10;  "authDomain": "...",&#10;  "projectId": "..."&#10;}'
-          style="width:100%;border:1px solid ${bdr};border-radius:8px;padding:8px 10px;font-size:11px;font-family:var(--font-mono,'monospace');background:${inpBg};color:${clr};outline:none;box-sizing:border-box;resize:vertical;line-height:1.5">${cfgIsSetSw ? cfgPreviewSw : ''}</textarea>
-        <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
-          <div id="fb-cfg-status" style="flex:1;font-size:11px;color:${cfgIsSetSw?(isDark?'#34D399':'#059669'):(isDark?'#607090':'#94A3B8')}">
-            ${cfgIsSetSw?'✅ Configuração salva':'Console Firebase → Configurações → Seus apps → firebaseConfig'}
-          </div>
-          <button type="button"
-            onclick="(function(){
-              const v=document.getElementById('fb-cfg-input').value.trim();
-              if(!v){return;}
-              const r=window._fbSaveConfig('producao',v);
-              const d=document.getElementById('fb-cfg-status');
-              if(r.ok){if(d){d.textContent='✅ Salvo!';d.style.color='${isDark?'#34D399':'#059669'}';}setTimeout(()=>{openFbModal();openFbModal();},700);}
-              else{if(d){d.textContent='❌ '+r.err;d.style.color='${isDark?'#F87171':'#DC2626'}';}}
-            })()"
-            style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
-            💾 Salvar
-          </button>
-        </div>
-      </div>
       <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
@@ -4722,7 +4690,7 @@ function _fbShowSwitchAccount() {
       </div>
       <div id="fb-sw-err" style="display:none;padding:8px 10px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#DC2626"></div>
       <button onclick="_fbSwitchLogin()" id="fb-sw-btn"
-        style="background:#2563EB;color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        style="background:#10B981;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
         Trocar conta
       </button>
     </div>`;
