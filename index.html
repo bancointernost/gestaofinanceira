@@ -100,12 +100,20 @@ html.dark .topbar select {
   border-color: #1e2d45;
 }
 html.dark .tabs {
-  background: #0d1424;
-  border-bottom-color: #1e2d45;
+  background: transparent;
+  border-bottom-color: transparent;
 }
-html.dark .tab { color: #4a6285; }
-html.dark .tab:hover { color: #8aafd4; }
-html.dark .tab.on { color: #60a5fa; border-bottom-color: #60a5fa; }
+html.dark .tab { color: #6b84a3; }
+html.dark .tab:hover { color: #8aafd4; background: #162035; }
+html.dark .tab.on { color: #60a5fa; border-bottom-color: transparent; background: #0c2a4a; }
+html.dark .sidebar {
+  background: #0d1424;
+  border-right-color: #1e2d45;
+  box-shadow: 2px 0 8px rgba(0,0,0,.3);
+}
+html.dark .sidebar-brand h1 { color: #e8f0fe; }
+html.dark .sidebar-footer { border-top-color: #1e2d45; }
+html.dark .topbar .sidebar-toggle { background: #162035; border-color: #1e2d45; color: #a8bdd8; }
 
 /* dark btn toggle */
 html.dark .resultado-lbl { color: #fff !important; }
@@ -271,10 +279,14 @@ html.dark .bar-row-val { color: #8aafd4 !important; }
   html:not(.light) .topbar { background:#0d1424;border-bottom-color:#1e2d45;box-shadow:0 1px 0 #1e2d45,0 2px 12px rgba(0,0,0,.4); }
   html:not(.light) .topbar h1 { color:#e8f0fe; }
   html:not(.light) .topbar select { background:#162035;color:#a8bdd8;border-color:#1e2d45; }
-  html:not(.light) .tabs { background:#0d1424;border-bottom-color:#1e2d45; }
-  html:not(.light) .tab { color:#4a6285; }
-  html:not(.light) .tab:hover { color:#8aafd4; }
-  html:not(.light) .tab.on { color:#60a5fa;border-bottom-color:#60a5fa; }
+  html:not(.light) .tabs { background:transparent;border-bottom-color:transparent; }
+  html:not(.light) .tab { color:#6b84a3; }
+  html:not(.light) .tab:hover { color:#8aafd4;background:#162035; }
+  html:not(.light) .tab.on { color:#60a5fa;border-bottom-color:transparent;background:#0c2a4a; }
+  html:not(.light) .sidebar { background:#0d1424;border-right-color:#1e2d45;box-shadow:2px 0 8px rgba(0,0,0,.3); }
+  html:not(.light) .sidebar-brand h1 { color:#e8f0fe; }
+  html:not(.light) .sidebar-footer { border-top-color:#1e2d45; }
+  html:not(.light) .topbar .sidebar-toggle { background:#162035;border-color:#1e2d45;color:#a8bdd8; }
   html:not(.light) #dk-btn { border-color:#1e2d45;color:#a8bdd8; }
   html:not(.light) .card,html:not(.light) .stat,html:not(.light) .acc-c,html:not(.light) .fixa-card,html:not(.light) .cat-card,html:not(.light) .proj-body,html:not(.light) .nav-btn,html:not(.light) .btn-g { background:#0f1e35;border-color:#1e2d45; }
   html:not(.light) .item:hover,html:not(.light) .tx-card:hover { background:#162035; }
@@ -330,32 +342,70 @@ html.dark .bar-row-val { color: #8aafd4 !important; }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font-sans);font-size:16px;background:var(--gray-100);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 
-/* ─── APP SHELL ─── */
-.app{background:var(--gray-100);min-height:600px;max-width:100%}
+/* ─── APP SHELL (sidebar layout) ─── */
+.app{background:var(--gray-100);min-height:100vh;max-width:100%}
+.app-shell{display:flex;align-items:stretch;min-height:100vh}
+.main-area{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
 
-/* ─── TOPBAR ─── */
-.topbar{background:#fff;border-bottom:1px solid var(--gray-200);padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 0 var(--gray-200),0 2px 8px rgba(15,23,42,.04)}
-.topbar h1{font-size:17px;font-weight:700;color:var(--gray-900);flex:1;letter-spacing:-.4px}
+/* ─── SIDEBAR ─── */
+.sidebar{width:236px;flex-shrink:0;background:#fff;border-right:1px solid var(--gray-200);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;box-shadow:2px 0 8px rgba(15,23,42,.03);z-index:40}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:18px 16px;flex-shrink:0}
+.sidebar-brand h1{font-size:16px;font-weight:700;color:var(--gray-900);letter-spacing:-.3px;line-height:1.2}
+
+/* ─── TOPBAR (barra superior de filtros, dentro da área de conteúdo) ─── */
+.topbar{background:#fff;border-bottom:1px solid var(--gray-200);padding:12px 20px;display:flex;align-items:center;justify-content:flex-end;gap:12px;box-shadow:0 1px 0 var(--gray-200),0 2px 8px rgba(15,23,42,.04);flex-shrink:0}
+.topbar .sidebar-toggle{display:none}
 .topbar select{font-size:14px;padding:7px 12px;border-radius:var(--radius-md);border:1.5px solid var(--gray-200);background:var(--gray-50);color:var(--gray-700);font-family:var(--font-sans);cursor:pointer;outline:none;transition:border-color .15s}
 .topbar select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
 
-/* ─── TABS ─── */
-.tabs{display:flex;background:#fff;border-bottom:1px solid var(--gray-200);overflow-x:auto;gap:0;padding:0 12px;scrollbar-width:none}
+/* ─── TABS (navegação vertical na sidebar) ─── */
+.tabs{display:flex;flex-direction:column;background:transparent;border-bottom:none;overflow-x:visible;overflow-y:auto;gap:2px;padding:4px 12px;flex:1;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:13px 14px;font-size:13px;font-weight:500;cursor:pointer;border:none;border-bottom:2.5px solid transparent;color:var(--gray-400);background:none;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:color .15s,border-color .15s;border-radius:0;font-family:var(--font-sans);letter-spacing:.01em}
-.tab:hover{color:var(--gray-700)}
-.tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.tab{padding:10px 12px;font-size:13.5px;font-weight:500;cursor:pointer;border:none;border-bottom:none;color:var(--gray-500);background:none;white-space:nowrap;display:flex;align-items:center;gap:10px;justify-content:flex-start;width:100%;transition:color .15s,background-color .15s;border-radius:var(--radius-md);font-family:var(--font-sans);letter-spacing:.01em;text-align:left}
+.tab span{font-size:15px;flex-shrink:0}
+.tab:hover{color:var(--gray-800);background:var(--gray-50)}
+.tab.on{color:var(--blue);border-bottom-color:transparent;font-weight:600;background:var(--blue-light)}
 .tab i{font-size:15px}
-.tab-cfg{margin-left:auto;padding:13px 16px;font-size:16px}
-.tab-cfg.on{color:var(--purple)!important;border-bottom-color:var(--purple)!important}
-html.dark .tab-cfg.on{color:var(--purple)!important;border-bottom-color:var(--purple)!important}
-.cfg-menu-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;background:none;border:none;border-radius:var(--radius-md);cursor:pointer;text-align:left;font-family:var(--font-sans);color:var(--gray-900);transition:background .12s}
-.cfg-menu-item:hover{background:var(--gray-100)}
-html.dark #cfg-menu{background:#0f1e35;border-color:#1e2d45;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-html.dark #cfg-menu>div:first-child{border-bottom-color:#1e2d45}
-html.dark .cfg-menu-item{color:var(--gray-900)}
-html.dark .cfg-menu-item:hover{background:var(--gray-100)}
-@media(prefers-color-scheme:dark){html:not(.light) #cfg-menu{background:#0f1e35;border-color:#1e2d45}html:not(.light) #cfg-menu>div:first-child{border-bottom-color:#1e2d45}}
+
+/* ─── Submenu expansível (Transações) ─── */
+.nav-group{display:flex;flex-direction:column}
+.tab-parent{position:relative}
+.nav-caret{margin-left:auto;font-size:13px;color:var(--gray-400);transition:transform .18s;flex-shrink:0}
+.nav-group.open .nav-caret{transform:rotate(90deg)}
+.nav-group.open .tab-parent{color:var(--gray-800)}
+.nav-submenu{display:none;flex-direction:column;gap:1px;padding:2px 0 4px 14px;margin-top:1px;border-left:1.5px solid var(--gray-200);margin-left:14px}
+.nav-group.open .nav-submenu{display:flex}
+.sub-tab{font-size:12.5px;padding:8px 10px;color:var(--gray-500);font-weight:500}
+.sub-tab:hover{color:var(--gray-800);background:var(--gray-50)}
+.sub-tab.on{color:var(--blue);font-weight:600;background:var(--blue-light)}
+html.dark .nav-submenu{border-left-color:#233047}
+html.dark .nav-caret{color:#4a6285}
+html.dark .sub-tab{color:#6b84a3}
+html.dark .sub-tab:hover{color:#8aafd4;background:#162035}
+html.dark .sub-tab.on{color:#60a5fa;background:#0c2a4a}
+@media(prefers-color-scheme:dark){
+  html:not(.light) .nav-submenu{border-left-color:#233047}
+  html:not(.light) .nav-caret{color:#4a6285}
+  html:not(.light) .sub-tab{color:#6b84a3}
+  html:not(.light) .sub-tab:hover{color:#8aafd4;background:#162035}
+  html:not(.light) .sub-tab.on{color:#60a5fa;background:#0c2a4a}
+}
+/* Configurações usa acento roxo em vez de azul */
+.nav-group.cfg .tab-parent.on{color:var(--purple)!important;background:var(--purple-light)!important}
+.nav-group.cfg .sub-tab.on{color:var(--purple)!important;background:var(--purple-light)!important}
+.sidebar-footer{padding:12px;border-top:1px solid var(--gray-200);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sidebar-footer #session-chip{flex:1;min-width:0}
+.sidebar-footer #session-name{max-width:110px!important}
+#sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:39}
+
+/* ─── Responsivo: sidebar vira gaveta em telas estreitas ─── */
+@media(max-width:860px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .22s ease;box-shadow:8px 0 32px rgba(15,23,42,.18)}
+  .sidebar.open{transform:translateX(0)}
+  #sidebar-backdrop.show{display:block}
+  .topbar{justify-content:space-between}
+  .topbar .sidebar-toggle{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--radius-md);border:1.5px solid var(--gray-200);background:#fff;font-size:17px;cursor:pointer;flex-shrink:0;order:-1;margin-right:auto}
+}
 .trans-subnav{display:flex;gap:0;background:var(--gray-50);border-bottom:1.5px solid var(--gray-200);padding:0 12px;overflow-x:auto;scrollbar-width:none}
 .trans-subnav::-webkit-scrollbar{display:none}
 .trans-sub-btn{padding:10px 14px;font-size:12px;font-weight:600;cursor:pointer;border:none;border-bottom:2.5px solid transparent;color:var(--gray-500);background:none;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:color .15s,border-color .15s;font-family:var(--font-sans);letter-spacing:.01em;margin-bottom:-1.5px}
@@ -791,7 +841,7 @@ html.dark .fr-add-btn:hover{background:#1e3a8a}
 .rel-by-cat-pct{width:38px;text-align:right;color:#64748b;font-size:11px}
 /* ─── PRINT ─── */
 @media print{
-  .topbar,.tabs,.rel-filters,.rel-actions,.toast,#db-bar{display:none!important}
+  .sidebar,.topbar,.tabs,.rel-filters,.rel-actions,.toast,#db-bar{display:none!important}
   .cnt{padding:0!important;background:#fff!important}
   .rel-preview{border:none!important;border-radius:0!important}
   .rel-doc{padding:16px 20px!important;max-width:100%!important}
@@ -926,38 +976,63 @@ html.dark .senha-toggle:hover{color:#c8daf0}
 </style>
 <body>
 <div class="app" style="position:relative" id="root">
-<div class="topbar">
-  <div style="width:34px;height:34px;background:linear-gradient(135deg,#2563EB 0%,#7C3AED 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(37,99,235,.3)"><span style="font-size:17px;color:#fff" aria-hidden="true">💰</span></div>
-  <h1>Personal Finances</h1>
-  <div id="ano-filt" style="display:flex;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
-  <select id="accSel" onchange="A.filt=this.value;render()"></select>
-  <button id="dk-btn" onclick="toggleDark()" title="Alternar modo escuro/claro">🌙</button>
-  <div id="session-chip" style="display:none;align-items:center;gap:6px;padding:4px 10px 4px 6px;border-radius:99px;border:1.5px solid var(--gray-200);background:var(--color-background-secondary);cursor:pointer;flex-shrink:0" onclick="appLogout()" title="Clique para sair">
-    <span id="session-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff"></span>
-    <span id="session-name" style="font-size:12px;font-weight:600;color:var(--gray-700);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
-    <span style="font-size:10px;color:var(--gray-400)">Sair</span>
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div style="width:34px;height:34px;background:linear-gradient(135deg,#2563EB 0%,#7C3AED 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(37,99,235,.3)"><span style="font-size:17px;color:#fff" aria-hidden="true">💰</span></div>
+    <h1>Personal Finances</h1>
   </div>
-</div>
-<div class="tabs" style="position:relative">
-  <button class="tab on"  onclick="go('painel',this)"><span aria-hidden="true">🏠</span> Início</button>
-  <button class="tab" onclick="goTransacoes(this)"><span aria-hidden="true">↕</span> Transações</button>
-  <button class="tab" onclick="go('projecao',this)"><span aria-hidden="true">📈</span> Projeção</button>
-  <button class="tab" onclick="go('relatorio',this)"><span aria-hidden="true">📊</span> Relatórios</button>
-  <button class="tab" onclick="go('contas',this)"><span aria-hidden="true">🏦</span> Contas</button>
-  <button class="tab tab-cfg" id="cfg-tab-btn" onclick="toggleCfgMenu(event)" title="Configurações"><span aria-hidden="true">⚙</span></button>
-</div>
+  <nav class="tabs" style="position:relative">
+    <button class="tab on"  onclick="go('painel',this)"><span aria-hidden="true">🏠</span> Início</button>
+    <div class="nav-group" id="nav-transacoes">
+      <button class="tab tab-parent" id="transacoes-parent-btn" onclick="toggleTransMenu()">
+        <span aria-hidden="true">↕</span> Transações
+        <span class="nav-caret" id="trans-caret" aria-hidden="true">›</span>
+      </button>
+      <div class="nav-submenu" id="trans-submenu">
+        <button class="tab sub-tab" onclick="goTransSub('lanc')"><span aria-hidden="true">☰</span> Lançamentos</button>
+        <button class="tab sub-tab" onclick="goTransSub('plan')"><span aria-hidden="true">📅</span> Planejar</button>
+        <button class="tab sub-tab" onclick="goTransSub('fixas')"><span aria-hidden="true">↺</span> Contas Fixas</button>
+      </div>
+    </div>
+    <button class="tab" onclick="go('projecao',this)"><span aria-hidden="true">📈</span> Projeção</button>
+    <button class="tab" onclick="go('relatorio',this)"><span aria-hidden="true">📊</span> Relatórios</button>
+    <button class="tab" onclick="go('contas',this)"><span aria-hidden="true">🏦</span> Contas</button>
+    <div class="nav-group cfg" id="nav-config">
+      <button class="tab tab-parent" id="config-parent-btn" onclick="toggleConfigMenu()">
+        <span aria-hidden="true">⚙</span> Configurações
+        <span class="nav-caret" aria-hidden="true">›</span>
+      </button>
+      <div class="nav-submenu" id="config-submenu">
+        <button class="tab sub-tab" onclick="goCfgSub('cats')"><span aria-hidden="true">🗂️</span> Categorias</button>
+        <button class="tab sub-tab" onclick="goCfgSub('familia')"><span aria-hidden="true">👥</span> Família</button>
+        <button class="tab sub-tab" onclick="goCfgSub('senhas')"><span aria-hidden="true">🔑</span> Senhas</button>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <button id="dk-btn" onclick="toggleDark()" title="Alternar modo escuro/claro">🌙</button>
+    <div id="session-chip" style="display:none;align-items:center;gap:6px;padding:4px 10px 4px 6px;border-radius:99px;border:1.5px solid var(--gray-200);background:var(--color-background-secondary);cursor:pointer" onclick="appLogout()" title="Clique para sair">
+      <span id="session-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#7C3AED);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0"></span>
+      <span id="session-name" style="font-size:12px;font-weight:600;color:var(--gray-700);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <span style="font-size:10px;color:var(--gray-400);flex-shrink:0">Sair</span>
+    </div>
+  </div>
+</aside>
+<!-- Backdrop para fechar a sidebar no mobile -->
+<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
-<!-- Menu Configurações dropdown -->
-<div id="cfg-menu" style="display:none;position:fixed;top:52px;right:8px;width:230px;background:var(--color-background-primary);border:1.5px solid var(--gray-200);border-radius:var(--radius-lg);box-shadow:0 8px 32px rgba(15,23,42,.14),0 2px 8px rgba(15,23,42,.08);z-index:6000;flex-direction:column;overflow:hidden">
-  <div style="padding:6px 6px;display:flex;flex-direction:column;gap:2px">
-    <button class="cfg-menu-item" onclick="goCfg('cats')"><span style="font-size:17px">&#9881;&#65039;</span><div><div style="font-weight:600;font-size:13px">Categorias</div><div style="font-size:11px;color:var(--gray-500)">Cadastro de categorias</div></div></button>
-    <button class="cfg-menu-item" onclick="goCfg('familia')"><span style="font-size:17px">&#128101;</span><div><div style="font-weight:600;font-size:13px">Família</div><div style="font-size:11px;color:var(--gray-500)">Membros da família</div></div></button>
-    <button class="cfg-menu-item" onclick="goCfg('senhas')"><span style="font-size:17px">&#128273;</span><div><div style="font-weight:600;font-size:13px">Senhas</div><div style="font-size:11px;color:var(--gray-500)">Cofre de senhas</div></div></button>
+<div class="main-area">
+  <div class="topbar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Abrir menu" aria-label="Abrir menu">☰</button>
+    <div id="mes-filt" style="display:none;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
+    <div id="ano-filt" style="display:flex;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
+    <select id="accSel" onchange="A.filt=this.value;render()"></select>
   </div>
+
+  <div class="cnt" id="main"></div>
 </div>
-<!-- Backdrop para fechar o menu cfg -->
-<div id="cfg-backdrop" onclick="closeCfgMenu()" style="display:none;position:fixed;inset:0;z-index:5999"></div>
-<div class="cnt" id="main"></div>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- Tela de Login do Sistema -->
@@ -1607,64 +1682,62 @@ function go(tab,el){
   A.tab=tab;A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');render();
+  closeSidebar();
 }
 
-// Sub-navegação interna da aba Transações
-function transSubNav(active){
-  return `<div class="trans-subnav">
-    <button class="trans-sub-btn ${active==='lanc'?'on':''}" onclick="A.tab='lanc';A.lastTransTab='lanc';render()"><span>☰</span> Lançamentos</button>
-    <button class="trans-sub-btn ${active==='plan'?'on':''}" onclick="A.tab='plan';A.lastTransTab='plan';render()"><span>📅</span> Planejar</button>
-    <button class="trans-sub-btn ${active==='fixas'?'on':''}" onclick="A.tab='fixas';A.lastTransTab='fixas';render()"><span>↺</span> Contas Fixas</button>
-  </div>`;
+// Sidebar (menu lateral) — comportamento de gaveta no mobile
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const bd=document.getElementById('sidebar-backdrop');
+  if(sb.classList.contains('open')){ closeSidebar(); }
+  else { sb.classList.add('open'); bd.classList.add('show'); }
+}
+function closeSidebar(){
+  const sb=document.getElementById('sidebar');
+  const bd=document.getElementById('sidebar-backdrop');
+  if(sb) sb.classList.remove('open');
+  if(bd) bd.classList.remove('show');
 }
 
-// Aba Transações → abre sub-aba que o usuário estava, ou lanc por padrão
-function goTransacoes(el){
-  const sub = A.lastTransTab || 'lanc';
-  A.tab=sub;A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');
-  render();
-}
-
-// Menu Configurações (overlay lateral)
-function toggleCfgMenu(e){
-  e.stopPropagation();
-  const menu=document.getElementById('cfg-menu');
-  const backdrop=document.getElementById('cfg-backdrop');
-  const btn=document.getElementById('cfg-tab-btn');
-  if(menu.style.display==='flex'){
-    closeCfgMenu();
+// Submenu de Transações na sidebar (Lançamentos / Planejar / Contas Fixas)
+function toggleTransMenu(){
+  const group=document.getElementById('nav-transacoes');
+  const isOpen=group.classList.contains('open');
+  if(isOpen){
+    group.classList.remove('open');
   } else {
-    // Posiciona o dropdown logo abaixo do botão
-    const rect=btn.getBoundingClientRect();
-    menu.style.top=(rect.bottom+4)+'px';
-    menu.style.right=(window.innerWidth-rect.right)+'px';
-    menu.style.left='auto';
-    menu.style.display='flex';
-    backdrop.style.display='block';
-    btn.classList.add('on');
+    A.tab=A.lastTransTab||'lanc';A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    render();
   }
 }
-function closeCfgMenu(){
-  document.getElementById('cfg-menu').style.display='none';
-  document.getElementById('cfg-backdrop').style.display='none';
-  document.getElementById('cfg-tab-btn').classList.remove('on');
+function goTransSub(sub){
+  A.tab=sub;A.lastTransTab=sub;A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
+  render();
+  closeSidebar();
 }
-function goCfg(sub){
-  closeCfgMenu();
-  // Navegar para a sub-aba dentro de cats (ou senhas)
-  if(sub==='senhas'){
-    A.tab='senhas';
-  } else if(sub==='familia'){
-    A.tab='cats';
-    A.catTab='familia';
+
+// Submenu de Configurações na sidebar (Categorias / Família / Senhas)
+function toggleConfigMenu(){
+  const group=document.getElementById('nav-config');
+  const isOpen=group.classList.contains('open');
+  if(isOpen){
+    group.classList.remove('open');
   } else {
-    A.tab='cats';
+    goCfgSub(A.lastCfgTab||'cats',true);
+  }
+}
+function goCfgSub(sub,keepOpen){
+  closeSidebar();
+  if(sub==='senhas'){
+    A.tab='senhas';A.lastCfgTab='senhas';
+  } else if(sub==='familia'){
+    A.tab='cats';A.catTab='familia';A.lastCfgTab='familia';
+  } else {
+    A.tab='cats';A.lastCfgTab='cats';
     if(!A.catTab||A.catTab==='familia') A.catTab='despesa';
   }
   A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
-  // Tirar o 'on' de todas as tabs principais (cfg não é tab principal)
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   render();
 }
@@ -1679,8 +1752,10 @@ function goToLanc(type){
   A.fixaSort=A.fixaSort||{};   // {pend,paga,inativa} → {col,dir}
   A.lancFamFilt='all';
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  const lancTab=document.querySelector('.tab[onclick*="goTransacoes"]');
-  if(lancTab)lancTab.classList.add('on');
+  const parentBtn=document.getElementById('transacoes-parent-btn');
+  if(parentBtn){parentBtn.classList.add('on');document.getElementById('nav-transacoes').classList.add('open');}
+  const lancSub=document.querySelector('#trans-submenu .sub-tab');
+  if(lancSub)lancSub.classList.add('on');
   render();
   // Após render, se precisar filtrar por tipo específico, exibe toast informativo
   if(type==='receita')toast('Mostrando receitas do ano','#1D9E75');
@@ -1708,6 +1783,31 @@ function updSel(){
   const s=document.getElementById('accSel');const cur=String(A.filt);
   s.innerHTML='<option value="all">Todas as contas</option>';
   A.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.text=a.name;if(String(a.id)===cur)o.selected=true;s.appendChild(o);});
+  // seletor de mês — Início (painel), Lançamentos (período=Mês) e Contas Fixas usam navegação por mês
+  const mf=document.getElementById('mes-filt');
+  const showMesFilt = A.tab==='painel' || A.tab==='fixas' || (A.tab==='lanc' && A.lancPeriod==='mes');
+  if(mf){
+    if(showMesFilt){
+      const mes=A.tab==='painel'?A.painelMes:(A.tab==='fixas'?A.fixaMes:A.lancMes);
+      const pm=mes.slice(5,7);
+      const prevMes=addMonths(mes,-1);
+      const nextMes=addMonths(mes,1);
+      mf.style.display='flex';
+      mf.innerHTML=`
+        <button onclick="topSetMes('${prevMes}')"
+          style="background:none;border:none;cursor:pointer;padding:3px 6px;font-size:15px;color:var(--gray-400);border-radius:var(--radius-sm);line-height:1;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'">‹</button>
+        <select onchange="topSetMesSel(this.value)"
+          style="border:none;background:none;font-size:13px;font-weight:700;color:var(--gray-900);font-family:inherit;cursor:pointer;outline:none;padding:2px 0">
+          ${Object.entries(MNLONG).map(([v,n])=>`<option value="${v}" ${v===pm?'selected':''}>${n}</option>`).join('')}
+        </select>
+        <button onclick="topSetMes('${nextMes}')"
+          style="background:none;border:none;cursor:pointer;padding:3px 6px;font-size:15px;color:var(--gray-400);border-radius:var(--radius-sm);line-height:1;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'">›</button>
+      `;
+    } else {
+      mf.style.display='none';
+      mf.innerHTML='';
+    }
+  }
   // seletor de ano — navegação livre com ‹ ano › 
   const af=document.getElementById('ano-filt');
   if(!af)return;
@@ -1720,26 +1820,61 @@ function updSel(){
       style="background:none;border:none;cursor:pointer;padding:3px 8px;font-size:15px;color:var(--gray-400);border-radius:var(--radius-sm);line-height:1;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'">›</button>
   `;
 }
+// Navegação de mês a partir da topbar (Início, Lançamentos e Contas Fixas)
+function topSetMes(novoMes){
+  if(A.tab==='painel'){ A.painelMes=novoMes; A.painelPeriod='mes'; }
+  else if(A.tab==='fixas'){ A.fixaMes=novoMes; }
+  else if(A.tab==='lanc'){ A.lancMes=novoMes; A.lancPeriod='mes'; }
+  const novoAno=parseInt(novoMes.slice(0,4));
+  if(novoAno!==A.anoFilt) setAnoFilt(novoAno); else render();
+}
+function topSetMesSel(mm){
+  if(A.tab==='painel'){ A.painelMes=A.anoFilt+'-'+mm; A.painelPeriod='mes'; }
+  else if(A.tab==='fixas'){ A.fixaMes=A.anoFilt+'-'+mm; }
+  else if(A.tab==='lanc'){ A.lancMes=A.anoFilt+'-'+mm; A.lancPeriod='mes'; }
+  render();
+}
 function render(){
   if(A.pie){A.pie.destroy();A.pie=null;}
   if(A.projChart){A.projChart.destroy();A.projChart=null;}
   if(A.famChart){A.famChart.destroy();A.famChart=null;}
   updSel();const m=document.getElementById('main');
   const t=A.tab;
-  // Sincroniza aba principal ativa na topbar
+  // Sincroniza aba principal ativa na sidebar
   const transAba = ['lanc','plan','fixas'];
+  const cfgAba = ['cats','senhas'];
   document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('on'));
+  const transGroup=document.getElementById('nav-transacoes');
+  const cfgGroup=document.getElementById('nav-config');
   if(transAba.includes(t)){
-    const transBtn=document.querySelector('.tab[onclick*="goTransacoes"]');
-    if(transBtn) transBtn.classList.add('on');
-  } else if(t==='painel'){
-    const btn=document.querySelector('.tab[onclick*="painel"]');if(btn)btn.classList.add('on');
-  } else if(t==='projecao'){
-    const btn=document.querySelector('.tab[onclick*="projecao"]');if(btn)btn.classList.add('on');
-  } else if(t==='relatorio'){
-    const btn=document.querySelector('.tab[onclick*="relatorio"]');if(btn)btn.classList.add('on');
-  } else if(t==='contas'){
-    const btn=document.querySelector('.tab[onclick*="contas"]');if(btn)btn.classList.add('on');
+    const parentBtn=document.getElementById('transacoes-parent-btn');
+    if(parentBtn) parentBtn.classList.add('on');
+    if(transGroup) transGroup.classList.add('open');
+    const subBtns=document.querySelectorAll('#trans-submenu .sub-tab');
+    const idx={lanc:0,plan:1,fixas:2}[t];
+    subBtns.forEach((b,i)=>b.classList.toggle('on',i===idx));
+  } else {
+    if(transGroup) transGroup.classList.remove('open');
+  }
+  if(cfgAba.includes(t)){
+    const parentBtn=document.getElementById('config-parent-btn');
+    if(parentBtn) parentBtn.classList.add('on');
+    if(cfgGroup) cfgGroup.classList.add('open');
+    const cfgIdx = t==='senhas' ? 2 : (A.catTab==='familia' ? 1 : 0);
+    document.querySelectorAll('#config-submenu .sub-tab').forEach((b,i)=>b.classList.toggle('on',i===cfgIdx));
+  } else {
+    if(cfgGroup) cfgGroup.classList.remove('open');
+  }
+  if(!transAba.includes(t)&&!cfgAba.includes(t)){
+    if(t==='painel'){
+      const btn=document.querySelector('.tab[onclick*="painel"]');if(btn)btn.classList.add('on');
+    } else if(t==='projecao'){
+      const btn=document.querySelector('.tab[onclick*="projecao"]');if(btn)btn.classList.add('on');
+    } else if(t==='relatorio'){
+      const btn=document.querySelector('.tab[onclick*="relatorio"]');if(btn)btn.classList.add('on');
+    } else if(t==='contas'){
+      const btn=document.querySelector('.tab[onclick*="contas"]');if(btn)btn.classList.add('on');
+    }
   }
   if(t==='painel')rPainel(m);else if(t==='lanc')rLanc(m);else if(t==='plan')rPlan(m);
   else if(t==='fixas')rFixas(m);else if(t==='projecao')rProjecao(m);
@@ -1795,37 +1930,6 @@ function rPainel(m){
   const periodoLabel=period==='mes'?`${MNLONG[pm]} ${py}`:period==='custom'?(A.painelDtIni&&A.painelDtFim?`${A.painelDtIni.split('-').reverse().join('/')} – ${A.painelDtFim.split('-').reverse().join('/')}`:ano):ano;
 
   m.innerHTML=`
-  <!-- Seletor de período do painel -->
-  <div class="card" style="padding:14px 18px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span style="font-size:11px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap">Período</span>
-      <div class="period-bar" style="padding:0;margin:0">
-        <button onclick="A.painelPeriod='mes';render()" class="period-btn ${period==='mes'?'on':''}">Mês</button>
-        <button onclick="A.painelPeriod='ano';render()" class="period-btn ${period==='ano'?'on':''}">Ano todo</button>
-        <button onclick="A.painelPeriod='custom';render()" class="period-btn ${period==='custom'?'on':''}">Período</button>
-      </div>
-      ${period==='mes'?`
-      <div style="display:flex;align-items:center;gap:4px;background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:var(--radius-md);padding:4px 6px">
-        <button onclick="A.painelMes='${prevMesPainel}';if(parseInt(A.painelMes.slice(0,4))!==A.anoFilt)setAnoFilt(parseInt(A.painelMes.slice(0,4)));else render()"
-          style="background:none;border:none;cursor:pointer;padding:2px 6px;font-size:15px;color:var(--gray-400);border-radius:var(--radius-sm);line-height:1;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'">‹</button>
-        <select onchange="A.painelMes=A.anoFilt+'-'+this.value;render()"
-          style="border:none;background:transparent;font-size:13px;font-weight:700;color:var(--gray-900);font-family:inherit;cursor:pointer;padding:2px 0;outline:none;appearance:none;-webkit-appearance:none;text-align:center;min-width:70px">
-          ${Object.entries(MNLONG).map(([v,n])=>`<option value="${v}" ${v===pm?'selected':''}>${n}</option>`).join('')}
-        </select>
-        <button onclick="A.painelMes='${nextMesPainel}';if(parseInt(A.painelMes.slice(0,4))!==A.anoFilt)setAnoFilt(parseInt(A.painelMes.slice(0,4)));else render()"
-          style="background:none;border:none;cursor:pointer;padding:2px 6px;font-size:15px;color:var(--gray-400);border-radius:var(--radius-sm);line-height:1;font-family:inherit;transition:color .15s" onmouseover="this.style.color='var(--gray-700)'" onmouseout="this.style.color='var(--gray-400)'">›</button>
-      </div>`:''}
-      ${period==='custom'?`
-      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-        <input type="date" value="${A.painelDtIni}" onblur="A.painelDtIni=this.value;render()" class="painel-date-input"/>
-        <span style="font-size:13px;color:var(--gray-400)">até</span>
-        <input type="date" value="${A.painelDtFim}" onblur="A.painelDtFim=this.value;render()" class="painel-date-input"/>
-        ${(!A.painelDtIni||!A.painelDtFim)?`<span style="font-size:12px;color:var(--gray-400)">Selecione as duas datas</span>`:''}
-      </div>`:''}
-      ${period!=='custom'?`<span style="font-size:13px;font-weight:700;color:var(--gray-600);margin-left:auto">${periodoLabel}</span>`:''}
-    </div>
-  </div>
-
   <div class="row3">
     <div class="stat"><div class="lbl">${totBalLabel}</div><div class="val" style="color:${totBalColor}">${R(totBal)}</div></div>
     <div class="stat"><div class="lbl">Receitas ${periodoLabel}</div><div class="val" style="color:#1D9E75">${R(rec)}</div></div>
@@ -2169,7 +2273,6 @@ function rFixas(m){
 
   A.lastTransTab='fixas';
   m.innerHTML=`
-  ${transSubNav('fixas')}
   <div class="row3">
     <div class="stat"><div class="lbl">Despesas fixas</div><div class="val" style="color:#E24B4A">${R(totalExp)}</div></div>
     <div class="stat"><div class="lbl">Receitas fixas</div><div class="val" style="color:#1D9E75">${R(totalRec)}</div></div>
@@ -2178,14 +2281,8 @@ function rFixas(m){
 
   <div class="card">
     <div class="ph">
-      <h3><span>📌</span> Contas Fixas</h3>
+      <h3><span>📌</span> Contas Fixas <span style="font-size:12px;color:var(--gray-400);font-weight:700;margin-left:6px">· ${MNLONG[mo]} ${y}</span></h3>
       <button class="btn-r" onclick="openFixaForm()"><span>+</span> Novo</button>
-    </div>
-
-    <div class="month-nav" style="margin-bottom:0">
-      ${prevOk?`<button class="nav-btn" onclick="A.fixaMes='${prevMes}';render()"><span>‹</span> ${MNLONG[prevMes.split('-')[1]]}</button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>‹</span></button>`}
-      <span>${MNLONG[mo]} ${y}</span>
-      ${nextOk?`<button class="nav-btn" onclick="A.fixaMes='${nextMes}';render()"> ${MNLONG[nextMes.split('-')[1]]} <span>›</span></button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>›</span></button>`}
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin:8px 0 4px">
@@ -2329,11 +2426,6 @@ function rProjecao(m){
 
   m.innerHTML=`
   <div class="card">
-    <div class="month-nav">
-      <button class="nav-btn" onclick="A.projViewYear=${ano-1};render()"><span>‹</span></button>
-      <span style="font-size:15px;font-weight:600">${ano}</span>
-      <button class="nav-btn" onclick="A.projViewYear=${ano+1};render()"><span>›</span></button>
-    </div>
     <div class="row3" style="margin-bottom:12px">
       <div class="stat" onclick="goToLanc('receita')" title="Ver receitas do ano" style="cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(29,158,117,.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''"><div class="lbl">Receita anual projetada <span style="font-size:10px;opacity:.55">↗</span></div><div class="val" style="color:#1D9E75">${R(totalRec)}</div></div>
       <div class="stat" onclick="goToLanc('despesa')" title="Ver despesas do ano" style="cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(226,75,74,.18)'" onmouseout="this.style.transform='';this.style.boxShadow=''"><div class="lbl">Despesa anual projetada <span style="font-size:10px;opacity:.55">↗</span></div><div class="val" style="color:#E24B4A">${R(totalExp)}</div></div>
@@ -2439,12 +2531,6 @@ function rLanc(m){
       <button class="period-btn ${A.lancPeriod==='all'?'on':''}" onclick="A.lancPeriod='all';render()">Ano todo</button>
       <button class="period-btn ${A.lancPeriod==='custom'?'on':''}" onclick="A.lancPeriod='custom';render()">Período</button>
     </div>
-    ${A.lancPeriod==='mes'?`
-    <div class="month-nav" style="margin-bottom:0">
-      ${prevOk?`<button class="nav-btn" onclick="A.lancMes='${prevMes}';render()"><span>‹</span> ${MNLONG[prevMes.split('-')[1]]}</button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>‹</span></button>`}
-      <span>${MNLONG[lm]} ${ano}</span>
-      ${nextOk?`<button class="nav-btn" onclick="A.lancMes='${nextMes}';render()"> ${MNLONG[nextMes.split('-')[1]]} <span>›</span></button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>›</span></button>`}
-    </div>`:''}
     ${A.lancPeriod==='custom'?`
     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:4px 0">
       <input type="date" value="${A.lancDtIni}" onblur="A.lancDtIni=this.value;render()" class="painel-date-input"/>
@@ -2684,7 +2770,6 @@ function rLanc(m){
 
   A.lastTransTab='lanc';
   m.innerHTML=`
-  ${transSubNav('lanc')}
   <div class="row3">
     <div class="stat"><div class="lbl">Receitas</div><div class="val" style="color:#059669">${R(tR)}</div></div>
     <div class="stat"><div class="lbl">Despesas</div><div class="val" style="color:#DC2626">${R(tE)}</div></div>
@@ -2693,7 +2778,7 @@ function rLanc(m){
 
   <div class="card">
     <div class="ph">
-      <h3><span>☰</span> Lançamentos</h3>
+      <h3><span>☰</span> Lançamentos ${A.lancPeriod==='mes'?`<span style="font-size:12px;color:var(--gray-400);font-weight:700;margin-left:6px">· ${MNLONG[lm]} ${ano}</span>`:''}</h3>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         ${A.bulkMode
           ? `<button onclick="bulkSelectAll()" style="font-size:13px;padding:7px 13px;border-radius:9px;border:1px solid #CBD5E1;background:#F1F5F9;color:#475569;cursor:pointer;font-family:var(--font-sans);font-weight:600">☑ Todos</button>
@@ -2711,12 +2796,6 @@ function rLanc(m){
       </div>
     </div>
 
-    ${A.lancPeriod==='mes'?`
-    <div class="month-nav" style="margin-bottom:0;padding:0 14px 10px">
-      ${prevOk?`<button class="nav-btn" onclick="A.lancMes='${prevMes}';render()"><span>‹</span> ${MNLONG[prevMes.split('-')[1]]}</button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>‹</span></button>`}
-      <span>${MNLONG[lm]} ${ano}</span>
-      ${nextOk?`<button class="nav-btn" onclick="A.lancMes='${nextMes}';render()"> ${MNLONG[nextMes.split('-')[1]]} <span>›</span></button>`:`<button class="nav-btn" disabled style="opacity:.3;cursor:default"><span>›</span></button>`}
-    </div>`:''}
     ${A.lancPeriod==='custom'?`
     <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:4px 14px 10px">
       <input type="date" value="${A.lancDtIni}" onblur="A.lancDtIni=this.value;render()" class="painel-date-input"/>
@@ -3154,7 +3233,6 @@ function rPlan(m){
 
   A.lastTransTab='plan';
   m.innerHTML=`
-  ${transSubNav('plan')}
   <div class="row3">
     <div class="stat"><div class="lbl">A receber</div><div class="val" style="color:#1D9E75">${R(tR)}</div></div>
     <div class="stat"><div class="lbl">A pagar</div><div class="val" style="color:#E24B4A">${R(tE)}</div></div>
