@@ -4583,6 +4583,22 @@ function dbClear() {
   location.reload();
 }
 
+// ── Apaga do navegador os dados de CONTEÚDO (contas, transações, senhas, etc.)
+//    do usuário/sessão ativa no momento — usada ao sair e ao fechar a aba.
+//    NÃO apaga a lista de usuários/logins (GLOBAL_KEY), só os dados financeiros.
+function _wipeActiveContentFromStorage(){
+  try { localStorage.removeItem(_activeContentKey()); } catch(e) {}
+  if (_opfsOk) {
+    try {
+      navigator.storage.getDirectory().then(root => {
+        root.removeEntry(OPFS_FILE).catch(()=>{});
+      }).catch(()=>{});
+    } catch(e) {}
+  }
+}
+// Ao fechar a aba/janela ou recarregar a página, apaga os dados salvos no navegador
+window.addEventListener('beforeunload', _wipeActiveContentFromStorage);
+
 // Intercepta o render original para auto-salvar após cada operação
 const _render = render;
 window.render = function() {
@@ -7575,6 +7591,7 @@ function _loginErrCad(msg) {
 // ── Logout ──
 function appLogout(){
   _showConfirm('Sair do sistema?','Sua sessão será encerrada.',async ()=>{
+    _wipeActiveContentFromStorage(); // apaga os dados salvos no navegador ANTES de limpar a sessão
     _sessionClear();
     vaultLock(); // trava o cofre ao fazer logout
     A.cofre={locked:true,masterSet:false,key:null,senhasDecrypt:null};
