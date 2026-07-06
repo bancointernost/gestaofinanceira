@@ -3854,12 +3854,26 @@ function _confirmOk(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')_confirmCancel();});
 
 /* ─── BANCO DE DADOS — Local + Firebase (opcional) ─── */
-const DB_KEY        = 'pfp_v11_data';    // chave localStorage
+const DB_KEY        = 'pfp_v11_data';    // chave localStorage LEGADA (modo livre, sem usuários cadastrados)
 const OPFS_FILE     = 'pfp_data.json';   // arquivo OPFS
 const FS_HANDLE_KEY = 'pfp_storage_mode'; // 'disk' | 'opfs' | 'local'
 
 // Campos do estado A que devem ser persistidos
 const DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios'];
+
+// ── Separação de dados por usuário ──────────────────────────────────
+// GLOBAL_FIELDS: compartilhado entre todos (lista de contas de login + contador de IDs)
+// USER_FIELDS:   dados privados de CADA usuário (contas financeiras, transações, senhas, etc.)
+const GLOBAL_KEY         = 'pfp_v11_global';
+const GLOBAL_FIELDS      = ['usuarios','nid'];
+const USER_FIELDS        = ['familia','cats','accounts','fixas','txs','senhas'];
+const MIGRATION_FLAG_KEY = 'pfp_v11_migrated_per_user';
+function userDataKey(id){ return 'pfp_v11_user_' + id; }
+// Chave de localStorage onde os dados de CONTEÚDO do usuário ativo devem ser lidos/gravados
+function _activeContentKey(){
+  const s = window._appSession;
+  return (s && s.id != null) ? userDataKey(s.id) : DB_KEY;
+}
 
 // ── Detecção de suporte ──
 const _opfsOk = typeof navigator !== 'undefined' &&
@@ -4315,10 +4329,29 @@ function _lsUsageKB() { return _lastUsageKB; }
 
 // ── dbSave: Disco / OPFS / localStorage ──
 function dbSave() {
+  // ── 1) Dados GLOBAIS: lista de usuários de login + contador de IDs ──
+  // Sempre gravados na mesma chave, independente de quem está logado.
+  const globalPayload = {};
+  GLOBAL_FIELDS.forEach(k => { globalPayload[k] = A[k]; });
+  globalPayload._savedAt = new Date().toISOString();
+  try { localStorage.setItem(GLOBAL_KEY, JSON.stringify(globalPayload)); } catch(e) {}
+
+  // ── 2) Dados de CONTEÚDO (contas, transações, categorias, senhas, etc.) ──
+  // Ficam isolados por usuário logado. Se não há usuários cadastrados
+  // (modo livre) OU ainda ninguém logou nesta sessão, não grava nada de
+  // conteúdo — evita misturar dados de contas diferentes.
+  const s = window._appSession;
+  const loginOn = _loginRequired();
+  if (loginOn && !(s && s.id != null)) {
+    _storageUsageKB().then(kb => { _lastUsageKB = kb; _updateDbStatus(); });
+    return;
+  }
+
   const payload = {};
-  DB_FIELDS.forEach(k => { payload[k] = A[k]; });
+  USER_FIELDS.forEach(k => { payload[k] = A[k]; });
   payload._savedAt = new Date().toISOString();
   const serialized = JSON.stringify(payload);
+  const activeKey = _activeContentKey();
 
   if (_storageMode === 'disk' && _diskFileHandle) {
     // Modo disco: salva no arquivo escolhido pelo usuário
@@ -4332,7 +4365,7 @@ function dbSave() {
       }
     });
     // Espelho no localStorage para carregamento rápido
-    try { localStorage.setItem(DB_KEY, serialized); } catch(e) {}
+    try { localStorage.setItem(activeKey, serialized); } catch(e) {}
     if (_opfsOk) {
       _opfsWrite(serialized).catch(() => {});
     }
@@ -4341,13 +4374,13 @@ function dbSave() {
       console.warn('OPFS write error (silenciado):', e);
     });
     // Espelho leve no localStorage para leitura síncrona inicial (comprimido)
-    try { localStorage.setItem(DB_KEY, serialized); } catch(e) { /* ignora quota */ }
+    try { localStorage.setItem(activeKey, serialized); } catch(e) { /* ignora quota */ }
   } else {
     // Fallback puro localStorage
     try {
       const kb = (serialized.length * 2) / 1024;
       if (kb > 4096) toast('⚠️ Armazenamento quase cheio! Faça um backup.', '#D97706', 5000);
-      localStorage.setItem(DB_KEY, serialized);
+      localStorage.setItem(activeKey, serialized);
     } catch(e) {
       if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
         toast('🚨 Armazenamento cheio! Exporte um backup imediatamente.', '#DC2626', 8000);
@@ -4424,35 +4457,79 @@ async function _ensureDefaultAdmin(){
   }
 }
 
-async function dbLoadAsync() {
-  let raw = null;
-
-  if (_storageMode === 'disk' && _diskFileHandle) {
-    raw = await _diskRead();
-  }
-
-  if (!raw && _opfsOk) {
-    raw = await _opfsRead();
-  }
-
-  if (!raw) {
-    // Fallback síncrono legacy
-    try { raw = localStorage.getItem(DB_KEY); } catch(e) {}
-  }
-  if (!raw) return false;
-  try {
-    const data = JSON.parse(raw);
-    DB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
-    // Garante admin padrão mesmo após carregar dados do Firebase
-    await _ensureDefaultAdmin();
-    return true;
-  } catch(e) {
-    console.error('Erro ao carregar dados:', e);
-    return false;
-  }
+// ── Migrações de schema que precisam rodar sempre que dados de CONTEÚDO
+//    são carregados (no boot, no modo livre, e a cada troca de usuário) ──
+function _runContentSchemaMigrations(){
+  (A.fixas||[]).forEach(f=>{
+    if(!f.inicioEm){
+      const pagMeses=Object.keys(f.pagamentos||{}).sort();
+      f.inicioEm=pagMeses.length>0?pagMeses[0]:thisMonth();
+    }
+  });
+  (A.accounts||[]).forEach(a=>{
+    if(a.iniDate===undefined) a.iniDate='';
+    if(a.iniDateActive===undefined) a.iniDateActive=false;
+    a.iniDateActive=(a.iniDateActive===true||a.iniDateActive==='true');
+  });
+  migrateFamilia();
+  if(!A.ctpExp) A.ctpExp={};
+  if(!A.famForm) A.famForm={name:'',parentId:null};
+  if(A.famSelId===undefined) A.famSelId=null;
+  if(!A.famExpanded) A.famExpanded={};
 }
 
-// Versão síncrona legada (só localStorage) para compatibilidade
+async function dbLoadAsync() {
+  // ── 1) Carrega dados GLOBAIS (lista de usuários + contador de IDs) ──
+  let globalRaw = null;
+  try { globalRaw = localStorage.getItem(GLOBAL_KEY); } catch(e) {}
+
+  // Lê o blob legado (versões antigas — um único conjunto de dados compartilhado)
+  let legacyRaw = null;
+  if (_storageMode === 'disk' && _diskFileHandle) legacyRaw = await _diskRead();
+  if (!legacyRaw && _opfsOk) legacyRaw = await _opfsRead();
+  if (!legacyRaw) { try { legacyRaw = localStorage.getItem(DB_KEY); } catch(e) {} }
+
+  let legacyData = null;
+  if (legacyRaw) { try { legacyData = JSON.parse(legacyRaw); } catch(e) {} }
+
+  if (globalRaw) {
+    try {
+      const g = JSON.parse(globalRaw);
+      GLOBAL_FIELDS.forEach(k => { if (g[k] !== undefined) A[k] = g[k]; });
+    } catch(e) {}
+  } else if (legacyData) {
+    // Primeira execução após a atualização: extrai usuários/contador do blob antigo
+    GLOBAL_FIELDS.forEach(k => { if (legacyData[k] !== undefined) A[k] = legacyData[k]; });
+  }
+
+  const loginOn = _loginRequired();
+  let hadData = false;
+
+  if (!loginOn) {
+    // ── Modo livre (nenhum usuário cadastrado): comportamento antigo, dados únicos e compartilhados ──
+    if (legacyData) {
+      USER_FIELDS.forEach(k => { if (legacyData[k] !== undefined) A[k] = legacyData[k]; });
+      hadData = true;
+    }
+  } else if (legacyData && !localStorage.getItem(MIGRATION_FLAG_KEY)) {
+    // ── Migração única: dados antigos compartilhados viram os dados privados do admin padrão ──
+    const adminUser = (A.usuarios||[]).find(u => u.papel === 'admin');
+    if (adminUser) {
+      const migPayload = {};
+      USER_FIELDS.forEach(k => { migPayload[k] = legacyData[k] !== undefined ? legacyData[k] : A[k]; });
+      migPayload._savedAt = new Date().toISOString();
+      try { localStorage.setItem(userDataKey(adminUser.id), JSON.stringify(migPayload)); } catch(e) {}
+    }
+    try { localStorage.setItem(MIGRATION_FLAG_KEY, '1'); } catch(e) {}
+  }
+
+  _runContentSchemaMigrations();
+  // Garante admin padrão mesmo após carregar dados do Firebase
+  await _ensureDefaultAdmin();
+  return hadData || !!globalRaw || !!legacyData;
+}
+
+// Versão síncrona legada (só localStorage, modo livre) para compatibilidade
 function dbLoad() {
   try {
     const raw = localStorage.getItem(DB_KEY);
@@ -4463,9 +4540,36 @@ function dbLoad() {
   } catch(e) { return false; }
 }
 
+// ── Carrega os dados privados de um usuário específico (troca de conta local) ──
+async function _loadUserContent(user){
+  // Reseta os campos de conteúdo para os valores "seed" antes de carregar,
+  // evitando que dados do usuário anterior fiquem visíveis/sejam salvos por engano
+  // na conta recém-logada.
+  const freshSeed = JSON.parse(JSON.stringify(_SEED_DATA));
+  USER_FIELDS.forEach(k => { A[k] = freshSeed[k]; });
+
+  let raw = null;
+  try { raw = localStorage.getItem(userDataKey(user.id)); } catch(e) {}
+  if (raw) {
+    try {
+      const data = JSON.parse(raw);
+      USER_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
+    } catch(e) { console.error('Erro ao carregar dados do usuário:', e); }
+  }
+  _runContentSchemaMigrations();
+}
+
 function dbClear() {
   if (!confirm('⚠️ Tem certeza que deseja apagar TODOS os dados salvos?\nEsta ação não pode ser desfeita.')) return;
   localStorage.removeItem(DB_KEY);
+  localStorage.removeItem(GLOBAL_KEY);
+  localStorage.removeItem(MIGRATION_FLAG_KEY);
+  // Remove os dados privados de todos os usuários
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('pfp_v11_user_'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
   if (_opfsOk) {
     navigator.storage.getDirectory().then(root => {
       root.removeEntry(OPFS_FILE).catch(()=>{});
@@ -4492,7 +4596,7 @@ function _updateDbStatus() {
   const el = document.getElementById('db-status');
   if (!el) return;
   try {
-    const raw = localStorage.getItem(DB_KEY);
+    const raw = localStorage.getItem(_activeContentKey());
     if (!raw) { el.textContent = '⚫ Sem dados'; return; }
     const data = JSON.parse(raw);
     const txCount = (data.txs||[]).length;
@@ -6079,6 +6183,7 @@ function delUsuario(id){
   _showConfirm('Excluir usuário?','Esta ação não pode ser desfeita.',()=>{
     A.usuarios=(A.usuarios||[]).filter(u=>u.id!==id);
     if(A.usuarioMostrar)delete A.usuarioMostrar[id];
+    try{ localStorage.removeItem(userDataKey(id)); }catch(e){}
     toast('Usuário excluído.','#DC2626');render();
   });
 }
@@ -7171,6 +7276,7 @@ async function appLogin(){
 
   _hideLoginScreen();
   _sessionSet(user);
+  await _loadUserContent(user);
 
   if(user._senhaDefault){
     toast('⚠️ Você está usando a senha padrão. Vá em Senhas → Usuários e altere sua senha!','#D97706',7000);
@@ -7324,6 +7430,7 @@ async function appLoginUnified() {
 
   _hideLoginScreen();
   _sessionSet(user);
+  await _loadUserContent(user);
 
   if (user._senhaDefault) {
     toast('⚠️ Você está usando a senha padrão. Vá em Senhas → Usuários e altere sua senha!', '#D97706', 7000);
@@ -7471,6 +7578,10 @@ function appLogout(){
     _sessionClear();
     vaultLock(); // trava o cofre ao fazer logout
     A.cofre={locked:true,masterSet:false,key:null,senhasDecrypt:null};
+    // Limpa os dados de conteúdo em memória (contas, transações, etc.) para
+    // que não fiquem visíveis nem sejam salvos por engano na conta errada.
+    const freshSeed = JSON.parse(JSON.stringify(_SEED_DATA));
+    USER_FIELDS.forEach(k => { A[k] = freshSeed[k]; });
     // Se estava autenticado via Firebase, deslogar do Firebase também
     if (window._fbUser && window._fb) {
       try { await window._fb.signOut(); } catch(e) {}
