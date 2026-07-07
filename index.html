@@ -991,7 +991,6 @@ html.dark .senha-toggle:hover{color:#c8daf0}
       </button>
       <div class="nav-submenu" id="trans-submenu">
         <button class="tab sub-tab" onclick="goTransSub('lanc')"><span aria-hidden="true">☰</span> Lançamentos</button>
-        <button class="tab sub-tab" onclick="goTransSub('plan')"><span aria-hidden="true">📅</span> Planejar</button>
         <button class="tab sub-tab" onclick="goTransSub('fixas')"><span aria-hidden="true">↺</span> Contas Fixas</button>
       </div>
     </div>
@@ -1907,7 +1906,7 @@ function render(){
   updSel();const m=document.getElementById('main');
   const t=A.tab;
   // Sincroniza aba principal ativa na sidebar
-  const transAba = ['lanc','plan','fixas'];
+  const transAba = ['lanc','fixas'];
   const cfgAba = ['cats','senhas','controles'];
   document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('on'));
   const transGroup=document.getElementById('nav-transacoes');
@@ -1917,7 +1916,7 @@ function render(){
     if(parentBtn) parentBtn.classList.add('on');
     if(transGroup) transGroup.classList.add('open');
     const subBtns=document.querySelectorAll('#trans-submenu .sub-tab');
-    const idx={lanc:0,plan:1,fixas:2}[t];
+    const idx={lanc:0,fixas:1}[t];
     subBtns.forEach((b,i)=>b.classList.toggle('on',i===idx));
   } else {
     if(transGroup) transGroup.classList.remove('open');
@@ -1942,7 +1941,7 @@ function render(){
       const btn=document.querySelector('.tab[onclick*="contas"]');if(btn)btn.classList.add('on');
     }
   }
-  if(t==='painel')rPainel(m);else if(t==='lanc')rLanc(m);else if(t==='plan')rPlan(m);
+  if(t==='painel')rPainel(m);else if(t==='lanc')rLanc(m);
   else if(t==='fixas')rFixas(m);else if(t==='projecao')rProjecao(m);
   else if(t==='contas')rContas(m);else if(t==='senhas')rSenhas(m);else if(t==='relatorio')rRelatorio(m);else if(t==='controles')rControles(m);else rCats(m);
 }
