@@ -1028,7 +1028,7 @@ html.dark .senha-toggle:hover{color:#c8daf0}
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="Abrir menu" aria-label="Abrir menu">☰</button>
     <div id="mes-filt" style="display:none;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
     <div id="ano-filt" style="display:flex;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
-    <select id="ctlSel" onchange="switchControle(this.value)" title="Trocar de controle" style="display:none"></select>
+    <div id="ctlMultiWrap" onclick="event.stopPropagation()" style="position:relative;display:none;flex-shrink:0"></div>
     <select id="accSel" onchange="A.filt=this.value;render()"></select>
   </div>
 
@@ -1789,14 +1789,34 @@ function _loadingHide() {
 }
 function updSel(){
   // seletor de controle (só aparece quando há mais de um controle cadastrado)
-  const cs=document.getElementById('ctlSel');
-  if(cs){
+  // permite marcar vários controles para uma visualização combinada (somente leitura)
+  const wrap=document.getElementById('ctlMultiWrap');
+  if(wrap){
     if(A.controles && A.controles.length>1){
-      cs.style.display='';
-      cs.innerHTML=A.controles.map(c=>`<option value="${c.id}" ${c.id===A.controleAtivo?'selected':''}>${(c.icone||'💼')} ${H(c.nome)}</option>`).join('');
+      wrap.style.display='';
+      const isDark=document.documentElement.classList.contains('dark');
+      const hoverBg=isDark?'#1e2d4a':'#F1F5F9';
+      const selIds=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?A.ctlMultiSel:[A.controleAtivo];
+      const isMulti=selIds.length>1;
+      const ativo=A.controles.find(c=>c.id===A.controleAtivo);
+      const label=isMulti?`🗂️ ${selIds.length} controles`:`${ativo?(ativo.icone||'💼'):'💼'} ${ativo?H(ativo.nome):''}`;
+      wrap.innerHTML=`
+        <button type="button" onclick="toggleCtlPanel()" title="Selecionar controle(s) para visualizar" style="display:flex;align-items:center;gap:5px;background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:5px 10px;font-size:12px;font-weight:600;color:var(--color-text-primary);cursor:pointer;white-space:nowrap;font-family:inherit">${label}<span style="font-size:9px">▾</span></button>
+        <div id="ctlMultiPanel" style="display:${_ctlPanelOpen?'block':'none'};position:absolute;top:calc(100% + 4px);left:0;z-index:80;background:var(--color-background-primary);border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:230px;max-height:320px;overflow-y:auto;padding:8px">
+          <div style="font-size:10.5px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.3px;padding:2px 6px 6px">Visualizar controle(s)</div>
+          ${A.controles.map(c=>`
+            <label style="display:flex;align-items:center;gap:8px;padding:6px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--color-text-primary)" onmouseover="this.style.background='${hoverBg}'" onmouseout="this.style.background='transparent'">
+              <input type="checkbox" ${selIds.includes(c.id)?'checked':''} onchange="toggleCtlSel(${c.id})" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB;flex-shrink:0">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.icone||'💼'} ${H(c.nome)}</span>
+            </label>`).join('')}
+          <div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-100)">
+            <button type="button" onclick="ctlSelAll()" style="flex:1;font-size:11px;font-weight:600;color:var(--color-text-secondary);background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:6px;padding:5px;cursor:pointer;font-family:inherit">Selecionar todos</button>
+          </div>
+          ${isMulti?'<div style="font-size:11px;color:#D97706;padding:7px 4px 0;line-height:1.4">🔒 Com mais de 1 selecionado, a visualização é combinada e somente leitura. Marque só 1 para editar.</div>':''}
+        </div>`;
     } else {
-      cs.style.display='none';
-      cs.innerHTML='';
+      wrap.style.display='none';
+      wrap.innerHTML='';
     }
   }
   // seletor de conta
@@ -2176,7 +2196,7 @@ function iRow(t,click,rowIdx){
     }
     <div class="tx-cell tx-cell-main" style="${cellBg}">
       <span class="tx-desc">${H(t.desc)}</span>
-      <span class="tx-chips">${famHtml}${refHtml}</span>
+      <span class="tx-chips">${famHtml}${refHtml}${_ctlBadgeHtml(t)}</span>
     </div>
     <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${acc}</div>
     <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${isT?'Transferência':(cat.name)}</span></span></div>
@@ -2281,7 +2301,7 @@ function rFixas(m){
       <div class="tx-cell tx-cell-icon"><span class="tx-icon" style="background:${inativa?'var(--gray-100)':bgIc};color:${inativa?'var(--gray-400)':dc}">${inativa?'⏸':f.icon||arrow}</span></div>
       <div class="tx-cell tx-cell-main">
         <span class="tx-desc" style="${pago?'text-decoration:line-through;color:var(--color-text-tertiary)':''}">${H(f.desc)}</span>
-        <span class="tx-chips">${f.recur&&f.recur!=='mensal'?`<span class="badge b-rep" style="font-size:9px">${f.recur}</span>`:''}<span style="font-size:13px;color:var(--color-text-tertiary)">dia ${f.diaVenc}</span>${vencInfo}</span>
+        <span class="tx-chips">${f.recur&&f.recur!=='mensal'?`<span class="badge b-rep" style="font-size:9px">${f.recur}</span>`:''}<span style="font-size:13px;color:var(--color-text-tertiary)">dia ${f.diaVenc}</span>${vencInfo}${_ctlBadgeHtml(f)}</span>
       </div>
       <div class="tx-cell tx-cell-acc" title="${accBy(f.accId).name}">${accBy(f.accId).name}</div>
       <div class="tx-cell tx-cell-cat"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${cat.name}</span></span></div>
@@ -3403,7 +3423,7 @@ function iRowPlan(t,rowIdx){
     <div class="tx-cell tx-cell-icon" style="${cellBg}"><span class="tx-icon" style="background:${bgIc};color:${dc}">${arrow}</span></div>
     <div class="tx-cell tx-cell-main" style="${cellBg}">
       <span class="tx-desc">${H(t.desc)}</span>
-      <span class="tx-chips"><span class="badge ${ov?'b-venc':'b-pend'}" style="font-size:9px">${ov?'Vencido':'Pendente'}</span></span>
+      <span class="tx-chips"><span class="badge ${ov?'b-venc':'b-pend'}" style="font-size:9px">${ov?'Vencido':'Pendente'}</span>${_ctlBadgeHtml(t)}</span>
     </div>
     <div class="tx-cell tx-cell-acc" style="${cellBg};color:var(--gray-500);">${accBy(t.accId).name}</div>
     <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${cat.name}</span></span></div>
@@ -3487,7 +3507,7 @@ function rContas(m){
       + '<div class="acc-ic" style="background:' + at.bg + '">' + at.ic + '</div>'
       + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:14px;font-weight:600;color:var(--gray-900)">' + H(a.name) + '</div>'
-        + '<div style="font-size:12px;color:var(--gray-500)">' + a.type + (a.familia?' · <span style="color:#7C3AED;font-weight:600">👤 '+H(a.familia)+'</span>':'') + '</div>'
+        + '<div style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + '<span>' + a.type + (a.familia?' · <span style="color:#7C3AED;font-weight:600">👤 '+H(a.familia)+'</span>':'') + '</span>' + _ctlBadgeHtml(a) + '</div>'
         + (a.obs ? '<div style="font-size:11px;color:var(--gray-400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H(a.obs) + '</div>' : '')
       + '</div>'
       + '<div style="text-align:right;flex-shrink:0;margin-right:4px">'
@@ -3586,6 +3606,7 @@ function switchControle(id){
   const data=cached?JSON.parse(JSON.stringify(cached)):_blankControleData();
   CONTROLE_CONTENT_FIELDS.forEach(k=>{ A[k]=data[k]; });
   A.controleAtivo=id;
+  A.ctlMultiSel=[id];
   A.filt='all';
   A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;A.delCtl=null;
   const nome=(A.controles.find(c=>c.id===id)||{}).nome||'';
@@ -4640,7 +4661,109 @@ function _ensureControles(){
   if(A.controleAtivo==null || !A.controles.some(c=>c.id===A.controleAtivo)){
     A.controleAtivo=A.controles[0].id;
   }
+  // ── Seleção múltipla de controles (visualização combinada) ──
+  // Auto-corrige se estiver vazia, ausente, ou referenciar controles que não existem mais.
+  if(!Array.isArray(A.ctlMultiSel) || A.ctlMultiSel.length===0 || !A.ctlMultiSel.every(id=>A.controles.some(c=>c.id===id))){
+    A.ctlMultiSel=[A.controleAtivo];
+  }
 }
+
+// ── Visualização combinada de múltiplos Controles (somente leitura) ──
+// Quando A.ctlMultiSel tem mais de 1 id, as telas de conteúdo passam a
+// enxergar dados mesclados de todos os controles selecionados (cada item
+// marcado com _ctlId/_ctlNome/_ctlIcone para exibir a "etiqueta" de origem).
+// Como os IDs são gerados por um contador global (A.nid), não há colisão
+// entre itens de controles diferentes ao mesclar.
+let _ctlPanelOpen=false;
+function toggleCtlPanel(){ _ctlPanelOpen=!_ctlPanelOpen; render(); }
+document.addEventListener('click', function(e){
+  if(_ctlPanelOpen){
+    const wrap=document.getElementById('ctlMultiWrap');
+    if(wrap && !wrap.contains(e.target)){ _ctlPanelOpen=false; render(); }
+  }
+});
+function _multiActive(){ return Array.isArray(A.ctlMultiSel) && A.ctlMultiSel.length>1; }
+function _ctlGuard(){
+  if(_multiActive()){
+    toast('🔒 Selecione apenas 1 controle para editar — a visualização combinada é somente leitura.','#D97706',4500);
+    return true;
+  }
+  return false;
+}
+function _ctlContentFor(id){
+  if(id===A.controleAtivo){
+    const o={}; CONTROLE_CONTENT_FIELDS.forEach(k=>{ o[k]=A[k]; }); return o;
+  }
+  return (A.controlesCache && A.controlesCache[id]) ? A.controlesCache[id] : _blankControleData();
+}
+function _mergedField(field){
+  const ids=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?A.ctlMultiSel:[A.controleAtivo];
+  const out=[];
+  ids.forEach(id=>{
+    const c=A.controles.find(x=>x.id===id); if(!c) return;
+    const data=_ctlContentFor(id);
+    (data[field]||[]).forEach(item=>{ out.push({...item,_ctlId:id,_ctlNome:c.nome,_ctlIcone:c.icone||'💼'}); });
+  });
+  return out;
+}
+function toggleCtlSel(id){
+  id=Number(id);
+  let sel=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?[...A.ctlMultiSel]:[A.controleAtivo];
+  if(sel.includes(id)){
+    if(sel.length<=1){ toast('Selecione ao menos um controle.','#D97706'); return; }
+    sel=sel.filter(x=>x!==id);
+    A.ctlMultiSel=sel;
+    if(sel.length===1 && sel[0]!==A.controleAtivo){ switchControle(sel[0]); return; }
+  } else {
+    sel.push(id);
+    A.ctlMultiSel=sel;
+  }
+  render();
+}
+function ctlSelAll(){ A.ctlMultiSel=A.controles.map(c=>c.id); render(); }
+function _ctlBadgeHtml(item){
+  if(!item || !item._ctlNome) return '';
+  return `<span title="Controle: ${H(item._ctlNome)}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#1E3A8A;background:#DBEAFE;border-radius:99px;padding:1px 7px;white-space:nowrap;flex-shrink:0">${item._ctlIcone||'💼'} ${H(item._ctlNome)}</span>`;
+}
+function _ctlMultiNoteHtml(){
+  const ids=A.ctlMultiSel||[];
+  const nomes=ids.map(id=>{ const c=A.controles.find(x=>x.id===id); return c?`${c.icone||'💼'} ${H(c.nome)}`:''; }).filter(Boolean).join(' + ');
+  return `<div style="display:flex;align-items:center;gap:8px;background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A;border-radius:var(--radius-md);padding:8px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600">🗂️📊 Visualização combinada (somente leitura): ${nomes}</div>`;
+}
+// Faz as telas de conteúdo enxergarem os dados mesclados quando há mais de
+// 1 controle selecionado, e bloqueia ações de edição/exclusão nesse modo.
+(function _wireMultiControleViews(){
+  const MERGE_FIELDS=['accounts','txs','cats','fixas','familia'];
+  const VIEW_FNS=['rPainel','rLanc','rPlan','rFixas','rProjecao','rContas','rRelatorio'];
+  VIEW_FNS.forEach(name=>{
+    const orig=window[name];
+    if(typeof orig!=='function') return;
+    window[name]=function(m){
+      if(_multiActive()){
+        const backup={};
+        MERGE_FIELDS.forEach(k=>{ backup[k]=A[k]; A[k]=_mergedField(k); });
+        try{ orig(m); } finally { MERGE_FIELDS.forEach(k=>{ A[k]=backup[k]; }); }
+        if(m) m.insertAdjacentHTML('afterbegin', _ctlMultiNoteHtml());
+      } else {
+        orig(m);
+      }
+    };
+  });
+  const GUARD_FNS=[
+    'openFixaForm','editFixa','saveFixa','askDelFixa','marcarPago','desmarcarPago','toggleAtiva',
+    'openForm','editTx','copyTx','saveTx','askDel','bulkDelete',
+    'openAccForm','editAcc','saveAcc','askDelAcc',
+    'openPlanForm','editPlan','savePlan','launch'
+  ];
+  GUARD_FNS.forEach(name=>{
+    const orig=window[name];
+    if(typeof orig!=='function') return;
+    window[name]=function(...args){
+      if(_ctlGuard()) return;
+      return orig.apply(this,args);
+    };
+  });
+})();
 
 // ── Migrações de schema que precisam rodar sempre que dados de CONTEÚDO
 //    são carregados (no boot, no modo livre, e a cada troca de usuário) ──
@@ -6920,7 +7043,7 @@ function rRelatorio(m){
     }
     return '<tr style="'+rowBg+'">'
       +dateTd
-      +'<td>'+H(t.desc)+planBadge+'</td>'
+      +'<td>'+H(t.desc)+planBadge+(t._ctlNome?' <span title="Controle: '+H(t._ctlNome)+'" style="font-size:9px;font-weight:700;color:#1E3A8A;background:#DBEAFE;border-radius:99px;padding:1px 6px;margin-left:4px;white-space:nowrap">'+(t._ctlIcone||'💼')+' '+H(t._ctlNome)+'</span>':'')+'</td>'
       +'<td style="color:#64748b">'+H(acc.name)+'</td>'
       +'<td><span class="rt-cat-dot" style="background:'+cat.color+'"></span>'+H(cat.name)+'</td>'
       +'<td class="r" style="'+valStyle+'">'+sign+R(t.val)+'</td>'
