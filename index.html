@@ -1007,6 +1007,7 @@ html.dark .senha-toggle:hover{color:#c8daf0}
         <button class="tab sub-tab" onclick="goCfgSub('cats')"><span aria-hidden="true">🗂️</span> Categorias</button>
         <button class="tab sub-tab" onclick="goCfgSub('familia')"><span aria-hidden="true">👥</span> Família</button>
         <button class="tab sub-tab" onclick="goCfgSub('senhas')"><span aria-hidden="true">🔑</span> Senhas</button>
+        <button class="tab sub-tab" onclick="goCfgSub('controles')"><span aria-hidden="true">📂</span> Controles</button>
       </div>
     </div>
   </nav>
@@ -1027,6 +1028,7 @@ html.dark .senha-toggle:hover{color:#c8daf0}
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="Abrir menu" aria-label="Abrir menu">☰</button>
     <div id="mes-filt" style="display:none;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
     <div id="ano-filt" style="display:flex;align-items:center;gap:2px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:3px 4px;flex-shrink:0"></div>
+    <select id="ctlSel" onchange="switchControle(this.value)" title="Trocar de controle" style="display:none"></select>
     <select id="accSel" onchange="A.filt=this.value;render()"></select>
   </div>
 
@@ -1365,6 +1367,11 @@ let A={
   painelPeriod:'mes',painelMes:thisMonth(),painelDtIni:'',painelDtFim:'',
   tf:{type:'despesa',desc:'',val:'',date:today(),catId:1,accId:1,accDest:2,recur:'none',obs:'',familia:'Eu'},
   af:{name:'',type:'Conta corrente',ini:'',iniDate:'',iniDateActive:false,obs:'',open:false},aeId:null,
+  // ── Controles (múltiplos "livros" financeiros dentro do mesmo login) ──
+  controles:[{id:1,nome:'Principal',icone:'💼'}],
+  controleAtivo:1,
+  controlesCache:{},
+  ctlForm:{name:'',icone:'💼',open:false},cteId:null,delCtl:null,
   catTab:'despesa', catSelId:null, catExpanded:{},
   cf:{name:'',color:COLORS[0],tipo:'despesa',parentId:null,open:false},ceId:null,
   ff:{type:'despesa',desc:'',val:'',diaVenc:5,catId:1,accId:1,recur:'mensal',ativa:true,icon:'💧',obs:'',open:false},feId:null,
@@ -1496,7 +1503,7 @@ let A={
 // Usado para resetar o estado em memória ao trocar de conta Firebase,
 // evitando que os dados do usuário anterior "vazem"/sejam salvos por engano
 // na conta recém-logada antes dos dados reais dela serem carregados da nuvem.
-const _SEED_DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios'];
+const _SEED_DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache'];
 const _SEED_DATA = JSON.parse(JSON.stringify(_SEED_DB_FIELDS.reduce((o,k)=>{o[k]=A[k];return o;},{})));
 function _resetAppDataToSeed(){
   const fresh = JSON.parse(JSON.stringify(_SEED_DATA));
@@ -1733,11 +1740,13 @@ function goCfgSub(sub,keepOpen){
     A.tab='senhas';A.lastCfgTab='senhas';
   } else if(sub==='familia'){
     A.tab='cats';A.catTab='familia';A.lastCfgTab='familia';
+  } else if(sub==='controles'){
+    A.tab='controles';A.lastCfgTab='controles';
   } else {
     A.tab='cats';A.lastCfgTab='cats';
     if(!A.catTab||A.catTab==='familia') A.catTab='despesa';
   }
-  A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;
+  A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;A.delCtl=null;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   render();
 }
@@ -1779,6 +1788,17 @@ function _loadingHide() {
   setTimeout(() => el.remove(), 320);
 }
 function updSel(){
+  // seletor de controle (só aparece quando há mais de um controle cadastrado)
+  const cs=document.getElementById('ctlSel');
+  if(cs){
+    if(A.controles && A.controles.length>1){
+      cs.style.display='';
+      cs.innerHTML=A.controles.map(c=>`<option value="${c.id}" ${c.id===A.controleAtivo?'selected':''}>${(c.icone||'💼')} ${H(c.nome)}</option>`).join('');
+    } else {
+      cs.style.display='none';
+      cs.innerHTML='';
+    }
+  }
   // seletor de conta
   const s=document.getElementById('accSel');const cur=String(A.filt);
   s.innerHTML='<option value="all">Todas as contas</option>';
@@ -1842,7 +1862,7 @@ function render(){
   const t=A.tab;
   // Sincroniza aba principal ativa na sidebar
   const transAba = ['lanc','plan','fixas'];
-  const cfgAba = ['cats','senhas'];
+  const cfgAba = ['cats','senhas','controles'];
   document.querySelectorAll('.tab').forEach(tb=>tb.classList.remove('on'));
   const transGroup=document.getElementById('nav-transacoes');
   const cfgGroup=document.getElementById('nav-config');
@@ -1860,7 +1880,7 @@ function render(){
     const parentBtn=document.getElementById('config-parent-btn');
     if(parentBtn) parentBtn.classList.add('on');
     if(cfgGroup) cfgGroup.classList.add('open');
-    const cfgIdx = t==='senhas' ? 2 : (A.catTab==='familia' ? 1 : 0);
+    const cfgIdx = t==='senhas' ? 2 : (t==='controles' ? 3 : (A.catTab==='familia' ? 1 : 0));
     document.querySelectorAll('#config-submenu .sub-tab').forEach((b,i)=>b.classList.toggle('on',i===cfgIdx));
   } else {
     if(cfgGroup) cfgGroup.classList.remove('open');
@@ -1878,7 +1898,7 @@ function render(){
   }
   if(t==='painel')rPainel(m);else if(t==='lanc')rLanc(m);else if(t==='plan')rPlan(m);
   else if(t==='fixas')rFixas(m);else if(t==='projecao')rProjecao(m);
-  else if(t==='contas')rContas(m);else if(t==='senhas')rSenhas(m);else if(t==='relatorio')rRelatorio(m);else rCats(m);
+  else if(t==='contas')rContas(m);else if(t==='senhas')rSenhas(m);else if(t==='relatorio')rRelatorio(m);else if(t==='controles')rControles(m);else rCats(m);
 }
 
 /* ─── PAINEL ─── */
@@ -3125,7 +3145,7 @@ function _qamRender(){
   setTimeout(()=>{ const inp=overlay.querySelector('input[id^="qam-"]'); if(inp)inp.focus(); },60);
 }
 // Fecha com ESC (completa o listener já existente de _confirmCancel)
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_qam)_qamClose();if(e.key==='Escape'&&A.txId!==null)closeForm();if(e.key==='Escape'&&A.planFormOpen)closePlanForm();if(e.key==='Escape'&&A.ff&&A.ff.open)closeFixaForm();if(e.key==='Escape'&&A.af&&A.af.open)closeAccForm();if(e.key==='Escape'&&A.cf&&A.cf.open)closeCatForm();if(e.key==='Escape'&&A.famEditOpen)closeFamForm();if(e.key==='Escape'&&A.senhaForm&&A.senhaForm.open)closeSenhaForm();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&_qam)_qamClose();if(e.key==='Escape'&&A.txId!==null)closeForm();if(e.key==='Escape'&&A.planFormOpen)closePlanForm();if(e.key==='Escape'&&A.ff&&A.ff.open)closeFixaForm();if(e.key==='Escape'&&A.af&&A.af.open)closeAccForm();if(e.key==='Escape'&&A.cf&&A.cf.open)closeCatForm();if(e.key==='Escape'&&A.famEditOpen)closeFamForm();if(e.key==='Escape'&&A.senhaForm&&A.senhaForm.open)closeSenhaForm();if(e.key==='Escape'&&A.ctlForm&&A.ctlForm.open)closeControleForm();});
 
 function openForm(mode){
   A.mode=mode;A.txId='new';
@@ -3553,6 +3573,113 @@ function askDelAcc(id){
 function doDelAcc(){A.accounts=A.accounts.filter(a=>a.id!==A.delAcc);A.delAcc=null;toast('Excluída.','#888780');render();}
 function accCBox(){return '';}
 
+/* ─── CONTROLES (múltiplos "livros" financeiros no mesmo login) ─── */
+// Troca o controle ativo: guarda o conteúdo atual no cache e carrega o do controle escolhido.
+function switchControle(id){
+  id=Number(id);
+  if(id===A.controleAtivo) return;
+  if(!A.controles.some(c=>c.id===id)) return;
+  if(!A.controlesCache) A.controlesCache={};
+  A.controlesCache[A.controleAtivo]={};
+  CONTROLE_CONTENT_FIELDS.forEach(k=>{ A.controlesCache[A.controleAtivo][k]=A[k]; });
+  const cached=A.controlesCache[id];
+  const data=cached?JSON.parse(JSON.stringify(cached)):_blankControleData();
+  CONTROLE_CONTENT_FIELDS.forEach(k=>{ A[k]=data[k]; });
+  A.controleAtivo=id;
+  A.filt='all';
+  A.delId=null;A.delAcc=null;A.delCat=null;A.delFixa=null;A.delCtl=null;
+  const nome=(A.controles.find(c=>c.id===id)||{}).nome||'';
+  toast('📂 Controle alterado: '+nome,'#2563EB');
+  render();
+}
+function openControleForm(){ A.cteId=null; A.delCtl=null; A.ctlForm={name:'',icone:'💼',open:true}; render(); }
+function editControle(id){
+  const c=A.controles.find(x=>x.id===id); if(!c) return;
+  A.cteId=id; A.delCtl=null; A.ctlForm={name:c.nome,icone:c.icone||'💼',open:true}; render();
+}
+function closeControleForm(){ A.cteId=null; A.ctlForm={...A.ctlForm,open:false}; render(); }
+function saveControle(){
+  const n=(A.ctlForm.name||'').trim();
+  if(!n){ toast('Informe o nome do controle.','#E24B4A'); return; }
+  const ic=A.ctlForm.icone||'💼';
+  if(A.cteId!==null){
+    const c=A.controles.find(x=>x.id===A.cteId);
+    if(c){ c.nome=n; c.icone=ic; }
+    toast('Controle atualizado!');
+  } else {
+    let newId=A.nid++;
+    // Segurança extra: nunca reutiliza um id que já exista em A.controles
+    while(A.controles.some(c=>c.id===newId)){ newId=A.nid++; }
+    A.controles.push({id:newId,nome:n,icone:ic});
+    if(!A.controlesCache) A.controlesCache={};
+    A.controlesCache[newId]=_blankControleData();
+    toast('✅ Controle criado! Selecione-o para começar a usar.','#059669',4000);
+  }
+  closeControleForm();
+}
+function askDelControle(id){
+  if(A.controles.length<=1){ toast('É preciso manter ao menos um controle.','#D97706'); return; }
+  const c=A.controles.find(x=>x.id===id);
+  _showConfirm('Excluir controle?',
+    `"<strong>${H(c?.nome)}</strong>" e todos os dados vinculados a ele (contas, lançamentos, categorias, senhas) serão apagados permanentemente.`,
+    ()=>{ doDelControle(id); });
+}
+function doDelControle(id){
+  if(A.controles.length<=1) return;
+  A.controles=A.controles.filter(c=>c.id!==id);
+  if(A.controlesCache) delete A.controlesCache[id];
+  if(A.controleAtivo===id){
+    const nextId=A.controles[0].id;
+    const cached=A.controlesCache&&A.controlesCache[nextId];
+    const data=cached?JSON.parse(JSON.stringify(cached)):_blankControleData();
+    CONTROLE_CONTENT_FIELDS.forEach(k=>{ A[k]=data[k]; });
+    A.controleAtivo=nextId;
+  }
+  A.delCtl=null;
+  toast('Controle excluído.','#888780');
+  render();
+}
+function rControles(m){
+  const cards=A.controles.map(c=>{
+    const isActive=c.id===A.controleAtivo;
+    return '<div class="acc-c ' + (A.cteId===c.id?'hl':'') + '" style="' + (isActive?'border-color:#2563EB':'') + '">'
+      + '<div class="acc-ic" style="background:var(--blue-mid)">' + (c.icone||'💼') + '</div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;color:var(--gray-900)">' + H(c.nome) + (isActive?' <span style="font-size:11px;color:#2563EB;font-weight:700">● Ativo agora</span>':'') + '</div>'
+        + '<div style="font-size:12px;color:var(--gray-500)">' + (c.id===A.controleAtivo?A.accounts.length:((A.controlesCache&&A.controlesCache[c.id]&&A.controlesCache[c.id].accounts)||[]).length) + ' conta(s) cadastrada(s)</div>'
+      + '</div>'
+      + (!isActive?'<button class="btn-g" onclick="switchControle(' + c.id + ')" title="Selecionar este controle" style="flex-shrink:0"><span>⇄</span> Selecionar</button>':'')
+      + '<button class="btn-e" onclick="editControle(' + c.id + ')" title="Editar" style="flex-shrink:0;padding:7px 10px"><span>✏</span></button>'
+      + '<button class="btn-d" onclick="askDelControle(' + c.id + ')" title="Excluir" style="flex-shrink:0;padding:7px 10px"><span>✕</span></button>'
+      + '</div>';
+  }).join('');
+  m.innerHTML=
+    '<div class="row3">'
+      + '<div class="stat"><div class="lbl">Controles</div><div class="val">' + A.controles.length + '</div></div>'
+      + '<div class="stat"><div class="lbl">Controle ativo</div><div class="val" style="font-size:16px">' + H((A.controles.find(c=>c.id===A.controleAtivo)||{}).nome||'—') + '</div></div>'
+      + '<div class="stat"><div class="lbl">Contas neste controle</div><div class="val">' + A.accounts.length + '</div></div>'
+    + '</div>'
+    + '<div class="card">'
+      + '<div class="ph"><h3><span>🗂️</span> Meus controles</h3><button class="btn-r" onclick="openControleForm()"><span>+</span> Novo controle</button></div>'
+      + '<p style="font-size:12px;color:var(--gray-500);margin:0 0 10px">Cada controle mantém contas, lançamentos, categorias e senhas totalmente separados uns dos outros — use para separar, por exemplo, finanças da <strong>casa</strong>, da <strong>empresa</strong> e <strong>pessoais</strong>, tudo com o mesmo login. Também é possível trocar rapidamente de controle pelo seletor no topo da tela.</p>'
+      + '<div style="display:flex;flex-direction:column;gap:8px">' + cards + '</div>'
+    + '</div>'
+    + (A.ctlForm.open?'<div class="tx-modal-overlay" onmousedown="_overlayMousedown(event)" onclick="_overlayClick(event,closeControleForm)"><div class="tx-modal-box" onclick="event.stopPropagation()">' + ctlFHTML() + '</div></div>':'');
+}
+function ctlFHTML(){
+  const f=A.ctlForm; const e=A.cteId!==null;
+  const icons=['💼','🏠','🏢','👤','💰','📊','🎯','🧾'];
+  return `<div class="ph"><h3><span style="font-style:normal">${e?'✏':'+'}</span> ${e?'Editar':'Novo'} controle</h3><button class="btn-g" onclick="closeControleForm()">Cancelar</button></div>
+  <div class="fg">
+    <div class="fr full"><label>Nome</label><input value="${H(f.name)}" oninput="A.ctlForm.name=this.value" placeholder="Ex: Casa, Empresa, Pessoal"/></div>
+    <div class="fr full"><label>Ícone</label><div style="display:flex;gap:6px;flex-wrap:wrap">${icons.map(ic=>`<button type="button" onclick="A.ctlForm.icone='${ic}';render()" style="font-size:18px;padding:6px 10px;border-radius:8px;border:1.5px solid ${ic===f.icone?'#2563EB':'var(--gray-200)'};background:${ic===f.icone?'var(--blue-light)':'var(--color-background-primary)'};cursor:pointer">${ic}</button>`).join('')}</div></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:12px">
+    <button class="btn-g" onclick="closeControleForm()">Cancelar</button>
+    <button class="btn-r" onclick="saveControle()"><span>✓</span> ${e?'Salvar':'Criar'}</button>
+  </div>`;
+}
+
 /* ─── CADASTROS (Categorias + Família) ─── */
 
 // Helpers da árvore
@@ -3859,14 +3986,19 @@ const OPFS_FILE     = 'pfp_data.json';   // arquivo OPFS
 const FS_HANDLE_KEY = 'pfp_storage_mode'; // 'disk' | 'opfs' | 'local'
 
 // Campos do estado A que devem ser persistidos
-const DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios'];
+const DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache'];
 
 // ── Separação de dados por usuário ──────────────────────────────────
 // GLOBAL_FIELDS: compartilhado entre todos (lista de contas de login + contador de IDs)
 // USER_FIELDS:   dados privados de CADA usuário (contas financeiras, transações, senhas, etc.)
 const GLOBAL_KEY         = 'pfp_v11_global';
 const GLOBAL_FIELDS      = ['usuarios','nid'];
-const USER_FIELDS        = ['familia','cats','accounts','fixas','txs','senhas'];
+// CONTROLE_CONTENT_FIELDS: dados que pertencem a CADA Controle individualmente
+// (ex.: "Casa", "Empresa", "Pessoal") — trocam de conteúdo ao trocar de controle.
+const CONTROLE_CONTENT_FIELDS = ['familia','cats','accounts','fixas','txs','senhas'];
+// USER_FIELDS: tudo que é privado do usuário — inclui o conteúdo do controle
+// ativo no momento + a lista de controles e o cache com os demais controles.
+const USER_FIELDS        = ['familia','cats','accounts','fixas','txs','senhas','controles','controleAtivo','controlesCache'];
 const MIGRATION_FLAG_KEY = 'pfp_v11_migrated_per_user';
 function userDataKey(id){ return 'pfp_v11_user_' + id; }
 // Chave de localStorage onde os dados de CONTEÚDO do usuário ativo devem ser lidos/gravados
@@ -4221,7 +4353,7 @@ async function createStorageFile() {
 }
 
 async function disconnectStorageFile() {
-  showConfirm('Desvincular o arquivo em disco?\nOs dados continuarão salvos no armazenamento interno do navegador (OPFS/localStorage).', async () => {
+  _showConfirm('Desvincular arquivo?', 'Os dados continuarão salvos no armazenamento interno do navegador (OPFS/localStorage).', async () => {
     _diskFileHandle = null;
     await _idbDel('diskFileHandle');
     _storageMode = _opfsOk ? 'opfs' : 'local';
@@ -4329,6 +4461,13 @@ function _lsUsageKB() { return _lastUsageKB; }
 
 // ── dbSave: Disco / OPFS / localStorage ──
 function dbSave() {
+  // ── 0) Sincroniza o conteúdo do Controle ativo no cache de controles,
+  //    para que os demais controles não se percam ao salvar ──
+  if(A.controleAtivo!=null){
+    if(!A.controlesCache) A.controlesCache={};
+    A.controlesCache[A.controleAtivo]={};
+    CONTROLE_CONTENT_FIELDS.forEach(k=>{ A.controlesCache[A.controleAtivo][k]=A[k]; });
+  }
   // ── 1) Dados GLOBAIS: lista de usuários de login + contador de IDs ──
   // Sempre gravados na mesma chave, independente de quem está logado.
   const globalPayload = {};
@@ -4457,9 +4596,56 @@ async function _ensureDefaultAdmin(){
   }
 }
 
+// ── Estrutura "em branco" para um Controle novo: mantém as categorias e
+//    membros da família padrão, mas sem contas/lançamentos/senhas ──
+function _blankControleData(){
+  return {
+    familia:  JSON.parse(JSON.stringify(_SEED_DATA.familia)),
+    cats:     JSON.parse(JSON.stringify(_SEED_DATA.cats)),
+    accounts: [],
+    fixas:    [],
+    txs:      [],
+    senhas:   []
+  };
+}
+// ── Garante que sempre exista ao menos 1 Controle e que o Controle ativo
+//    seja válido. Roda no boot, no modo livre e a cada troca de usuário. ──
+function _ensureControles(){
+  if(!Array.isArray(A.controles) || A.controles.length===0){
+    A.controles=[{id:1,nome:'Principal',icone:'💼'}];
+  }
+  if(!A.controlesCache || typeof A.controlesCache!=='object'){
+    A.controlesCache={};
+  }
+  // ── Corrige controles com IDs duplicados ──
+  // Se dois controles compartilham o mesmo id, eles acabam apontando para o
+  // mesmo slot em A.controlesCache: ao ativar um, o outro também aparece
+  // marcado como "Ativo agora" (mesmo bug visto na tela de Controles).
+  // Aqui detectamos duplicados e damos um id novo e único para eles.
+  const seen = new Set();
+  let fixedDup = false;
+  A.controles.forEach(c=>{
+    if(seen.has(c.id)){
+      fixedDup = true;
+      const newId = A.nid++;
+      A.controlesCache[newId] = _blankControleData();
+      c.id = newId;
+    } else {
+      seen.add(c.id);
+    }
+  });
+  if(fixedDup){
+    toast('⚠️ Havia controles com o mesmo ID interno — foram separados automaticamente. Confira as contas de cada um.', '#D97706', 7000);
+  }
+  if(A.controleAtivo==null || !A.controles.some(c=>c.id===A.controleAtivo)){
+    A.controleAtivo=A.controles[0].id;
+  }
+}
+
 // ── Migrações de schema que precisam rodar sempre que dados de CONTEÚDO
 //    são carregados (no boot, no modo livre, e a cada troca de usuário) ──
 function _runContentSchemaMigrations(){
+  _ensureControles();
   (A.fixas||[]).forEach(f=>{
     if(!f.inicioEm){
       const pagMeses=Object.keys(f.pagamentos||{}).sort();
@@ -5208,7 +5394,7 @@ async function fbSetEnv(env) {
   }
   if (env === window._fbEnv) return; // já está nesse ambiente
   if (window._fbUser) {
-    showConfirm('Trocar de ambiente vai desconectar o usuário atual. Continuar?', async () => {
+    _showConfirm('Trocar de ambiente?', 'Isso vai desconectar o usuário atual. Continuar?', async () => {
       await window._fbSwitchEnv(env);
       document.getElementById('fb-modal-overlay')?.remove();
       const label = env === 'producao' ? '🚀 Produção' : '🧪 Teste';
