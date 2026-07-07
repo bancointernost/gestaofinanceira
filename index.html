@@ -1322,6 +1322,7 @@ const COLORS=['#1D9E75','#378ADD','#BA7517','#E24B4A','#7F77DD','#D4537E','#0F6E
 const ATYPES=[{t:'Conta corrente',ic:'🏦',bg:'#E6F1FB'},{t:'Poupança',ic:'🏛',bg:'#EAF3DE'},{t:'Cartão de crédito',ic:'💳',bg:'#FAEEDA'},{t:'Dinheiro',ic:'💵',bg:'#E1F5EE'},{t:'Investimento',ic:'📈',bg:'#EEEDFE'},{t:'Outro',ic:'💰',bg:'#F1EFE8'}];
 const atype=t=>ATYPES.find(a=>a.t===t)||ATYPES[5];
 const MNLONG={'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
+const FIXA_STEP={mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12};
 const MNSHORT={'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
 const ICONS_EXP=['💧','⚡','🌐','🏠','📱','🚗','🎓','🏥','📺','🔒','🛒','📦','💳'];
 const ICONS_REC=['💰','📈','💼','🏦','🎁','🌟'];
@@ -1650,10 +1651,11 @@ function balView(acc){const b=bal(acc);if(isCC(acc)){const fatura=-b;return{val:
 function filt(){return A.txs.filter(t=>t.done&&(A.filt==='all'||t.accId==A.filt||t.accDest==A.filt));}
 function sumT(arr,type){return arr.filter(t=>t.type===type).reduce((s,t)=>s+t.val,0);}
 
-// Calcula fixas ativas para um mês (respeita periodicidade)
+// Calcula fixas ativas para um mês (respeita periodicidade e parcelamento)
 function fixasParaMes(mes){
   return A.fixas.filter(f=>{
     if(!f.ativa) return false;
+    const step=FIXA_STEP[f.recur]||1;
     // Âncora = inicioEm se definido, senão primeiro pagamento, senão não restringe (legado)
     const anchor=f.inicioEm||(Object.keys(f.pagamentos||{}).sort()[0]||null);
     // Se tem âncora, o mês consultado não pode ser anterior a ela
@@ -1662,27 +1664,51 @@ function fixasParaMes(mes){
       const [fy,fm]=mes.split('-').map(Number);
       const diff=(fy-ay)*12+(fm-am);
       if(diff<0) return false;
-      if(f.recur==='mensal')      return true;
-      if(f.recur==='bimestral')   return diff%2===0;
-      if(f.recur==='trimestral')  return diff%3===0;
-      if(f.recur==='semestral')   return diff%6===0;
-      if(f.recur==='anual')       return diff%12===0;
-      return false;
+      if(diff%step!==0) return false;
+      // Parcelamento: se definido, encerra após o número de parcelas
+      if(f.parcelas&&(diff/step)>=f.parcelas) return false;
+      return true;
     }
     // Sem âncora (fixas legadas sem inicioEm): usa comportamento anterior
-    if(f.recur==='mensal') return true;
+    if(f.recur==='mensal') return !f.parcelas;
     const pagMeses=Object.keys(f.pagamentos||{}).sort();
     const legacyAnchor=pagMeses.length>0?pagMeses[0]:thisMonth();
     const [ay,am]=legacyAnchor.split('-').map(Number);
     const [fy,fm]=mes.split('-').map(Number);
     const diff=(fy-ay)*12+(fm-am);
     if(diff<0) return false;
-    if(f.recur==='bimestral')   return diff%2===0;
-    if(f.recur==='trimestral')  return diff%3===0;
-    if(f.recur==='semestral')   return diff%6===0;
-    if(f.recur==='anual')       return diff%12===0;
-    return false;
+    if(diff%step!==0) return false;
+    if(f.parcelas&&(diff/step)>=f.parcelas) return false;
+    return true;
   });
+}
+
+// Retorna a parcela atual (1-based) de uma fixa parcelada para o mês informado, ou null se não parcelada/fora do período
+function fixaParcelaAtual(f,mes){
+  if(!f.parcelas) return null;
+  const anchor=f.inicioEm||(Object.keys(f.pagamentos||{}).sort()[0]||null);
+  if(!anchor) return null;
+  const step=FIXA_STEP[f.recur]||1;
+  const [ay,am]=anchor.split('-').map(Number);
+  const [fy,fm]=mes.split('-').map(Number);
+  const diff=(fy-ay)*12+(fm-am);
+  if(diff<0||diff%step!==0) return null;
+  const idx=(diff/step)+1;
+  if(idx>f.parcelas) return null;
+  return idx;
+}
+
+// Texto de preview do parcelamento (usado no formulário de conta fixa)
+function fixaParcEndLabel(f){
+  if(!f.parcelas||f.parcelas<=1) return '<span style="color:var(--gray-400)">Recorrência sem fim</span>';
+  const step=FIXA_STEP[f.recur]||1;
+  const inicio=f.inicioEm||A.fixaMes;
+  const [ay,am]=inicio.split('-').map(Number);
+  const totalMonths=(f.parcelas-1)*step;
+  const endY=ay+Math.floor((am-1+totalMonths)/12);
+  const endM=((am-1+totalMonths)%12)+1;
+  const endStr=`${MNLONG[String(endM).padStart(2,'0')]}/${endY}`;
+  return `<span style="color:#2563EB">${f.parcelas}x · termina em ${endStr}</span>`;
 }
 
 function go(tab,el){
@@ -2301,7 +2327,7 @@ function rFixas(m){
       <div class="tx-cell tx-cell-icon"><span class="tx-icon" style="background:${inativa?'var(--gray-100)':bgIc};color:${inativa?'var(--gray-400)':dc}">${inativa?'⏸':f.icon||arrow}</span></div>
       <div class="tx-cell tx-cell-main">
         <span class="tx-desc" style="${pago?'text-decoration:line-through;color:var(--color-text-tertiary)':''}">${H(f.desc)}</span>
-        <span class="tx-chips">${f.recur&&f.recur!=='mensal'?`<span class="badge b-rep" style="font-size:9px">${f.recur}</span>`:''}<span style="font-size:13px;color:var(--color-text-tertiary)">dia ${f.diaVenc}</span>${vencInfo}${_ctlBadgeHtml(f)}</span>
+        <span class="tx-chips">${f.recur&&f.recur!=='mensal'?`<span class="badge b-rep" style="font-size:9px">${f.recur}</span>`:''}${f.parcelas?`<span class="badge b-rep" style="font-size:9px;background:#EFF6FF;color:#1D4ED8">${fixaParcelaAtual(f,secao==='inativa'?(f.inicioEm||mes):mes)||'—'}/${f.parcelas}</span>`:''}<span style="font-size:13px;color:var(--color-text-tertiary)">dia ${f.diaVenc}</span>${vencInfo}${_ctlBadgeHtml(f)}</span>
       </div>
       <div class="tx-cell tx-cell-acc" title="${accBy(f.accId).name}">${accBy(f.accId).name}</div>
       <div class="tx-cell tx-cell-cat"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${cat.name}</span></span></div>
@@ -2358,7 +2384,13 @@ function rFixas(m){
       <div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Conta</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamAcc('A.ff','accId')" title="Nova conta">＋ Nova</button><button class="fr-add-btn" onclick="qamAcc('A.ff','accId');setTimeout(()=>{_qamEditAcc(A.ff.accId)},80)" title="Editar conta" style="color:var(--gray-500)">✏ Editar</button></div></div><select onchange="A.ff.accId=parseInt(this.value)">${aOpts}</select></div>
       <div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Categoria</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamCat('A.ff','catId','${A.ff.type==='receita'?'receita':'despesa'}')" title="Nova categoria">＋ Nova</button><button class="fr-add-btn" onclick="qamCat('A.ff','catId','${A.ff.type==='receita'?'receita':'despesa'}');setTimeout(()=>{_qamEditCat(A.ff.catId)},80)" title="Editar categoria" style="color:var(--gray-500)">✏ Editar</button></div></div>${buildCatTreePicker(A.ff.catId,A.ff.type==='receita'?'receita':'despesa','ff','A.ff.catId')}</div>
       <div class="fr"><label>Periodicidade</label><select onchange="A.ff.recur=this.value;render()"><option value="mensal" ${A.ff.recur==='mensal'?'selected':''}>Mensal</option><option value="bimestral" ${A.ff.recur==='bimestral'?'selected':''}>Bimestral</option><option value="trimestral" ${A.ff.recur==='trimestral'?'selected':''}>Trimestral</option><option value="semestral" ${A.ff.recur==='semestral'?'selected':''}>Semestral</option><option value="anual" ${A.ff.recur==='anual'?'selected':''}>Anual</option></select></div>
-      <div class="fr"><label>Início em</label><input type="month" value="${A.ff.inicioEm||A.fixaMes}" oninput="A.ff.inicioEm=this.value"/></div>
+      <div class="fr"><label>Início em</label><input type="month" value="${A.ff.inicioEm||A.fixaMes}" oninput="A.ff.inicioEm=this.value;_updFixaParcPreview()"/></div>
+      <div class="fr"><label>Parcelas <span style="font-weight:400;color:var(--gray-400)">(opcional)</span></label>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input id="fixa-parc" type="number" value="${A.ff.parcelas||''}" min="1" max="360" step="1" placeholder="Sem fim" style="width:80px" oninput="_updFixaParcPreview()"/>
+          <span id="fixa-parc-preview" style="font-size:12px;font-weight:600;white-space:nowrap">${fixaParcEndLabel(A.ff)}</span>
+        </div>
+      </div>
       <div class="fr full"><label>Observação</label><textarea oninput="A.ff.obs=this.value">${H(A.ff.obs)}</textarea></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
@@ -2369,6 +2401,12 @@ function rFixas(m){
     </div>
   </div></div>`:''}
   ${A.delFixa?fixaCBox():''}`;
+}
+
+// Sufixo de descrição do lançamento gerado por uma fixa, incluindo parcela atual se houver
+function fixaTxDescSuffix(f,mes){
+  const parc=fixaParcelaAtual(f,mes);
+  return parc?` (fixa ${parc}/${f.parcelas})`:' (fixa)';
 }
 
 function copiarParaProximoMes(mes){
@@ -2389,7 +2427,7 @@ function copiarParaProximoMes(mes){
     const d=String(f.diaVenc||1).padStart(2,'0');
     const txId=A.nid++;
     A.txs.push({
-      id:txId,type:f.type,desc:f.desc+' (fixa)',
+      id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,proximo),
       val:f.val,date:`${y}-${mo}-${d}`,
       catId:f.catId,accId:f.accId,accDest:null,
       recur:f.recur,obs:f.obs,planned:false,done:true
@@ -2415,7 +2453,7 @@ function marcarPago(id,mes){
   if(!f.pagamentos)f.pagamentos={};
   const[y,mo]=mes.split('-');const d=String(f.diaVenc).padStart(2,'0');
   const txId=A.nid++;
-  A.txs.push({id:txId,type:f.type,desc:f.desc+' (fixa)',val:f.val,date:`${y}-${mo}-${d}`,catId:f.catId,accId:f.accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true});
+  A.txs.push({id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,mes),val:f.val,date:`${y}-${mo}-${d}`,catId:f.catId,accId:f.accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true});
   f.pagamentos[mes]=txId;
   toast(f.type==='receita'?'Recebido! Lançamento criado.':'Lançamento criado.','#1D9E75');render();
 }
@@ -2427,10 +2465,10 @@ function desmarcarPago(id,mes){
   toast('Desmarcado e lançamento removido.','#888780');render();
 }
 function toggleAtiva(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;f.ativa=!f.ativa;toast(f.ativa?'Ativada!':'Pausada.','#888780');render();}
-function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:A.accounts[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',inicioEm:A.fixaMes,open:true};render();}
-function editFixa(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;A.feId=id;A.delFixa=null;A.ctpExp={};A.ff={...f,open:true};render();}
+function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:A.accounts[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',inicioEm:A.fixaMes,parcelas:null,open:true};render();}
+function editFixa(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;A.feId=id;A.delFixa=null;A.ctpExp={};A.ff={...f,parcelas:f.parcelas||null,open:true};render();}
 function closeFixaForm(){A.feId=null;A.ff={...A.ff,open:false};render();}
-function saveFixa(){const f=A.ff;if(!f.desc.trim()||!f.val||parseFloat(f.val)<=0){toast('Preencha descrição e valor.','#E24B4A');return;}const obj={...f,val:parseFloat(f.val),diaVenc:parseInt(f.diaVenc)||5,inicioEm:f.inicioEm||A.fixaMes};delete obj.open;if(A.feId!==null){const i=A.fixas.findIndex(x=>x.id===A.feId);if(i!==-1)A.fixas[i]={...A.fixas[i],...obj};toast('Atualizada!');}else{A.fixas.push({id:A.nid++,...obj,pagamentos:{}});toast('Criada!');}closeFixaForm();}
+function saveFixa(){const f=A.ff;if(!f.desc.trim()||!f.val||parseFloat(f.val)<=0){toast('Preencha descrição e valor.','#E24B4A');return;}const parc=f.parcelas?parseInt(f.parcelas)||null:null;const obj={...f,val:parseFloat(f.val),diaVenc:parseInt(f.diaVenc)||5,inicioEm:f.inicioEm||A.fixaMes,parcelas:parc&&parc>1?parc:null};delete obj.open;if(A.feId!==null){const i=A.fixas.findIndex(x=>x.id===A.feId);if(i!==-1)A.fixas[i]={...A.fixas[i],...obj};toast('Atualizada!');}else{A.fixas.push({id:A.nid++,...obj,pagamentos:{}});toast(parc&&parc>1?`Criada! Parcelamento em ${parc}x.`:'Criada!');}closeFixaForm();}
 function askDelFixa(id){
   const f=A.fixas.find(x=>x.id===id);
   _showConfirm('Excluir conta fixa?',`"<strong>${H(f?.desc)}</strong>" será removida permanentemente.`,
@@ -3489,6 +3527,13 @@ function savePlan(){
 }
 function launch(id){const t=A.txs.find(x=>x.id===id);if(!t)return;t.done=true;t.planned=true;toast('Lançado!');render();}
 function desfazerLancamento(id){const t=A.txs.find(x=>x.id===id);if(!t)return;t.done=false;toast('Lançamento desfeito.','#888780');render();}
+function _updFixaParcPreview(){
+  const val=document.getElementById('fixa-parc')?.value;
+  A.ff.parcelas=val?(parseInt(val)||null):null;
+  const el=document.getElementById('fixa-parc-preview');
+  if(!el)return;
+  el.innerHTML=fixaParcEndLabel(A.ff);
+}
 function _updParcPreview(){
   const parc=parseInt(document.getElementById('plan-parc')?.value)||1;
   const val=parseFloat(document.getElementById('plan-val')?.value)||0;
