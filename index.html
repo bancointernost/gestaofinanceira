@@ -1069,10 +1069,6 @@ html.dark .senha-toggle:hover{color:#c8daf0}
             style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--gray-400);padding:2px">👁</button>
         </div>
       </div>
-      <!-- Aviso senha padrão -->
-      <div id="login-default-warn" style="display:none;padding:10px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;font-size:12px;color:#92400E;margin-bottom:14px;font-family:var(--font-sans);line-height:1.5">
-        ⚠️ <strong>Primeiro acesso.</strong> Use o login <strong>admin</strong> e senha <strong>admin123</strong>. Troque a senha após entrar.
-      </div>
       <!-- Mensagem de erro -->
       <div id="login-err" style="display:none;padding:9px 12px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#DC2626;margin-bottom:14px;font-family:var(--font-sans)"></div>
       <!-- Botão entrar -->
@@ -1371,6 +1367,9 @@ let A={
   controles:[{id:1,nome:'Principal',icone:'💼'}],
   controleAtivo:1,
   controlesCache:{},
+  // Contas marcadas como compartilhadas entre TODOS os controles do usuário
+  // (saldo soma lançamentos feitos em qualquer controle que a utilize).
+  sharedAccounts:[],
   ctlForm:{name:'',icone:'💼',open:false},cteId:null,delCtl:null,
   catTab:'despesa', catSelId:null, catExpanded:{},
   cf:{name:'',color:COLORS[0],tipo:'despesa',parentId:null,open:false},ceId:null,
@@ -1503,7 +1502,7 @@ let A={
 // Usado para resetar o estado em memória ao trocar de conta Firebase,
 // evitando que os dados do usuário anterior "vazem"/sejam salvos por engano
 // na conta recém-logada antes dos dados reais dela serem carregados da nuvem.
-const _SEED_DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache'];
+const _SEED_DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts'];
 const _SEED_DATA = JSON.parse(JSON.stringify(_SEED_DB_FIELDS.reduce((o,k)=>{o[k]=A[k];return o;},{})));
 function _resetAppDataToSeed(){
   const fresh = JSON.parse(JSON.stringify(_SEED_DATA));
@@ -1624,13 +1623,42 @@ function migrateFamilia(){
     A.familia=A.familia.map(name=>({id:nextId++,name,parentId:null}));
   }
 }
-const accBy=id=>A.accounts.find(a=>a.id==id)||{name:'?',id:0};
+function _allAccounts(){ return [...A.accounts, ...(A.sharedAccounts||[])]; }
+function _isSharedAcc(id){ return (A.sharedAccounts||[]).some(a=>a.id===id); }
+// Junta os lançamentos do controle ativo com os de todos os outros controles
+// (usado para calcular o saldo de contas compartilhadas, que somam tudo).
+function _allTxsAcrossControles(){
+  const out=[...A.txs];
+  if(A.controlesCache){
+    Object.keys(A.controlesCache).forEach(k=>{
+      const id=Number(k);
+      if(id===A.controleAtivo) return; // já incluído via A.txs
+      const c=A.controlesCache[k];
+      if(c && Array.isArray(c.txs)) out.push(...c.txs);
+    });
+  }
+  return out;
+}
+function _acctTxCountInOtherControles(accId){
+  let n=0;
+  if(A.controlesCache){
+    Object.keys(A.controlesCache).forEach(k=>{
+      const id=Number(k);
+      if(id===A.controleAtivo) return;
+      const c=A.controlesCache[k];
+      if(c && Array.isArray(c.txs)) n+=c.txs.filter(t=>t.accId===accId||t.accDest===accId).length;
+    });
+  }
+  return n;
+}
+const accBy=id=>_allAccounts().find(a=>a.id==id)||{name:'?',id:0};
 function bal(acc){
   let b=acc.ini||0;
   const active=acc.iniDateActive===true||acc.iniDateActive==='true';
   const iniD=acc.iniDate&&acc.iniDate.length===10?acc.iniDate:'';
   const cutoff=(active&&iniD)?iniD:null;
-  A.txs.filter(t=>t.done&&(!cutoff||t.date>=cutoff)).forEach(t=>{
+  const txsSrc=_isSharedAcc(acc.id)?_allTxsAcrossControles():A.txs;
+  txsSrc.filter(t=>t.done&&(!cutoff||t.date>=cutoff)).forEach(t=>{
     if(t.type==='transferencia'){if(t.accId==acc.id)b-=t.val;if(t.accDest==acc.id)b+=t.val;}
     else if(t.accId==acc.id)b+=t.type==='receita'?t.val:-t.val;
   });
@@ -1641,7 +1669,8 @@ function balIgnorados(acc){
   const active=acc.iniDateActive===true||acc.iniDateActive==='true';
   const iniD=acc.iniDate&&acc.iniDate.length===10?acc.iniDate:'';
   if(!active||!iniD) return 0;
-  return A.txs.filter(t=>t.done&&t.accId==acc.id&&t.date<iniD).length;
+  const txsSrc=_isSharedAcc(acc.id)?_allTxsAcrossControles():A.txs;
+  return txsSrc.filter(t=>t.done&&t.accId==acc.id&&t.date<iniD).length;
 }
 const isCC=acc=>acc&&acc.type==='Cartão de crédito';
 // Para cartão de crédito: fatura = -bal (gastos geram fatura positiva, i.e. dívida)
@@ -1821,12 +1850,12 @@ function updSel(){
       wrap.style.display='';
       const isDark=document.documentElement.classList.contains('dark');
       const hoverBg=isDark?'#1e2d4a':'#F1F5F9';
-      const selIds=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?A.ctlMultiSel:[A.controleAtivo];
+      const selIds=_ctlNormSel();
       const isMulti=selIds.length>1;
       const ativo=A.controles.find(c=>c.id===A.controleAtivo);
       const label=isMulti?`🗂️ ${selIds.length} controles`:`${ativo?(ativo.icone||'💼'):'💼'} ${ativo?H(ativo.nome):''}`;
       wrap.innerHTML=`
-        <button type="button" onclick="toggleCtlPanel()" title="Selecionar controle(s) para visualizar" style="display:flex;align-items:center;gap:5px;background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:5px 10px;font-size:12px;font-weight:600;color:var(--color-text-primary);cursor:pointer;white-space:nowrap;font-family:inherit">${label}<span style="font-size:9px">▾</span></button>
+        <button type="button" onclick="toggleCtlPanel()" title="Selecionar controle(s) para visualizar" style="display:flex;align-items:center;gap:5px;background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:5px 10px;font-size:12px;font-weight:600;color:var(--color-text-primary);cursor:pointer;font-family:inherit;width:150px;flex-shrink:0"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left">${label}</span><span style="font-size:9px;flex-shrink:0">▾</span></button>
         <div id="ctlMultiPanel" style="display:${_ctlPanelOpen?'block':'none'};position:absolute;top:calc(100% + 4px);left:0;z-index:80;background:var(--color-background-primary);border:1px solid var(--gray-200);border-radius:var(--radius-md);box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:230px;max-height:320px;overflow-y:auto;padding:8px">
           <div style="font-size:10.5px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.3px;padding:2px 6px 6px">Visualizar controle(s)</div>
           ${A.controles.map(c=>`
@@ -1836,6 +1865,7 @@ function updSel(){
             </label>`).join('')}
           <div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--gray-100)">
             <button type="button" onclick="ctlSelAll()" style="flex:1;font-size:11px;font-weight:600;color:var(--color-text-secondary);background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:6px;padding:5px;cursor:pointer;font-family:inherit">Selecionar todos</button>
+            <button type="button" onclick="ctlDeselAll()" style="flex:1;font-size:11px;font-weight:600;color:var(--color-text-secondary);background:var(--color-background-secondary);border:1px solid var(--gray-200);border-radius:6px;padding:5px;cursor:pointer;font-family:inherit">Desmarcar todos</button>
           </div>
           ${isMulti?'<div style="font-size:11px;color:#D97706;padding:7px 4px 0;line-height:1.4">🔒 Com mais de 1 selecionado, a visualização é combinada e somente leitura. Marque só 1 para editar.</div>':''}
         </div>`;
@@ -1847,7 +1877,7 @@ function updSel(){
   // seletor de conta
   const s=document.getElementById('accSel');const cur=String(A.filt);
   s.innerHTML='<option value="all">Todas as contas</option>';
-  A.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.text=a.name;if(String(a.id)===cur)o.selected=true;s.appendChild(o);});
+  _allAccounts().forEach(a=>{const o=document.createElement('option');o.value=a.id;o.text=a.name+(_isSharedAcc(a.id)?' 🔗':'');if(String(a.id)===cur)o.selected=true;s.appendChild(o);});
   // seletor de mês — Início (painel), Lançamentos (período=Mês) e Contas Fixas usam navegação por mês
   const mf=document.getElementById('mes-filt');
   const showMesFilt = A.tab==='painel' || A.tab==='fixas' || (A.tab==='lanc' && A.lancPeriod==='mes');
@@ -1916,7 +1946,7 @@ function render(){
     if(parentBtn) parentBtn.classList.add('on');
     if(transGroup) transGroup.classList.add('open');
     const subBtns=document.querySelectorAll('#trans-submenu .sub-tab');
-    const idx={lanc:0,fixas:1}[t];
+    const idx={lanc:0,plan:1,fixas:2}[t];
     subBtns.forEach((b,i)=>b.classList.toggle('on',i===idx));
   } else {
     if(transGroup) transGroup.classList.remove('open');
@@ -1972,8 +2002,8 @@ function rPainel(m){
   const rec=sumT(txs,'receita'),exp=sumT(txs,'despesa');
   const saldo=rec-exp;
   // Saldo total: conta selecionada ou soma de todas
-  const contaFiltrada=A.filt!=='all'?A.accounts.find(a=>String(a.id)===String(A.filt)):null;
-  const totBal=contaFiltrada?balView(contaFiltrada).val:A.accounts.reduce((s,a)=>s+bal(a),0);
+  const contaFiltrada=A.filt!=='all'?_allAccounts().find(a=>String(a.id)===String(A.filt)):null;
+  const totBal=contaFiltrada?balView(contaFiltrada).val:_allAccounts().reduce((s,a)=>s+bal(a),0);
   const totBalLabel=contaFiltrada?balView(contaFiltrada).label:'Saldo total';
   const totBalColor=contaFiltrada?balView(contaFiltrada).color:(totBal>=0?'#1D9E75':'#E24B4A');
   const mesHoje=thisMonth();
@@ -2292,7 +2322,7 @@ function rFixas(m){
   const totalRec=ativasNoMes.filter(f=>f.type==='receita').reduce((s,f)=>s+f.val,0);
   const totalPago=pagas.filter(f=>f.type==='despesa').reduce((s,f)=>s+f.val,0);
   const pct=ativasNoMes.length>0&&totalExp>0?Math.round(totalPago/totalExp*100):ativasNoMes.length===0?100:0;
-  const aOpts=A.accounts.map(a=>`<option value="${a.id}" ${a.id==A.ff.accId?'selected':''}>${a.name}</option>`).join('');
+  const aOpts=_allAccounts().map(a=>`<option value="${a.id}" ${a.id==A.ff.accId?'selected':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const iconList=(A.ff.type==='receita'?ICONS_REC:ICONS_EXP).map(ic=>`<span onclick="A.ff.icon='${ic}';render()" style="cursor:pointer;font-size:18px;padding:3px;border-radius:var(--border-radius-md);background:${A.ff.icon===ic?'var(--color-background-tertiary)':'transparent'};border:${A.ff.icon===ic?'1.5px solid #378ADD':'1.5px solid transparent'}">${ic}</span>`).join('');
 
   // helpers de row para fixas
@@ -2402,12 +2432,6 @@ function rFixas(m){
   ${A.delFixa?fixaCBox():''}`;
 }
 
-// Sufixo de descrição do lançamento gerado por uma fixa, incluindo parcela atual se houver
-function fixaTxDescSuffix(f,mes){
-  const parc=fixaParcelaAtual(f,mes);
-  return parc?` (fixa ${parc}/${f.parcelas})`:' (fixa)';
-}
-
 function copiarParaProximoMes(mes){
   const proximo=addMonths(mes,1);
   let copiadas=0,ignoradas=0;
@@ -2464,10 +2488,15 @@ function desmarcarPago(id,mes){
   toast('Desmarcado e lançamento removido.','#888780');render();
 }
 function toggleAtiva(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;f.ativa=!f.ativa;toast(f.ativa?'Ativada!':'Pausada.','#888780');render();}
-function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:A.accounts[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',inicioEm:A.fixaMes,parcelas:null,open:true};render();}
+function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:_allAccounts()[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',inicioEm:A.fixaMes,parcelas:null,open:true};render();}
 function editFixa(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;A.feId=id;A.delFixa=null;A.ctpExp={};A.ff={...f,parcelas:f.parcelas||null,open:true};render();}
 function closeFixaForm(){A.feId=null;A.ff={...A.ff,open:false};render();}
 function saveFixa(){const f=A.ff;if(!f.desc.trim()||!f.val||parseFloat(f.val)<=0){toast('Preencha descrição e valor.','#E24B4A');return;}const parc=f.parcelas?parseInt(f.parcelas)||null:null;const obj={...f,val:parseFloat(f.val),diaVenc:parseInt(f.diaVenc)||5,inicioEm:f.inicioEm||A.fixaMes,parcelas:parc&&parc>1?parc:null};delete obj.open;if(A.feId!==null){const i=A.fixas.findIndex(x=>x.id===A.feId);if(i!==-1)A.fixas[i]={...A.fixas[i],...obj};toast('Atualizada!');}else{A.fixas.push({id:A.nid++,...obj,pagamentos:{}});toast(parc&&parc>1?`Criada! Parcelamento em ${parc}x.`:'Criada!');}closeFixaForm();}
+// Sufixo de descrição do lançamento gerado por uma fixa, incluindo parcela atual se houver
+function fixaTxDescSuffix(f,mes){
+  const parc=fixaParcelaAtual(f,mes);
+  return parc?` (fixa ${parc}/${f.parcelas})`:' (fixa)';
+}
 function askDelFixa(id){
   const f=A.fixas.find(x=>x.id===id);
   _showConfirm('Excluir conta fixa?',`"<strong>${H(f?.desc)}</strong>" será removida permanentemente.`,
@@ -2956,7 +2985,7 @@ function fHTML(){
   const f=A.tf;
   const isT=A.mode==='transferencia';
   const editing=typeof A.txId==='number';
-  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':'')+A.accounts.map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${a.name}</option>`).join('');
+  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const orig=accBy(f.accId),dest=accBy(f.accDest);
   const oB=bal(orig),dB=bal(dest),amt=parseFloat(f.val)||0;
   const temFam=famNames().length>0;
@@ -3049,7 +3078,7 @@ function qamAcc(stateObj, stateKey){
   _qamRender();
 }
 function _qamEditAcc(id){
-  const a=A.accounts.find(x=>x.id===id); if(!a)return;
+  const a=_allAccounts().find(x=>x.id===id); if(!a)return;
   _qam.editId=id;
   _qam.form={ name:a.name, type:a.type, ini:a.ini, iniDate:a.iniDate||'', iniDateActive:!!a.iniDateActive, obs:a.obs||'' };
   _qamRender();
@@ -3060,7 +3089,7 @@ function _qamSaveAcc(){
   const ini=parseFloat(_qam.form.ini)||0;
   let selId;
   if(_qam.editId!==null){
-    const a=A.accounts.find(x=>x.id===_qam.editId);
+    const a=_allAccounts().find(x=>x.id===_qam.editId);
     if(a){a.name=n;a.type=_qam.form.type;a.ini=ini;a.iniDate=_qam.form.iniDate||'';a.iniDateActive=!!_qam.form.iniDateActive;a.obs=_qam.form.obs||'';}
     selId=_qam.editId;
     toast('Conta atualizada!');
@@ -3153,7 +3182,7 @@ function _qamRender(){
   if(_qam.type==='acc'){
     const editing=_qam.editId!==null;
     const typeOpts=ATYPES.map(t=>`<option value="${t.t}" ${_qam.form.type===t.t?'selected':''}>${t.ic} ${t.t}</option>`).join('');
-    const accList=A.accounts.map(a=>`<div onclick="_qamEditAcc(${a.id})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;${_qam.editId===a.id?'background:'+( isDark?'#1e3a8a':'#DBEAFE')+';':''}" onmouseover="this.style.background='${isDark?'#162035':'#F1F5F9'}'" onmouseout="this.style.background='${_qam.editId===a.id?(isDark?'#1e3a8a':'#DBEAFE'):'transparent'}'"><span style="font-size:14px">${atype(a.type).ic}</span><span style="font-size:13px;color:${isDark?'#c8daf0':'#334155'};flex:1">${H(a.name)}</span><span style="font-size:11px;color:${isDark?'#607090':'#94A3B8'}">${a.type}</span></div>`).join('');
+    const accList=_allAccounts().map(a=>`<div onclick="_qamEditAcc(${a.id})" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;${_qam.editId===a.id?'background:'+( isDark?'#1e3a8a':'#DBEAFE')+';':''}" onmouseover="this.style.background='${isDark?'#162035':'#F1F5F9'}'" onmouseout="this.style.background='${_qam.editId===a.id?(isDark?'#1e3a8a':'#DBEAFE'):'transparent'}'"><span style="font-size:14px">${atype(a.type).ic}</span><span style="font-size:13px;color:${isDark?'#c8daf0':'#334155'};flex:1">${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</span><span style="font-size:11px;color:${isDark?'#607090':'#94A3B8'}">${a.type}</span></div>`).join('');
     inner=`
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <div style="flex:1"><label style="${lbStyle}">Nome</label><input id="qam-acc-name" value="${H(_qam.form.name)}" placeholder="Ex: Nubank, Carteira..." style="${inputStyle}" oninput="_qam.form.name=this.value"/></div>
@@ -3213,8 +3242,8 @@ function openForm(mode){
     recur:'none',obs:'',familia:'',refTransfId:null};
   render();
 }
-function editTx(id){const t=A.txs.find(x=>x.id===id);if(!t)return;A.txId=id;A.mode=t.type==='transferencia'?'transferencia':'lanc';A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:t.date,catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(A.accounts[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',refTransfId:t.refTransfId||null};render();}
-function copyTx(id,e){e.stopPropagation();const t=A.txs.find(x=>x.id===id);if(!t)return;A.txId='new';A.mode=t.type==='transferencia'?'transferencia':'lanc';A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:today(),catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(A.accounts[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',refTransfId:null};render();toast('Cópia pronta — revise e salve.','#378ADD');}
+function editTx(id){const t=A.txs.find(x=>x.id===id);if(!t)return;A.txId=id;A.mode=t.type==='transferencia'?'transferencia':'lanc';A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:t.date,catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(_allAccounts()[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',refTransfId:t.refTransfId||null};render();}
+function copyTx(id,e){e.stopPropagation();const t=A.txs.find(x=>x.id===id);if(!t)return;A.txId='new';A.mode=t.type==='transferencia'?'transferencia':'lanc';A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:today(),catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(_allAccounts()[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',refTransfId:null};render();toast('Cópia pronta — revise e salve.','#378ADD');}
 function closeForm(){A.txId=null;render();}
 function updateTrbox(){
   // Atualiza só o painel visual de saldo sem re-renderizar o form inteiro
@@ -3293,7 +3322,7 @@ function rPlan(m){
           <span id="parc-preview" style="font-size:13px;font-weight:600;white-space:nowrap">${(f.parcelas||1)>1&&f.val?`<span style="color:#2563EB">${f.parcelas}x de ${R(parseFloat(f.val)/(f.parcelas||1))}</span>`:'<span style="color:var(--gray-400)">à vista</span>'}</span>
         </div>
       </div>
-      <div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Conta</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamAcc('A.tf','accId')" title="Nova conta">＋ Nova</button><button class="fr-add-btn" onclick="qamAcc('A.tf','accId');setTimeout(()=>{_qamEditAcc(A.tf.accId)},80)" title="Editar conta" style="color:var(--gray-500)">✏ Editar</button></div></div><select onchange="A.tf.accId=parseInt(this.value)||null;render()">${(f.accId==null?'<option value="">— Selecione —</option>':'')+A.accounts.map(a=>`<option value="${a.id}" ${a.id==f.accId?'selected':''}>${a.name}</option>`).join('')}</select></div>
+      <div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Conta</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamAcc('A.tf','accId')" title="Nova conta">＋ Nova</button><button class="fr-add-btn" onclick="qamAcc('A.tf','accId');setTimeout(()=>{_qamEditAcc(A.tf.accId)},80)" title="Editar conta" style="color:var(--gray-500)">✏ Editar</button></div></div><select onchange="A.tf.accId=parseInt(this.value)||null;render()">${(f.accId==null?'<option value="">— Selecione —</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==f.accId?'selected':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('')}</select></div>
       <div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Categoria</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamCat('A.tf','catId','${f.type}')" title="Nova categoria">＋ Nova</button><button class="fr-add-btn" onclick="qamCat('A.tf','catId','${f.type}');setTimeout(()=>{_qamEditCat(A.tf.catId)},80)" title="Editar categoria" style="color:var(--gray-500)">✏ Editar</button></div></div>${buildCatTreePicker(f.catId,f.type,'plan','A.tf.catId')}</div>
       <div class="fr"><label>Repetição</label><select onchange="A.tf.recur=this.value"><option value="none" ${f.recur==='none'?'selected':''}>Sem repetição</option><option value="semanal" ${f.recur==='semanal'?'selected':''}>Semanal</option><option value="mensal" ${f.recur==='mensal'?'selected':''}>Mensal</option><option value="anual" ${f.recur==='anual'?'selected':''}>Anual</option></select></div>
       ${famFieldP}
@@ -3476,7 +3505,7 @@ function iRowPlan(t,rowIdx){
   </div>`;
 }
 function clrPlan(){A.planFormOpen=false;A.txId=null;A.ctpExp={};A.tf={type:'despesa',desc:'',val:'',date:today(),catId:null,accId:null,accDest:null,recur:'none',obs:'',familia:'',parcelas:1};render();}
-function editPlan(id){const t=A.txs.find(x=>x.id===id);if(!t)return;A.planFormOpen=true;A.txId=id;A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:t.date,catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(A.accounts[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',parcelas:1};render();}
+function editPlan(id){const t=A.txs.find(x=>x.id===id);if(!t)return;A.planFormOpen=true;A.txId=id;A.ctpExp={};A.tf={type:t.type,desc:t.desc,val:t.val,date:t.date,catId:t.catId||A.cats[0]?.id||1,accId:t.accId,accDest:t.accDest||(_allAccounts()[1]?.id||1),recur:t.recur||'none',obs:t.obs||'',familia:t.familia||'',parcelas:1};render();}
 function savePlan(){
   const f=A.tf;
   if(!f.desc.trim()||!f.val||parseFloat(f.val)<=0||!f.date){toast('Preencha descrição, valor e data.','#E24B4A');return;}
@@ -3526,13 +3555,6 @@ function savePlan(){
 }
 function launch(id){const t=A.txs.find(x=>x.id===id);if(!t)return;t.done=true;t.planned=true;toast('Lançado!');render();}
 function desfazerLancamento(id){const t=A.txs.find(x=>x.id===id);if(!t)return;t.done=false;toast('Lançamento desfeito.','#888780');render();}
-function _updFixaParcPreview(){
-  const val=document.getElementById('fixa-parc')?.value;
-  A.ff.parcelas=val?(parseInt(val)||null):null;
-  const el=document.getElementById('fixa-parc-preview');
-  if(!el)return;
-  el.innerHTML=fixaParcEndLabel(A.ff);
-}
 function _updParcPreview(){
   const parc=parseInt(document.getElementById('plan-parc')?.value)||1;
   const val=parseFloat(document.getElementById('plan-val')?.value)||0;
@@ -3541,17 +3563,25 @@ function _updParcPreview(){
   A.tf.parcelas=parc;A.tf.val=val||A.tf.val;
   el.innerHTML=parc>1&&val?`<span style="color:#2563EB">${parc}x de ${R(val/parc)}</span>`:'<span style="color:var(--gray-400)">à vista</span>';
 }
+function _updFixaParcPreview(){
+  const val=document.getElementById('fixa-parc')?.value;
+  A.ff.parcelas=val?(parseInt(val)||null):null;
+  const el=document.getElementById('fixa-parc-preview');
+  if(!el)return;
+  el.innerHTML=fixaParcEndLabel(A.ff);
+}
 
 /* ─── CONTAS ─── */
 function rContas(m){
-  const tot=A.accounts.reduce((s,a)=>s+bal(a),0);
-  const accCards=A.accounts.map(a=>{
-    const bv=balView(a);const at=atype(a.type);
+  const allAccs=_allAccounts();
+  const tot=allAccs.reduce((s,a)=>s+bal(a),0);
+  const accCards=allAccs.map(a=>{
+    const bv=balView(a);const at=atype(a.type);const shared=_isSharedAcc(a.id);
     return '<div class="acc-c ' + (A.aeId===a.id?'hl':'') + '">'
       + '<div class="acc-ic" style="background:' + at.bg + '">' + at.ic + '</div>'
       + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:14px;font-weight:600;color:var(--gray-900)">' + H(a.name) + '</div>'
-        + '<div style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + '<span>' + a.type + (a.familia?' · <span style="color:#7C3AED;font-weight:600">👤 '+H(a.familia)+'</span>':'') + '</span>' + _ctlBadgeHtml(a) + '</div>'
+        + '<div style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + '<span>' + a.type + (a.familia?' · <span style="color:#7C3AED;font-weight:600">👤 '+H(a.familia)+'</span>':'') + '</span>' + (shared?'<span title="Compartilhada entre todos os controles" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#7C3AED;background:#EDE9FE;border-radius:99px;padding:1px 7px;white-space:nowrap">🔗 Compartilhada</span>':'') + _ctlBadgeHtml(a) + '</div>'
         + (a.obs ? '<div style="font-size:11px;color:var(--gray-400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H(a.obs) + '</div>' : '')
       + '</div>'
       + '<div style="text-align:right;flex-shrink:0;margin-right:4px">'
@@ -3565,7 +3595,7 @@ function rContas(m){
   }).join('');
   m.innerHTML=
     '<div class="row3">'
-      + '<div class="stat"><div class="lbl">Contas</div><div class="val">' + A.accounts.length + '</div></div>'
+      + '<div class="stat"><div class="lbl">Contas</div><div class="val">' + allAccs.length + '</div></div>'
       + '<div class="stat"><div class="lbl">Patrimônio</div><div class="val" style="color:' + (tot>=0?'#1D9E75':'#E24B4A') + '">' + R(tot) + '</div></div>'
       + '<div class="stat"><div class="lbl">Lançamentos</div><div class="val">' + A.txs.filter(t=>t.done).length + '</div></div>'
     + '</div>'
@@ -3595,14 +3625,23 @@ function accFHTML(){
         </div>
       </label>
     </div>
+    <div class="fr full" style="background:${f.shared?'#EDE9FE':'var(--gray-50)'};border-radius:var(--radius-md);padding:8px 10px;border:1.5px solid ${f.shared?'#A78BFA':'var(--gray-200)'};transition:all .2s">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="chk-shared" ${f.shared?'checked':''} onchange="A.af.shared=this.checked;render()" style="width:14px;height:14px;cursor:pointer;accent-color:#7C3AED;flex-shrink:0"/>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:${f.shared?'#6D28D9':'var(--gray-600)'}">🔗 Conta compartilhada entre todos os controles</span>
+        </div>
+      </label>
+      ${f.shared?'<div style="font-size:11px;color:#6D28D9;margin-top:4px;padding-left:22px">O saldo somará os lançamentos feitos nesta conta em qualquer controle.</div>':''}
+    </div>
     <div class="fr full"><label>Observações</label><textarea oninput="A.af.obs=this.value" placeholder="Ex: Banco usado para débitos automáticos, limite do cartão, agência...">${H(f.obs||'')}</textarea></div>
   </div>
   <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:12px">
     <button class="btn-g" onclick="closeAccForm()">Cancelar</button>
     <button class="btn-r" onclick="saveAcc()"><span>✓</span> ${e?'Salvar':'Criar'}</button>
   </div>`;
-}function openAccForm(){A.aeId=null;A.delAcc=null;A.af={name:'',type:'Conta corrente',ini:'',iniDate:'',iniDateActive:false,obs:'',familia:'',open:true};render();}
-function editAcc(id){const a=A.accounts.find(x=>x.id===id);if(!a)return;A.aeId=id;A.delAcc=null;A.af={name:a.name,type:a.type,ini:a.ini,iniDate:a.iniDate||'',iniDateActive:!!a.iniDateActive,obs:a.obs||'',familia:a.familia||'',open:true};render();}
+}function openAccForm(){A.aeId=null;A.delAcc=null;A.af={name:'',type:'Conta corrente',ini:'',iniDate:'',iniDateActive:false,obs:'',familia:'',shared:false,open:true};render();}
+function editAcc(id){const a=_allAccounts().find(x=>x.id===id);if(!a)return;A.aeId=id;A.delAcc=null;A.af={name:a.name,type:a.type,ini:a.ini,iniDate:a.iniDate||'',iniDateActive:!!a.iniDateActive,obs:a.obs||'',familia:a.familia||'',shared:_isSharedAcc(id),open:true};render();}
 function closeAccForm(){A.aeId=null;A.af={...A.af,open:false};render();}
 function saveAcc(){
   // Lê campos direto do DOM como fallback (garante captura mesmo sem oninput disparar)
@@ -3616,25 +3655,62 @@ function saveAcc(){
   const obs=A.af.obs||'';
   const iniDate=A.af.iniDate||'';
   const iniDateActive=!!A.af.iniDateActive;
+  const wantShared=!!A.af.shared;
   if(!n){toast('Informe o nome.','#E24B4A');return;}
-  if(A.aeId!==null){
-    const a=A.accounts.find(x=>x.id===A.aeId);
-    if(a){a.name=n;a.type=A.af.type;a.ini=ini;a.iniDate=iniDate;a.iniDateActive=iniDateActive;a.obs=obs;a.familia=A.af.familia||'';}
-    toast('Atualizada!');
-  } else {
-    A.accounts.push({id:A.nid++,name:n,type:A.af.type,ini,iniDate,iniDateActive,obs,familia:A.af.familia||''});
-    toast('Criada!');
+
+  function _applySaveAcc(){
+    if(A.aeId!==null){
+      const wasShared=_isSharedAcc(A.aeId);
+      const srcList=wasShared?A.sharedAccounts:A.accounts;
+      const i=srcList.findIndex(x=>x.id===A.aeId);
+      if(i!==-1){
+        const updated={...srcList[i],name:n,type:A.af.type,ini,iniDate,iniDateActive,obs,familia:A.af.familia||''};
+        srcList.splice(i,1);
+        if(wantShared){ if(!A.sharedAccounts)A.sharedAccounts=[]; A.sharedAccounts.push(updated); }
+        else { A.accounts.push(updated); }
+      }
+      if(wantShared&&!wasShared) toast('🔗 Conta agora é compartilhada entre todos os controles.','#7C3AED',4000);
+      else if(!wantShared&&wasShared) toast('Conta agora é exclusiva deste controle.','#D97706',4000);
+      else toast('Atualizada!');
+    } else {
+      const obj={id:A.nid++,name:n,type:A.af.type,ini,iniDate,iniDateActive,obs,familia:A.af.familia||''};
+      if(wantShared){ if(!A.sharedAccounts)A.sharedAccounts=[]; A.sharedAccounts.push(obj); toast('🔗 Conta compartilhada criada!','#7C3AED'); }
+      else { A.accounts.push(obj); toast('Criada!'); }
+    }
+    closeAccForm();
   }
-  closeAccForm();
+
+  // Se está deixando de ser compartilhada e existem lançamentos feitos em
+  // OUTROS controles usando essa conta, avisa antes (eles deixarão de aparecer aqui).
+  if(A.aeId!==null && _isSharedAcc(A.aeId) && !wantShared){
+    const outros=_acctTxCountInOtherControles(A.aeId);
+    if(outros>0){
+      _showConfirm('Tornar conta exclusiva?',
+        `Esta conta tem <strong>${outros}</strong> lançamento(s) em outro(s) controle(s). Eles continuarão existindo, mas a conta não aparecerá mais nos outros controles depois dessa mudança.`,
+        _applySaveAcc);
+      return;
+    }
+  }
+  _applySaveAcc();
 }
 function askDelAcc(id){
-  const a=A.accounts.find(x=>x.id===id);
-  const n=A.txs.filter(t=>t.accId===id||t.accDest===id).length;
-  const extra=n>0?`<br><span style="color:#DC2626;font-weight:600">⚠ ${n} lançamento(s) vinculado(s).</span>`:'';
-  _showConfirm('Excluir conta?',`"<strong>${H(a?.name)}</strong>" será removida permanentemente.${extra}`,
-    ()=>{A.accounts=A.accounts.filter(a=>a.id!==id);A.delAcc=null;toast('Excluída.','#888780');render();});
+  const a=_allAccounts().find(x=>x.id===id);
+  const shared=_isSharedAcc(id);
+  const n=shared?_allTxsAcrossControles().filter(t=>t.accId===id||t.accDest===id).length:A.txs.filter(t=>t.accId===id||t.accDest===id).length;
+  const extra=n>0?`<br><span style="color:#DC2626;font-weight:600">⚠ ${n} lançamento(s) vinculado(s)${shared?' (somando todos os controles)':''}.</span>`:'';
+  const sharedWarn=shared?'<br><span style="color:#7C3AED;font-weight:600">🔗 Conta compartilhada — será removida de todos os controles.</span>':'';
+  _showConfirm('Excluir conta?',`"<strong>${H(a?.name)}</strong>" será removida permanentemente.${extra}${sharedWarn}`,
+    ()=>{
+      if(shared){ A.sharedAccounts=(A.sharedAccounts||[]).filter(x=>x.id!==id); }
+      else { A.accounts=A.accounts.filter(x=>x.id!==id); }
+      A.delAcc=null;toast('Excluída.','#888780');render();
+    });
 }
-function doDelAcc(){A.accounts=A.accounts.filter(a=>a.id!==A.delAcc);A.delAcc=null;toast('Excluída.','#888780');render();}
+function doDelAcc(){
+  if(_isSharedAcc(A.delAcc)){ A.sharedAccounts=(A.sharedAccounts||[]).filter(x=>x.id!==A.delAcc); }
+  else { A.accounts=A.accounts.filter(a=>a.id!==A.delAcc); }
+  A.delAcc=null;toast('Excluída.','#888780');render();
+}
 function accCBox(){return '';}
 
 /* ─── CONTROLES (múltiplos "livros" financeiros no mesmo login) ─── */
@@ -4051,7 +4127,7 @@ const OPFS_FILE     = 'pfp_data.json';   // arquivo OPFS
 const FS_HANDLE_KEY = 'pfp_storage_mode'; // 'disk' | 'opfs' | 'local'
 
 // Campos do estado A que devem ser persistidos
-const DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache'];
+const DB_FIELDS = ['nid','familia','cats','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts'];
 
 // ── Separação de dados por usuário ──────────────────────────────────
 // GLOBAL_FIELDS: compartilhado entre todos (lista de contas de login + contador de IDs)
@@ -4063,7 +4139,7 @@ const GLOBAL_FIELDS      = ['usuarios','nid'];
 const CONTROLE_CONTENT_FIELDS = ['familia','cats','accounts','fixas','txs','senhas'];
 // USER_FIELDS: tudo que é privado do usuário — inclui o conteúdo do controle
 // ativo no momento + a lista de controles e o cache com os demais controles.
-const USER_FIELDS        = ['familia','cats','accounts','fixas','txs','senhas','controles','controleAtivo','controlesCache'];
+const USER_FIELDS        = ['familia','cats','accounts','fixas','txs','senhas','controles','controleAtivo','controlesCache','sharedAccounts'];
 const MIGRATION_FLAG_KEY = 'pfp_v11_migrated_per_user';
 function userDataKey(id){ return 'pfp_v11_user_' + id; }
 // Chave de localStorage onde os dados de CONTEÚDO do usuário ativo devem ser lidos/gravados
@@ -4741,7 +4817,7 @@ function _ctlContentFor(id){
   return (A.controlesCache && A.controlesCache[id]) ? A.controlesCache[id] : _blankControleData();
 }
 function _mergedField(field){
-  const ids=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?A.ctlMultiSel:[A.controleAtivo];
+  const ids=_ctlNormSel();
   const out=[];
   ids.forEach(id=>{
     const c=A.controles.find(x=>x.id===id); if(!c) return;
@@ -4750,14 +4826,28 @@ function _mergedField(field){
   });
   return out;
 }
+function _ctlNormSel(){
+  // Garante que A.ctlMultiSel só contenha ids de controles existentes e nunca fique
+  // vazio/dessincronizado de A.controleAtivo. Chamar sempre antes de ler ou alterar a seleção.
+  const validIds=new Set(A.controles.map(c=>c.id));
+  if(!validIds.has(A.controleAtivo)){
+    A.controleAtivo=A.controles[0]?A.controles[0].id:null;
+  }
+  let sel=Array.isArray(A.ctlMultiSel)?A.ctlMultiSel.filter(x=>validIds.has(x)):[];
+  if(sel.length===0){
+    sel=(A.controleAtivo!=null)?[A.controleAtivo]:[];
+  }
+  A.ctlMultiSel=sel;
+  return sel;
+}
 function toggleCtlSel(id){
   id=Number(id);
-  let sel=(Array.isArray(A.ctlMultiSel)&&A.ctlMultiSel.length)?[...A.ctlMultiSel]:[A.controleAtivo];
+  let sel=[..._ctlNormSel()];
   if(sel.includes(id)){
     if(sel.length<=1){ toast('Selecione ao menos um controle.','#D97706'); return; }
     sel=sel.filter(x=>x!==id);
     A.ctlMultiSel=sel;
-    if(sel.length===1 && sel[0]!==A.controleAtivo){ switchControle(sel[0]); return; }
+    if(sel.length===1 && sel[0]!==A.controleAtivo){ switchControle(sel[0]); }
   } else {
     sel.push(id);
     A.ctlMultiSel=sel;
@@ -4765,12 +4855,19 @@ function toggleCtlSel(id){
   render();
 }
 function ctlSelAll(){ A.ctlMultiSel=A.controles.map(c=>c.id); render(); }
+function ctlDeselAll(){
+  const keep=(A.controles.some(c=>c.id===A.controleAtivo))?A.controleAtivo:(A.controles[0]&&A.controles[0].id);
+  if(keep==null) return;
+  A.ctlMultiSel=[keep];
+  if(keep!==A.controleAtivo) switchControle(keep);
+  render();
+}
 function _ctlBadgeHtml(item){
   if(!item || !item._ctlNome) return '';
   return `<span title="Controle: ${H(item._ctlNome)}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#1E3A8A;background:#DBEAFE;border-radius:99px;padding:1px 7px;white-space:nowrap;flex-shrink:0">${item._ctlIcone||'💼'} ${H(item._ctlNome)}</span>`;
 }
 function _ctlMultiNoteHtml(){
-  const ids=A.ctlMultiSel||[];
+  const ids=_ctlNormSel();
   const nomes=ids.map(id=>{ const c=A.controles.find(x=>x.id===id); return c?`${c.icone||'💼'} ${H(c.nome)}`:''; }).filter(Boolean).join(' + ');
   return `<div style="display:flex;align-items:center;gap:8px;background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A8A;border-radius:var(--radius-md);padding:8px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600">🗂️📊 Visualização combinada (somente leitura): ${nomes}</div>`;
 }
@@ -4819,7 +4916,8 @@ function _runContentSchemaMigrations(){
       f.inicioEm=pagMeses.length>0?pagMeses[0]:thisMonth();
     }
   });
-  (A.accounts||[]).forEach(a=>{
+  if(!Array.isArray(A.sharedAccounts)) A.sharedAccounts=[];
+  (A.accounts||[]).concat(A.sharedAccounts||[]).forEach(a=>{
     if(a.iniDate===undefined) a.iniDate='';
     if(a.iniDateActive===undefined) a.iniDateActive=false;
     a.iniDateActive=(a.iniDateActive===true||a.iniDateActive==='true');
@@ -5603,7 +5701,8 @@ window._fbAuthReady = new Promise(resolve => { window._fbAuthReadyResolve = reso
       f.inicioEm=pagMeses.length>0?pagMeses[0]:thisMonth();
     }
   });
-  A.accounts.forEach(a=>{
+  if(!Array.isArray(A.sharedAccounts)) A.sharedAccounts=[];
+  A.accounts.concat(A.sharedAccounts).forEach(a=>{
     if(a.iniDate===undefined) a.iniDate='';
     if(a.iniDateActive===undefined) a.iniDateActive=false;
     a.iniDateActive=(a.iniDateActive===true||a.iniDateActive==='true');
@@ -5914,7 +6013,7 @@ let _csvState = null;
 function openCsvImport() {
   _csvState = {
     step: 'upload', // 'upload' | 'preview'
-    accId: A.accounts[0]?.id || null,
+    accId: _allAccounts()[0]?.id || null,
     rows: [],
     format: '',
     selected: new Set(),
@@ -5951,7 +6050,7 @@ function _renderCsvModal() {
 
   // ── STEP 1: UPLOAD ──
   if (s.step === 'upload') {
-    const accOpts = A.accounts.map(a => `<option value="${a.id}" ${a.id == s.accId ? 'selected' : ''}>${a.name}</option>`).join('');
+    const accOpts = _allAccounts().map(a => `<option value="${a.id}" ${a.id == s.accId ? 'selected' : ''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
     el.innerHTML = `
     <div style="background:${bg};border:${border};border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.22);padding:24px;width:100%;max-width:480px;font-family:var(--font-sans)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -5991,7 +6090,7 @@ function _renderCsvModal() {
 
   // ── STEP 2: PREVIEW ──
   const { rows, format, accId, selected } = s;
-  const accName = (A.accounts.find(a => a.id == accId) || {}).name || '?';
+  const accName = (_allAccounts().find(a => a.id == accId) || {}).name || '?';
 
   // Gera hash simples para deduplicação
   function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
@@ -7194,7 +7293,7 @@ function rRelatorio(m){
 
   // ── montar options ──
   const mesOpts=Object.entries(MNLONG).map(([v,n])=>`<option value="${ano}-${v}" ${f.mes===ano+'-'+v?'selected':''}>${n}</option>`).join('');
-  const accOpts=`<option value="all">Todas</option>`+A.accounts.map(a=>`<option value="${a.id}" ${String(f.accId)===String(a.id)?'selected':''}>${H(a.name)}</option>`).join('');
+  const accOpts=`<option value="all">Todas</option>`+_allAccounts().map(a=>`<option value="${a.id}" ${String(f.accId)===String(a.id)?'selected':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const catOpts=`<option value="all">Todas</option>`+A.cats.filter(c=>!c.parentId).map(c=>`<option value="${c.id}" ${String(f.catId)===String(c.id)?'selected':''}>${H(c.name)}</option>`).join('');
 
   // ── card de planejados (resumo) ──
@@ -7538,11 +7637,6 @@ function _loginRequired(){
 function _showLoginScreen(){
   const el = document.getElementById('app-login-screen');
   if(el){ el.style.display='flex'; }
-
-  // Aviso de senha padrão
-  const hasDefault = (A.usuarios||[]).some(u=>u._senhaDefault);
-  const warn = document.getElementById('login-default-warn');
-  if(warn) warn.style.display = hasDefault ? 'block' : 'none';
 
   // Limpa erro anterior
   const errEl = document.getElementById('login-err');
