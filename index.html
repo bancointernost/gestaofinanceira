@@ -474,6 +474,64 @@ html.dark .rg-wrap select,html.dark .rg-wrap input{background:#162035;border-col
 .rg-item .row-actions{display:flex;gap:2px}
 .csv-regra{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid var(--gray-200);background:none;color:var(--gray-500);cursor:pointer;font-size:13px;flex-shrink:0;padding:0}
 .csv-regra:hover{border-color:var(--amber);color:var(--amber);background:var(--amber-light)}
+.csv-filtro{display:flex;align-items:center;gap:6px;flex:1 1 260px;min-width:220px;max-width:420px;padding:0 8px 0 10px;height:30px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:var(--gray-500)}
+.csv-filtro:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+.csv-filtro.on{border-color:var(--blue)}
+.csv-filtro input{flex:1;min-width:0;border:none;outline:none;background:none;font-size:12.5px;font-family:var(--font-sans);color:var(--color-text-primary);padding:0;height:100%}
+.csv-filtro input::-webkit-search-cancel-button{display:none}
+.csv-filtro-n{font-size:11px;font-weight:600;color:var(--blue);white-space:nowrap}
+.csv-filtro-x{border:none;background:none;cursor:pointer;color:var(--gray-500);font-size:12px;padding:2px 4px;line-height:1}
+.csv-filtro-x:hover{color:var(--expense)}
+html.dark .csv-filtro{background:#162035;border-color:#2e3d55;color:#8aafd4}
+html.dark .csv-filtro input{color:#e0eeff}
+html.dark .csv-filtro.on,html.dark .csv-filtro:focus-within{border-color:#3b82f6}
+html.dark .csv-filtro-n{color:#93c5fd}
+.csv-ver{display:inline-flex;border:1px solid var(--gray-200);border-radius:8px;overflow:hidden;height:30px;flex-shrink:0}
+.csv-ver button{border:none;border-right:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:var(--gray-500);font-size:12px;font-family:var(--font-sans);padding:0 10px;cursor:pointer;white-space:nowrap}
+.csv-ver button:last-child{border-right:none}
+.csv-ver button b{font-weight:700;margin-left:2px}
+.csv-ver button:hover{color:var(--color-text-primary)}
+.csv-ver button.on{background:var(--blue);color:#fff}
+.csv-ver button.sim.on{background:var(--income)}
+.csv-ver button.nao.on{background:#64748B}
+html.dark .csv-ver{border-color:#2e3d55}
+html.dark .csv-ver button{background:#162035;color:#8aafd4;border-color:#2e3d55}
+html.dark .csv-ver button.on{color:#fff;background:#2563EB}
+html.dark .csv-ver button.sim.on{background:#047857}
+html.dark .csv-ver button.nao.on{background:#475569}
+.csv-tot{margin-right:auto;display:flex;flex-direction:column;gap:4px;min-width:0}
+.csv-tot-lin{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+.csv-tot-tit{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500);padding:4px 6px 0 0;line-height:1.35}
+.csv-tot-tit span{font-weight:500;text-transform:none;letter-spacing:0}
+.csv-tot-c{display:flex;flex-direction:column;gap:1px;padding:5px 12px;border-radius:10px;border:1px solid var(--gray-200);background:var(--gray-50);min-width:110px}
+.csv-tot-c span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500)}
+.csv-tot-c strong{font-family:var(--font-mono);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.csv-tot-c.rec strong{color:var(--income)}
+.csv-tot-c.desp strong{color:var(--expense)}
+.csv-tot-c.saldo.pos{border-color:var(--income)}.csv-tot-c.saldo.pos strong{color:var(--income)}
+.csv-tot-c.saldo.neg{border-color:var(--expense)}.csv-tot-c.saldo.neg strong{color:var(--expense)}
+.csv-tot-filtro{font-size:11.5px;color:var(--gray-500)}
+.csv-tot-filtro strong{color:var(--color-text-primary);font-family:var(--font-mono)}
+html.dark .csv-tot-c{background:#0a0f1a;border-color:#1e2d45}
+html.dark .csv-tot-c.rec strong,html.dark .csv-tot-c.saldo.pos strong{color:#34d399}
+html.dark .csv-tot-c.desp strong,html.dark .csv-tot-c.saldo.neg strong{color:#f87171}
+html.dark .csv-tot-c.saldo.pos{border-color:#065f46}html.dark .csv-tot-c.saldo.neg{border-color:#7f1d1d}
+html.dark .csv-tot-filtro strong{color:#e0eeff}
+.tx-semconta{border:1px dashed var(--amber);background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;font-family:var(--font-sans)}
+.tx-semconta:hover{border-style:solid}
+.tx-semconta-btn{border-color:var(--amber)!important;color:var(--amber)!important}
+html.dark .tx-semconta{background:#3a2a06;color:#fbbf24;border-color:#b45309}
+.recat-n{display:inline-block;min-width:18px;padding:0 5px;margin-left:2px;border-radius:999px;background:var(--gray-200);color:var(--color-text-primary);font-size:11px;font-weight:700;line-height:18px;text-align:center}
+html.dark .recat-n{background:#2e3d55;color:#e0eeff}
+.csv-orig{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:6px;font-size:11px;cursor:help;flex-shrink:0;background:var(--gray-50);color:var(--gray-500)}
+.csv-orig.vazio{opacity:.5}
+.csv-orig.o-ia{background:#f3e8ff}.csv-orig.o-historico{background:#e0f2fe}.csv-orig.o-palavra{background:#f1f5f9}.csv-orig.o-planilha{background:#ecfdf5}.csv-orig.o-regra{background:#fef3c7}.csv-orig.o-manual{background:#eff6ff}
+.csv-cat-resumo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--gray-500);margin:-4px 0 10px;flex-shrink:0}
+.csv-cat-resumo strong{color:var(--color-text-primary);font-weight:600;margin-right:2px}
+.csv-cr{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;border:1px solid var(--gray-200);background:var(--gray-50);white-space:nowrap;cursor:help}
+.csv-cr.o-nenhuma{border-style:dashed}
+.csv-cat-nota{font-size:11.5px;color:var(--gray-500);margin:-4px 0 10px;line-height:1.5;flex-shrink:0}
+html.dark .csv-orig,html.dark .csv-cr{background:#162035;border-color:#1e2d45}
 .csv-regra.on{border-color:var(--amber);background:var(--amber-light);color:var(--amber)}
 .csv-rg-auto{display:flex;align-items:center;gap:10px;border:1px dashed var(--gray-300,#cbd5e1);border-radius:10px;padding:8px 14px;font-size:12px;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-weight:400}
 .csv-rg-auto.on{border-style:solid;border-color:var(--amber);background:var(--amber-light)}
@@ -1069,7 +1127,7 @@ html.dark .ctp-ed-x,html.dark .ctp-cancel{background:#162035;border-color:#1e2d4
 .tx-modal-box{background:var(--color-background-primary,#fff);border-radius:var(--radius-xl);box-shadow:0 24px 60px rgba(15,23,42,.22),0 8px 24px rgba(15,23,42,.12);padding:22px 22px 18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;animation:slideDialog .18s cubic-bezier(.34,1.56,.64,1)}
 html.dark .tx-modal-box{background:#0f1e35;border:1px solid #1e2d45}
 /* ─── QUICK-ADD INLINE MODAL (cadastro rápido no lançamento) ─── */
-.qam-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:8000;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeOverlay .15s ease}
+.qam-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:8600;display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeOverlay .15s ease}
 .qam-box{background:var(--color-background-primary,#fff);border-radius:var(--radius-xl);box-shadow:0 24px 60px rgba(15,23,42,.22),0 8px 24px rgba(15,23,42,.12);padding:22px 22px 18px;width:100%;max-width:400px;animation:slideDialog .18s cubic-bezier(.34,1.56,.64,1)}
 .qam-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .qam-title{font-size:15px;font-weight:700;color:var(--color-text-primary)}
@@ -1464,6 +1522,36 @@ html.dark .senha-toggle:hover{color:#c8daf0}
   .pl-val{min-width:0}
   .lanc-filter-sel{flex:1 1 140px}
 }
+
+.csv-fam{width:100%;min-width:118px;max-width:170px;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--gray-200,#CBD5E1);background:var(--color-background-primary,#fff);color:inherit;font-family:var(--font-sans);cursor:pointer}
+.csv-fam.regra{border-color:#f59e0b;box-shadow:inset 3px 0 0 #f59e0b}
+html.dark .csv-fam{background:#162035;border-color:#2e3d55;color:#c8daf0}
+.rg-fam{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:#EDE9FE;color:#5B21B6;white-space:nowrap}
+html.dark .rg-fam{background:#1e1050;color:#c4b5fd}
+.rg-semcat{font-size:12px;color:var(--gray-400);font-style:italic}
+.rg-c-fam select{width:100%}
+
+.csv-th-sort button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;border-radius:4px;padding:2px 4px;margin:-2px -4px}
+.csv-th-sort button:hover{background:rgba(37,99,235,.12)}
+.csv-th-sort button:focus-visible{outline:2px solid #3b82f6;outline-offset:1px}
+.csv-sort-ic{font-size:9px;opacity:.55}
+.csv-th-sort.on .csv-sort-ic{opacity:1}
+
+.cp-lista{display:flex;flex-direction:column;gap:8px}
+.cp-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--gray-200);border-radius:12px;cursor:pointer;transition:border-color .15s,background .15s}
+.cp-item:hover{border-color:var(--blue)}
+.cp-item.on{border-color:var(--transfer);background:rgba(124,58,237,.06)}
+.cp-item input{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:var(--transfer)}
+.cp-ic{width:30px;height:30px;border-radius:8px;background:var(--gray-100,#F1F5F9);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cp-txt{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13.5px;color:var(--gray-900)}
+.cp-txt span{font-size:12px;color:var(--gray-500)}
+.cp-st{font-size:11.5px;font-weight:600;color:var(--gray-400);white-space:nowrap}
+.cp-item.on .cp-st{color:var(--transfer)}
+.cp-aviso{margin-top:10px;font-size:12px;color:var(--amber);line-height:1.5}
+.cp-nota{margin:10px 0 0;padding:8px 12px;border-radius:10px;font-size:12.5px;background:rgba(124,58,237,.08);color:var(--transfer);border:1px solid rgba(124,58,237,.25)}
+.cp-nota a{color:inherit;font-weight:700}
+html.dark .cp-ic{background:#162035}
+@media(max-width:600px){.cp-st{display:none}}
 </style>
 <body>
 <!-- Ícones: Lucide (https://lucide.dev) — licença ISC -->
@@ -1891,6 +1979,8 @@ let A={
   // Contas marcadas como compartilhadas entre TODOS os controles do usuário
   // (saldo soma lançamentos feitos em qualquer controle que a utilize).
   sharedAccounts:[],
+  // Cadastros compartilhados entre todos os controles (Configurações › Controles)
+  compart:{despesa:false,receita:false,transferencia:false,familia:false,regras:false},
   catRegras:[],
   ctlForm:{name:'',icone:'💼',open:false},cteId:null,delCtl:null,
   catTab:'despesa', catSelId:null, catExpanded:{},
@@ -2024,7 +2114,7 @@ let A={
 // Usado para resetar o estado em memória ao trocar de conta Firebase,
 // evitando que os dados do usuário anterior "vazem"/sejam salvos por engano
 // na conta recém-logada antes dos dados reais dela serem carregados da nuvem.
-const _SEED_DB_FIELDS = ['nid','familia','cats','catRegras','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts'];
+const _SEED_DB_FIELDS = ['nid','familia','cats','catRegras','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts','compart'];
 const _SEED_DATA = JSON.parse(JSON.stringify(_SEED_DB_FIELDS.reduce((o,k)=>{o[k]=A[k];return o;},{})));
 function _resetAppDataToSeed(){
   const fresh = JSON.parse(JSON.stringify(_SEED_DATA));
@@ -2079,8 +2169,9 @@ function _vinculosConta(id){
 function _vinculosCategoria(id){
   const ids=_catDescIds(id);
   const subs=A.cats.filter(c=>c.parentId!=null&&c.parentId==id).length;
-  const nTx=(A.txs||[]).filter(t=>ids.has(Number(t.catId))).length;
-  const nFx=(A.fixas||[]).filter(f=>ids.has(Number(f.catId))).length;
+  const _c=_catById(id); const _todos=_c&&_compartOn(_c.tipo)?_todosConteudos():[{txs:A.txs||[],fixas:A.fixas||[]}];
+  const nTx=_todos.reduce((n,d)=>n+(d.txs||[]).filter(t=>ids.has(Number(t.catId))).length,0);
+  const nFx=_todos.reduce((n,d)=>n+(d.fixas||[]).filter(f=>ids.has(Number(f.catId))).length,0);
   const nRg=_regras().filter(r=>ids.has(Number(r.catId))).length;
   return [
     {n:subs,txt:_plural(subs,'subcategoria dentro dela','subcategorias dentro dela')},
@@ -2092,7 +2183,7 @@ function _vinculosCategoria(id){
 function _vinculosFamilia(id){
   const item=famById(id); if(!item) return [];
   const filhos=famChildren(id).length;
-  const nTx=(A.txs||[]).filter(t=>t.familia===item.name).length;
+  const nTx=(_compartOn('familia')?_todosConteudos():[{txs:A.txs||[]}]).reduce((n,d)=>n+(d.txs||[]).filter(t=>t.familia===item.name).length,0);
   return [
     {n:filhos,txt:_plural(filhos,'membro dentro deste grupo','membros dentro deste grupo')},
     {n:nTx,txt:_plural(nTx,'lançamento','lançamentos')},
@@ -2439,6 +2530,8 @@ window.addEventListener('resize',()=>{ const d=document.querySelector('.ctp-drop
 function _txDescInput(el){
   A.tf.desc=el.value;
   if(A.txId!=='new'||A.tf._catManual||A.tf.type==='transferencia') return;
+  const _fr=typeof _famPorRegra==='function'?_famPorRegra(el.value,A.tf.type):null;
+  if(_fr&&(!A.tf.familia||A.tf._famSug)&&_fr.familia!==A.tf.familia){ A.tf.familia=_fr.familia; A.tf._famSug=true; const fs=document.getElementById('tf-fam-sel'); if(fs) fs.value=_fr.familia; }
   const id=_catSugerida(el.value,A.tf.type);
   if(id&&id!==A.tf.catId){ A.tf.catId=id; A.tf._catSug=true; _ctpSetTrigger('tf',id);
     const tg=document.getElementById('ctp-sug-tf'); if(tg) tg.style.display=''; }
@@ -2469,6 +2562,32 @@ function migrateFamilia(){
   }
 }
 function _allAccounts(){ return [...A.accounts, ...(A.sharedAccounts||[])]; }
+function _accExiste(id){ return id!=null&&id!==''&&_allAccounts().some(a=>String(a.id)===String(id)); }
+// Lançamentos cuja conta não existe mais (ou nunca foi gravada) — aparecem com "?" no Extrato
+function _txsSemConta(){ return (A.txs||[]).filter(t=>!_accExiste(t.accId)||(t.type==='transferencia'&&t.accDest!=null&&!_accExiste(t.accDest))); }
+function corrigirContas(){
+  const lst=_txsSemConta(); if(!lst.length){ toast('Todos os lançamentos têm conta.'); return; }
+  const accs=_allAccounts(); if(!accs.length){ toast('Cadastre uma conta primeiro.','var(--amber)'); return; }
+  // sugestão: se vieram de fatura ("Cartão final ..."), o 1º cartão; senão a conta mais usada
+  const deCartao=lst.filter(t=>/cart[aã]o final/i.test(t.obs||'')||t.origem==='pdf').length>lst.length/2;
+  const uso={}; (A.txs||[]).forEach(t=>{ if(_accExiste(t.accId)) uso[t.accId]=(uso[t.accId]||0)+1; });
+  // 1º: a conta dos outros lançamentos com o mesmo "Cartão final XXXX"; 2º: o cartão mais usado; 3º: a conta mais usada
+  const fin=t=>((t.obs||'').match(/cart[aã]o final (\d{4})/i)||[])[1];
+  const finais=new Set(lst.map(fin).filter(Boolean)); const pf={};
+  if(finais.size) (A.txs||[]).forEach(t=>{ const f=fin(t); if(f&&finais.has(f)&&_accExiste(t.accId)) pf[t.accId]=(pf[t.accId]||0)+1; });
+  const porUso=l=>l.slice().sort((a,b)=>(uso[b.id]||0)-(uso[a.id]||0))[0];
+  const sug=accs.slice().filter(a=>pf[a.id]).sort((a,b)=>pf[b.id]-pf[a.id])[0]||(deCartao&&porUso(accs.filter(isCC)))||porUso(accs);
+  const ex=lst.slice(0,5).map(t=>`<li>${D(t.date)} · ${H(t.desc||'')} · ${R(t.val)}</li>`).join('');
+  _showConfirm('Lançamentos sem conta',`<strong>${lst.length}</strong> lançamento(s) estão com uma conta que não existe (aparecem com “?” no Extrato). Ao editar, o formulário mostrava a primeira conta da lista, mas ela não estava gravada.
+    <ul style="margin:8px 0 10px 18px;font-size:12px;color:var(--gray-500)">${ex}${lst.length>5?`<li>… e mais ${lst.length-5}</li>`:''}</ul>
+    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Gravar a conta</label>
+    <select id="fix-acc" style="width:100%;padding:8px 10px;border-radius:8px">${accs.map(a=>`<option value="${a.id}" ${a.id===sug.id?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>
+    <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">Se forem de contas diferentes, filtre no Extrato e ajuste os que não forem desta conta depois.</div>`,()=>{
+    const el=document.getElementById('fix-acc'); const v=el?el.value:null; const acc=_allAccounts().find(a=>String(a.id)===String(v)); if(!acc) return;
+    let n=0; lst.forEach(t=>{ if(!_accExiste(t.accId)){ t.accId=acc.id; n++; } if(t.type==='transferencia'&&t.accDest!=null&&!_accExiste(t.accDest)) t.accDest=null; });
+    toast(`${n} lançamento(s) agora na conta ${acc.name}.`,'var(--income)'); render();
+  },{okLabel:'Gravar conta',okColor:'var(--blue)'});
+}
 function _isSharedAcc(id){ return (A.sharedAccounts||[]).some(a=>a.id===id); }
 // Junta os lançamentos do controle ativo com os de todos os outros controles
 // (usado para calcular o saldo de contas compartilhadas, que somam tudo).
@@ -3164,7 +3283,7 @@ function iRow(t,click,rowIdx){
       <span class="tx-desc">${H(t.desc)}</span>
       <span class="tx-chips">${famHtml}${refHtml}${_ctlBadgeHtml(t)}${(()=>{const ac=accBy(t.accId);if(!isCC(ac)||t.type==='transferencia'||!_ccOk(ac))return'';const fm=faturaMesDe(ac,t.date);return `<span class="tx-fat" title="Fatura com vencimento em ${MNLONG[fm.slice(5,7)].toLowerCase()}/${fm.slice(0,4)}">fatura ${MNSHORT[fm.slice(5,7)].toLowerCase()}</span>`;})()}</span>
     </div>
-    <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${acc}</div>
+    <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${_accExiste(t.accId)?acc:`<button type="button" class="tx-semconta" onclick="event.stopPropagation();corrigirContas()" title="A conta deste lançamento não existe mais — clique para gravar uma conta">⚠ sem conta</button>`}</div>
     <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${isT?'Transferência':(cat.name)}</span></span></div>
     <div class="tx-cell tx-cell-val" style="${cellBg}"><span class="tx-val" style="color:${vc}">${pf}${R(t.val)}</span></div>
     <div class="tx-cell tx-cell-date" style="${cellBg}">${dateStr}</div>
@@ -3846,7 +3965,7 @@ function rLanc(m){
           ? `<button onclick="bulkSelectAll()" class="btn-g">☑ Todos</button>
              <button onclick="bulkSelectNone()" class="btn-g">☐ Nenhum</button>
              <button onclick="bulkExit()" class="btn-g">✕ Cancelar</button>`
-          : `<button onclick="A.bulkMode=true;A.bulkSel=new Set();render()" class="btn-g" title="Selecionar para excluir em grupo"><svg class="ic" aria-hidden="true"><use href="#i-square-check-big"/></svg> Selecionar</button>`
+          : `<button onclick="A.bulkMode=true;A.bulkSel=new Set();render()" class="btn-g" title="Selecionar para excluir em grupo"><svg class="ic" aria-hidden="true"><use href="#i-square-check-big"/></svg> Selecionar</button>${(()=>{const n=_recatCandidatos().length;const nsc=_txsSemConta().length;return (nsc?`<button onclick="corrigirContas()" class="btn-g tx-semconta-btn" title="Lançamentos com conta inexistente (aparecem com ⚠ no Extrato)">⚠ ${nsc} sem conta</button>`:'')+(n?`<button onclick="openRecategorizar()" class="btn-g" title="Sugere categoria para os lançamentos em “Outros” (regras › IA › histórico › palavra-chave). Você revisa antes."><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg> Recategorizar “Outros” <span class="recat-n">${n}</span></button>`:'');})()}`
         }
         <div style="width:1px;height:22px;background:var(--gray-200);margin:0 2px"></div>
         <button class="period-btn ${A.lancPeriod==='mes'?'on':''}" onclick="A.lancPeriod='mes';render()">Mês</button>
@@ -3920,8 +4039,8 @@ function saveFamItem(){
     if(item){
       const oldName=item.name;
       item.name=n;
-      // Atualiza lançamentos com o nome antigo
-      A.txs.forEach(t=>{if(t.familia===oldName)t.familia=n;});
+      // Atualiza lançamentos e regras com o nome antigo
+      _famRenomear(oldName,n);
     }
     toast('Atualizado!');
   } else {
@@ -3952,12 +4071,12 @@ function fHTML(){
   const f=A.tf;
   const isT=A.mode==='transferencia';
   const editing=typeof A.txId==='number';
-  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
+  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':!_accExiste(sel)?'<option value="" selected>⚠ Conta não existe mais — escolha</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const orig=accBy(f.accId),dest=accBy(f.accDest);
   const oB=bal(orig),dB=bal(dest),amt=parseFloat(f.val)||0;
   const temFam=famNames().length>0;
   const famOpts='<option value="" '+((!f.familia||f.familia==='')?'selected':'')+'>— Nenhum —</option>'+famNames().map(fm=>`<option value="${fm}" ${fm===(f.familia||'')?'selected':''}>${fm}</option>`).join('');
-  const famField=temFam?`<div class="fr"><label>Família</label><select onchange="A.tf.familia=this.value">${famOpts}</select></div>`:'';
+  const famField=temFam?`<div class="fr"><label>Família</label><select id="tf-fam-sel" onchange="A.tf.familia=this.value;A.tf._famSug=false">${famOpts}</select></div>`:'';
 
 
 
@@ -3980,8 +4099,8 @@ function fHTML(){
     <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:12px">${delBtn}<button class="btn-g" onclick="closeForm()">Cancelar</button><button class="btn-p" onclick="saveTx()"><span>✓</span> ${editing?'Salvar':'Transferir'}</button></div>`;
 
   const famFieldFull=temFam
-    ?`<div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Família</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamFam('tf','familia','add')" title="Novo membro">＋ Novo</button><button class="fr-add-btn" onclick="qamFam('tf','familia','edit')" title="Editar selecionado" style="color:var(--gray-500)">✏ Editar</button></div></div><select onchange="A.tf.familia=this.value">${famOpts}</select></div>`
-    :`<div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Família</label><button class="fr-add-btn" onclick="qamFam('tf','familia','add')" title="Novo membro">＋ Novo</button></div><select onchange="A.tf.familia=this.value">${famOpts}</select></div>`;
+    ?`<div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Família</label><div style="display:flex;gap:4px"><button class="fr-add-btn" onclick="qamFam('tf','familia','add')" title="Novo membro">＋ Novo</button><button class="fr-add-btn" onclick="qamFam('tf','familia','edit')" title="Editar selecionado" style="color:var(--gray-500)">✏ Editar</button></div></div><select id="tf-fam-sel" onchange="A.tf.familia=this.value;A.tf._famSug=false">${famOpts}</select></div>`
+    :`<div class="fr"><div class="fr-label-row"><label style="margin-bottom:0">Família</label><button class="fr-add-btn" onclick="qamFam('tf','familia','add')" title="Novo membro">＋ Novo</button></div><select id="tf-fam-sel" onchange="A.tf.familia=this.value;A.tf._famSug=false">${famOpts}</select></div>`;
 
   return`
     <div class="ph"><h3><span style="font-style:normal">${editing?'✏':'+'}</span> ${editing?'Editar':'Novo'} lançamento</h3><button class="btn-g" onclick="closeForm()">Fechar</button></div>
@@ -4078,7 +4197,9 @@ function _qamSaveAcc(){
 
 // ── Família ──
 function qamFam(stateObj, stateKey, mode){
-  const curName = (stateObj==='A.tf'?A.tf:A.ff)[stateKey]||'';
+  const curName = stateObj==='csv' ? ((_csvState&&_csvState.rows&&_csvState.rows[stateKey])||{}).fam||''
+    : stateObj==='rg' ? (_rgForm().familia||'')
+    : ((stateObj==='A.tf'||stateObj==='tf'?A.tf:A.ff)||{})[stateKey]||'';
   const curItem = A.familia.find(f=>f.name===curName)||null;
   _qam = { type:'fam', stateObj, stateKey, mode,
     editId: mode==='edit'&&curItem ? curItem.id : null,
@@ -4094,7 +4215,7 @@ function _qamSaveFam(){
     const item=famById(_qam.editId);
     if(item){
       const old=item.name; item.name=n;
-      A.txs.forEach(t=>{if(t.familia===old)t.familia=n;});
+      _famRenomear(old,n);
     }
     selName=n;
     toast('Membro atualizado!');
@@ -4103,9 +4224,25 @@ function _qamSaveFam(){
     selName=n;
     toast('Membro adicionado!','var(--income)');
   }
+  if(_qam.stateObj==='csv'){
+    const k=_qam.stateKey; _qamClose();
+    if(k==='todos') _csvFamTodos(selName); else if(_csvState&&_csvState.rows&&_csvState.rows[k]){ _csvSetFam(k,selName); }
+    _renderCsvModal(); scheduleSave(); return;
+  }
+  if(_qam.stateObj==='rg'){ _rgForm().familia=selName; _qamClose(); render(); return; }
   if((_qam.stateObj==='A.tf'||_qam.stateObj==='tf')) A.tf[_qam.stateKey]=selName;
   else if((_qam.stateObj==='A.ff'||_qam.stateObj==='ff')) A.ff[_qam.stateKey]=selName;
   _qamClose(); render();
+}
+// Renomear membro: atualiza lançamentos e regras
+function _famRenomear(old,n){
+  if(!old||old===n) return;
+  (A.txs||[]).forEach(t=>{if(t.familia===old)t.familia=n;});
+  (A.catRegras||[]).forEach(r=>{if(r.familia===old)r.familia=n;});
+  if(typeof _compartOn==='function'&&_compartOn('familia')) _outrosControles().forEach(d=>{
+    (d.txs||[]).forEach(t=>{if(t.familia===old)t.familia=n;});
+    (d.catRegras||[]).forEach(r=>{if(r.familia===old)r.familia=n;});
+  });
 }
 
 // ── Renderização do modal ──
@@ -4647,7 +4784,7 @@ function updateTrbox(){
   if(!el)return;
   el.innerHTML=`<div class="trs"><div class="tl">Origem</div><div class="tn">${H(orig.name||'—')}</div><div class="tb2">${R(oB)}→${R(oB-amt)}</div></div><div class="trm"><div class="ti">↔</div><div class="tv">${amt>0?R(amt):'—'}</div></div><div class="trs"><div class="tl">Destino</div><div class="tn">${H(dest.name||'—')}</div><div class="tb2">${R(dB)}→${R(dB+amt)}</div></div>`;
 }
-function saveTx(){const f=A.tf;const isT=A.mode==='transferencia';if(!f.val||parseFloat(f.val)<=0||!f.date){toast('Preencha valor e data.','var(--expense)');return;}if(!f.catId){toast('Selecione uma categoria.','var(--expense)');return;}if(!isT&&!f.accId){toast('Selecione uma conta.','var(--expense)');return;}if(isT&&(!f.accId||!f.accDest)){toast('Selecione origem e destino.','var(--expense)');return;}if(isT&&f.accId==f.accDest){toast('Selecione contas diferentes.','var(--expense)');return;}if(!f.desc.trim())f.desc=isT?`${accBy(f.accId).name}→${accBy(f.accDest).name}`:'Sem descrição';const obj={...f,type:isT?'transferencia':f.type,val:parseFloat(f.val),planned:false,done:true};const _nParc=parseInt(obj.parcelas)||1;delete obj.parcelas;if(A.txId==='new'&&!isT&&obj.type==='despesa'&&_nParc>1&&isCC(accBy(obj.accId))){_lancarParcelado(obj,_nParc);closeForm();return;}if(A.txId==='new'){const _c=A.cats.find(x=>String(x.id)===String(obj.catId));const _alvo=_c&&[_c,_c.parentId?A.cats.find(x=>String(x.id)===String(_c.parentId)):null].find(x=>x&&parseFloat(x.orcamento)>0);const _antes=_alvo?_gastoCat(_alvo.id,(obj.date||today()).slice(0,7)):0;A.txs.push({id:A.nid++,...obj});_rememberLastTx(obj);setTimeout(()=>_checkOrcamento(obj,_antes),2300);toast(isT?'Transferência registrada!':'Adicionado!',isT?'var(--transfer)':'var(--income)');}else{const i=A.txs.findIndex(t=>t.id===A.txId);if(i!==-1)A.txs[i]={...A.txs[i],...obj};toast('Atualizado!');}closeForm();}
+function saveTx(){const f=A.tf;const isT=A.mode==='transferencia';if(!f.val||parseFloat(f.val)<=0||!f.date){toast('Preencha valor e data.','var(--expense)');return;}if(!f.catId){toast('Selecione uma categoria.','var(--expense)');return;}if(!isT&&!_accExiste(f.accId)){toast('Selecione uma conta.','var(--expense)');return;}if(isT&&(!f.accId||!f.accDest)){toast('Selecione origem e destino.','var(--expense)');return;}if(isT&&f.accId==f.accDest){toast('Selecione contas diferentes.','var(--expense)');return;}if(!f.desc.trim())f.desc=isT?`${accBy(f.accId).name}→${accBy(f.accDest).name}`:'Sem descrição';const obj={...f,type:isT?'transferencia':f.type,val:parseFloat(f.val),planned:false,done:true};const _nParc=parseInt(obj.parcelas)||1;delete obj.parcelas;if(A.txId==='new'&&!isT&&obj.type==='despesa'&&_nParc>1&&isCC(accBy(obj.accId))){_lancarParcelado(obj,_nParc);closeForm();return;}if(A.txId==='new'){const _c=A.cats.find(x=>String(x.id)===String(obj.catId));const _alvo=_c&&[_c,_c.parentId?A.cats.find(x=>String(x.id)===String(_c.parentId)):null].find(x=>x&&parseFloat(x.orcamento)>0);const _antes=_alvo?_gastoCat(_alvo.id,(obj.date||today()).slice(0,7)):0;A.txs.push({id:A.nid++,...obj});_rememberLastTx(obj);setTimeout(()=>_checkOrcamento(obj,_antes),2300);toast(isT?'Transferência registrada!':'Adicionado!',isT?'var(--transfer)':'var(--income)');}else{const i=A.txs.findIndex(t=>t.id===A.txId);if(i!==-1)A.txs[i]={...A.txs[i],...obj};toast('Atualizado!');}closeForm();}
 function cBox(){return '';}  // legado — não usado mais
 function askDel(id){
   const t=A.txs.find(x=>x.id===id);
@@ -4881,6 +5018,7 @@ function switchControle(id,opts){
   if(id===A.controleAtivo) return;
   if(!A.controles.some(c=>c.id===id)) return;
   if(!A.controlesCache) A.controlesCache={};
+  _compartSync();
   A.controlesCache[A.controleAtivo]={};
   CONTROLE_CONTENT_FIELDS.forEach(k=>{ A.controlesCache[A.controleAtivo][k]=A[k]; });
   const cached=A.controlesCache[id];
@@ -4942,6 +5080,143 @@ function doDelControle(id){
   toast('Controle excluído.','#888780');
   render();
 }
+/* ═══ Cadastros compartilhados entre controles ═══
+   Cada controle continua guardando sua cópia de categorias, família e regras;
+   o que estiver marcado como compartilhado é copiado do controle aberto para
+   todos os outros a cada salvamento e a cada troca de controle. Ao ligar,
+   os cadastros de todos os controles são unidos (sem perder nada). */
+const COMPART_ITENS=[
+  {k:'despesa',  ic:'↓', nome:'Categorias de despesas',     desc:'Mesma árvore de categorias de despesa em todos os controles.'},
+  {k:'receita',  ic:'↑', nome:'Categorias de receitas',     desc:'Mesma árvore de categorias de receita em todos os controles.'},
+  {k:'transferencia',ic:'↔',nome:'Categorias de transferências',desc:'Mesmas categorias de transferência em todos os controles.'},
+  {k:'familia',  ic:'👤',nome:'Família',                     desc:'Mesmos grupos e membros em todos os controles.'},
+  {k:'regras',   ic:'⚡',nome:'Regras de categorização',     desc:'Mesmas regras de importação. Funciona melhor junto com as categorias compartilhadas.'},
+];
+function _compart(){ if(!A.compart||typeof A.compart!=='object') A.compart={}; COMPART_ITENS.forEach(i=>{ if(A.compart[i.k]===undefined) A.compart[i.k]=false; }); return A.compart; }
+function _compartOn(k){ return !!_compart()[k]; }
+function _compartAlgum(){ return COMPART_ITENS.some(i=>_compartOn(i.k)); }
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function _outrosControles(){
+  if(!A.controlesCache) A.controlesCache={};
+  return (A.controles||[]).filter(c=>c.id!==A.controleAtivo).map(c=>{
+    if(!A.controlesCache[c.id]) A.controlesCache[c.id]=_blankControleData();
+    return A.controlesCache[c.id];
+  });
+}
+// Copia o que é compartilhado do controle aberto para os demais
+function _compartSync(){
+  if(!_compartAlgum()||!A.controles||A.controles.length<2) return;
+  const tipos=['despesa','receita','transferencia'].filter(_compartOn);
+  _outrosControles().forEach(d=>{
+    if(tipos.length){
+      const meus=_clone((A.cats||[]).filter(c=>tipos.includes(c.tipo)));
+      const ids=new Set(meus.map(c=>String(c.id)));
+      d.cats=(d.cats||[]).filter(c=>!tipos.includes(c.tipo)&&!ids.has(String(c.id))).concat(meus);
+    }
+    if(_compartOn('familia')) d.familia=_clone(A.familia||[]);
+    if(_compartOn('regras')) d.catRegras=_clone(A.catRegras||[]);
+  });
+}
+// Une os cadastros de todos os controles no controle aberto (antes de ligar o compartilhamento)
+function _compartUnir(k){
+  const outros=_outrosControles();
+  const novoId=usados=>{ let id=A.nid++; while(usados.has(String(id))) id=A.nid++; usados.add(String(id)); return id; };
+  if(['despesa','receita','transferencia'].includes(k)){
+    const tipo=k; let novas=0;
+    outros.forEach(d=>{
+      const usados=new Set((A.cats||[]).map(c=>String(c.id)).concat((d.cats||[]).map(c=>String(c.id))));
+      const mapa={};
+      // ordem da árvore: pais antes das filhas
+      const lista=(d.cats||[]).filter(c=>c.tipo===tipo); const ord=[]; const vis=new Set();
+      const add=c=>{ if(vis.has(c.id)) return; const pai=c.parentId!=null?lista.find(x=>x.id==c.parentId):null; if(pai) add(pai); vis.add(c.id); ord.push(c); };
+      lista.forEach(add);
+      ord.forEach(c=>{
+        const pai=c.parentId!=null?(mapa[c.parentId]!=null?mapa[c.parentId]:c.parentId):null;
+        const igual=(A.cats||[]).find(x=>x.tipo===tipo&&_normTxt(x.name)===_normTxt(c.name)&&String(x.parentId??'')===String(pai??''));
+        if(igual){ mapa[c.id]=igual.id; return; }
+        const conflito=(A.cats||[]).some(x=>String(x.id)===String(c.id));
+        const id=conflito?novoId(usados):c.id;
+        A.cats.push({..._clone(c),id,parentId:pai}); mapa[c.id]=id; novas++;
+      });
+      // categorias de outros tipos desse controle que batem com ids do controle aberto ganham id novo
+      const meusIds=new Set((A.cats||[]).filter(c=>c.tipo===tipo).map(c=>String(c.id)));
+      (d.cats||[]).forEach(c=>{ if(c.tipo!==tipo&&meusIds.has(String(c.id))){ const id=novoId(usados); (d.cats||[]).forEach(x=>{ if(x.parentId==c.id) x.parentId=id; }); mapa[c.id]=id; c.id=id; } });
+      // reaponta lançamentos, contas fixas e regras desse controle
+      const troca=o=>{ if(o&&o.catId!=null&&mapa[o.catId]!=null) o.catId=mapa[o.catId]; };
+      (d.txs||[]).forEach(troca); (d.fixas||[]).forEach(troca); (d.catRegras||[]).forEach(troca);
+    });
+    return novas;
+  }
+  if(k==='familia'){
+    let novos=0;
+    outros.forEach(d=>{
+      const usados=new Set((A.familia||[]).map(f=>String(f.id)));
+      const mapa={}; const lista=d.familia||[];
+      [...lista.filter(f=>!f.parentId),...lista.filter(f=>f.parentId)].forEach(f=>{
+        const igual=(A.familia||[]).find(x=>_normTxt(x.name)===_normTxt(f.name));
+        if(igual){ mapa[f.id]=igual.id; return; }
+        const id=usados.has(String(f.id))?novoId(usados):f.id; usados.add(String(id));
+        A.familia.push({id,name:f.name,parentId:f.parentId?(mapa[f.parentId]??null):null}); mapa[f.id]=id; novos++;
+      });
+      // lançamentos guardam o nome: alinha a grafia com a do cadastro unido
+      (d.txs||[]).forEach(t=>{ if(!t.familia) return; const m=(A.familia||[]).find(x=>_normTxt(x.name)===_normTxt(t.familia)); if(m) t.familia=m.name; });
+    });
+    return novos;
+  }
+  if(k==='regras'){
+    let novas=0; const usados=new Set(_regras().map(r=>String(r.id)));
+    outros.forEach(d=>{
+      (d.catRegras||[]).forEach(r=>{
+        if(_regras().some(x=>_regraNorm(x.texto)===_regraNorm(r.texto)&&(x.modo||'contem')===(r.modo||'contem'))) return;
+        const id=usados.has(String(r.id))?novoId(usados):r.id; usados.add(String(id));
+        _regras().push({..._clone(r),id}); novas++;
+      });
+    });
+    return novas;
+  }
+  return 0;
+}
+function compartToggle(k,el){
+  const item=COMPART_ITENS.find(i=>i.k===k); if(!item) return;
+  if(_multiActive()){ el.checked=_compartOn(k); toast('🔒 Selecione apenas 1 controle para alterar o compartilhamento.','#D97706',4500); return; }
+  if(!el.checked){
+    _compartSync(); // garante que todos os controles fiquem com a cópia mais recente antes de separar
+    _compart()[k]=false; dbSave();
+    toast(`${item.nome}: cada controle passa a ter a sua própria cópia.`,'#888780',4500); render(); return;
+  }
+  el.checked=false;
+  const nCtl=(A.controles||[]).length;
+  const nomeAtivo=H((A.controles.find(c=>c.id===A.controleAtivo)||{}).nome||'');
+  _showConfirm('Compartilhar '+item.nome.toLowerCase()+'?',
+    `Os cadastros dos ${nCtl} controles serão <strong>unidos</strong> no controle aberto (<strong>${nomeAtivo}</strong>) e, daqui em diante, qualquer alteração vale para todos.<br><span style="font-size:12px;color:var(--gray-500)">Itens com o mesmo nome viram um só; os lançamentos de cada controle são reapontados automaticamente. Nada é apagado.</span>`,
+    ()=>{
+      const n=_compartUnir(k);
+      _compart()[k]=true;
+      _compartSync(); dbSave();
+      toast(`🔗 Compartilhado entre os controles: ${item.nome}${n?` · ${n} item(ns) trazido(s) de outros controles`:''}.`,'var(--transfer)',5000);
+      render();
+    },{okLabel:'Compartilhar',okColor:'var(--transfer)'});
+}
+function _compartCardHtml(){
+  const c=_compart(); const n=(A.controles||[]).length;
+  return `<div class="card">
+    <div class="ph"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-link"/></svg> Cadastros compartilhados entre controles</h3></div>
+    <p style="font-size:12px;color:var(--gray-500);margin:0 0 12px">Marque o que deve ser <strong>igual em todos os controles</strong>. Ao alterar em qualquer controle, a mudança vale para os outros. Desmarcado, cada controle mantém o seu próprio cadastro.${n<2?' <em>Crie um segundo controle para usar.</em>':''}</p>
+    <div class="cp-lista">${COMPART_ITENS.map(i=>`<label class="cp-item ${c[i.k]?'on':''}">
+      <input type="checkbox" ${c[i.k]?'checked':''} ${n<2?'disabled':''} onchange="compartToggle('${i.k}',this)">
+      <span class="cp-ic" aria-hidden="true">${i.ic}</span>
+      <span class="cp-txt"><strong>${i.nome}</strong><span>${i.desc}</span></span>
+      <span class="cp-st">${c[i.k]?'🔗 Compartilhado':'Por controle'}</span>
+    </label>`).join('')}</div>
+    ${c.regras&&!(c.despesa&&c.receita)?'<div class="cp-aviso">⚠ As regras estão compartilhadas, mas as categorias não: uma regra criada em um controle pode apontar para uma categoria que não existe nos outros.</div>':''}
+  </div>`;
+}
+// Aviso nas telas de cadastro quando o item é compartilhado
+function _compartNota(tab){
+  const k=tab==='regras'?'regras':tab;
+  if(!_compartOn(k)||(A.controles||[]).length<2) return '';
+  return `<div class="cp-nota">🔗 Compartilhado entre todos os controles — alterações aqui valem para ${A.controles.length} controles. <a href="#" onclick="A.tab='controles';render();return false">Gerenciar</a></div>`;
+}
 function rControles(m){
   const cards=A.controles.map(c=>{
     const isActive=c.id===A.controleAtivo;
@@ -4964,9 +5239,10 @@ function rControles(m){
     + '</div>'
     + '<div class="card">'
       + '<div class="ph"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-folder"/></svg> Meus controles</h3><button class="btn-r" onclick="openControleForm()"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> Novo controle</button></div>'
-      + '<p style="font-size:12px;color:var(--gray-500);margin:0 0 10px">Cada controle mantém contas, lançamentos, categorias e senhas totalmente separados uns dos outros — use para separar, por exemplo, finanças da <strong>casa</strong>, da <strong>empresa</strong> e <strong>pessoais</strong>, tudo com o mesmo login. Também é possível trocar rapidamente de controle pelo seletor no topo da tela.</p>'
+      + '<p style="font-size:12px;color:var(--gray-500);margin:0 0 10px">Cada controle mantém contas, lançamentos e senhas separados uns dos outros (categorias, família e regras também, a menos que você as compartilhe logo abaixo) — use para separar, por exemplo, finanças da <strong>casa</strong>, da <strong>empresa</strong> e <strong>pessoais</strong>, tudo com o mesmo login. Também é possível trocar rapidamente de controle pelo seletor no topo da tela.</p>'
       + '<div style="display:flex;flex-direction:column;gap:8px">' + cards + '</div>'
     + '</div>'
+    + _compartCardHtml()
     + (A.ctlForm.open?'<div class="tx-modal-overlay" onmousedown="_overlayMousedown(event)" onclick="_overlayClick(event,closeControleForm)"><div class="tx-modal-box" onclick="event.stopPropagation()">' + ctlFHTML() + '</div></div>':'');
 }
 function ctlFHTML(){
@@ -5006,7 +5282,7 @@ function rCats(m){
     <button class="cat-tab-btn rg ${tipo==='regras'?'on':''}" onclick="A.catTab='regras';A.catSelId=null;A.cf.open=false;render()"><svg class="ic sm" aria-hidden="true"><use href="#i-sparkles"/></svg> Regras</button>
   </div>`;
   if(tipo==='regras'){
-    m.innerHTML=`<div class="card"><div class="ph" style="margin-bottom:0"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-tags"/></svg> Cadastros</h3></div>${tabsBar}${rRegrasHtml()}</div>`;
+    m.innerHTML=`<div class="card"><div class="ph" style="margin-bottom:0"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-tags"/></svg> Cadastros</h3></div>${tabsBar}${_compartNota(A.catTab)}${rRegrasHtml()}</div>`;
     return;
   }
 
@@ -5072,7 +5348,7 @@ function rCats(m){
 
     m.innerHTML=`<div class="card">
       <div class="ph" style="margin-bottom:0"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-tags"/></svg> Cadastros</h3></div>
-      ${tabsBar}
+      ${tabsBar}${_compartNota(A.catTab)}
       <div class="cat-tree">
         <div class="cat-tree-list">${treeRows}</div>
         <div class="cat-tree-actions ${sel?'has-sel':''}" role="toolbar" aria-label="Ações do cadastro">
@@ -5156,7 +5432,7 @@ function rCats(m){
   m.innerHTML=`
   <div class="card">
     <div class="ph" style="margin-bottom:0"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-tags"/></svg> Cadastros</h3></div>
-    ${tabsBar}
+    ${tabsBar}${_compartNota(A.catTab)}
     <div class="cat-tree">
       <div class="cat-tree-list">${roots.length===0?'<div class="empty" style="padding:30px">Nenhuma categoria</div>':treeRows}</div>
       <div class="cat-tree-actions ${A.catSelId?'has-sel':''}" role="toolbar" aria-label="Ações da categoria">
@@ -5286,7 +5562,7 @@ const DB_KEY        = 'pfp_v11_data';    // chave localStorage LEGADA (modo livr
 const OPFS_FILE     = 'pfp_data.json';   // arquivo OPFS
 
 // Campos do estado A que devem ser persistidos
-const DB_FIELDS = ['nid','familia','cats','catRegras','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts'];
+const DB_FIELDS = ['nid','familia','cats','catRegras','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts','compart'];
 
 // ── Separação de dados por usuário ──────────────────────────────────
 // GLOBAL_FIELDS: compartilhado entre todos (lista de contas de login + contador de IDs)
@@ -5298,7 +5574,7 @@ const GLOBAL_FIELDS      = ['usuarios','nid'];
 const CONTROLE_CONTENT_FIELDS = ['familia','cats','catRegras','accounts','fixas','txs','senhas'];
 // USER_FIELDS: tudo que é privado do usuário — inclui o conteúdo do controle
 // ativo no momento + a lista de controles e o cache com os demais controles.
-const USER_FIELDS        = ['familia','cats','catRegras','accounts','fixas','txs','senhas','controles','controleAtivo','controlesCache','sharedAccounts'];
+const USER_FIELDS        = ['familia','cats','catRegras','accounts','fixas','txs','senhas','controles','controleAtivo','controlesCache','sharedAccounts','compart'];
 const MIGRATION_FLAG_KEY = 'pfp_v11_migrated_per_user';
 function userDataKey(id){ return 'pfp_v11_user_' + id; }
 // Chave de localStorage onde os dados de CONTEÚDO do usuário ativo devem ser lidos/gravados
@@ -5378,10 +5654,10 @@ function rArmazenamento(m){
       ${lastBk?`<div class="stg-hint">Último backup exportado neste navegador: ${new Date(lastBk).toLocaleString('pt-BR')}</div>`:'<div class="stg-hint">Nenhum backup exportado neste navegador ainda.</div>'}
       <div class="stg-actions"><button class="btn-p" onclick="exportBackup()"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> Exportar backup</button>
       <label class="btn-g" style="cursor:pointer"><svg class="ic" aria-hidden="true"><use href="#i-upload"/></svg> Restaurar backup<input type="file" accept=".json,application/json" style="display:none" onchange="importBackupFile(this)"></label></div>`)}
-    ${sec('sparkles','Leitura de faturas em PDF (IA)',(()=>{const c=iaCfg();return `
-      <div class="stg-text">Escolha como o app lê a fatura do cartão em PDF. Você sempre revisa antes de importar.</div>
+    ${sec('sparkles','Leitura de faturas e categorização (IA)',(()=>{const c=iaCfg();return `
+      <div class="stg-text">Escolha como o app lê a fatura do cartão em PDF e sugere categorias na importação de extratos e planilhas. Você sempre revisa antes de importar.</div>
       <label class="stg-check"><input type="radio" name="ia-motor" ${c.motor!=='claude'?'checked':''} onchange="iaSalvar({motor:'local'});render()" style="accent-color:var(--blue)"><span><strong>Leitura no aparelho</strong> (padrão)<br><span class="stg-hint">Grátis e privada: o PDF não sai do navegador. Funciona com o PDF original do banco (com texto).</span></span></label>
-      <label class="stg-check"><input type="radio" name="ia-motor" ${c.motor==='claude'?'checked':''} onchange="iaSalvar({motor:'claude'});render()" style="accent-color:var(--blue)"><span><strong>Claude (Anthropic)</strong><br><span class="stg-hint">Mais preciso, lê PDF escaneado e sugere categorias. O PDF é enviado à API da Anthropic usando a sua chave, com custo por uso na sua conta.</span></span></label>
+      <label class="stg-check"><input type="radio" name="ia-motor" ${c.motor==='claude'?'checked':''} onchange="iaSalvar({motor:'claude'});render()" style="accent-color:var(--blue)"><span><strong>Claude (Anthropic)</strong><br><span class="stg-hint">Mais preciso, lê PDF escaneado e sugere categorias. O PDF é enviado à API da Anthropic usando a sua chave, com custo por uso na sua conta. Em extratos e planilhas, só a descrição, o tipo e o valor das linhas sem regra são enviados.</span></span></label>
       ${c.motor==='claude'?`<div class="ia-cfg">
         <label>Chave da API<input id="ia-chave" type="password" autocomplete="off" value="${H(c.chave)}" placeholder="sk-ant-..." onchange="iaSalvar({chave:this.value.trim()});render()"></label>
         <label>Modelo<select onchange="iaSalvar({modelo:this.value})">${IA_MODELOS.map(([id,n])=>`<option value="${id}" ${id===c.modelo?'selected':''}>${n}</option>`).join('')}</select></label>
@@ -5396,6 +5672,7 @@ function rArmazenamento(m){
 function exportBackup(){
   if(A.controleAtivo!=null){
     if(!A.controlesCache) A.controlesCache={};
+    _compartSync();
     A.controlesCache[A.controleAtivo]={};
     CONTROLE_CONTENT_FIELDS.forEach(k=>{A.controlesCache[A.controleAtivo][k]=A[k];});
   }
@@ -5484,6 +5761,7 @@ function dbSave() {
   //    para que os demais controles não se percam ao salvar ──
   if(A.controleAtivo!=null){
     if(!A.controlesCache) A.controlesCache={};
+    _compartSync();
     A.controlesCache[A.controleAtivo]={};
     CONTROLE_CONTENT_FIELDS.forEach(k=>{ A.controlesCache[A.controleAtivo][k]=A[k]; });
   }
@@ -5846,6 +6124,31 @@ function _mergedField(field){
   });
   return out;
 }
+// Visão combinada: a mesma categoria (mesmo id) e o mesmo membro (mesmo nome)
+// existem em vários controles — junta em um só para não repetir nos filtros,
+// gráficos e totais por categoria/membro.
+function _mergedSemDuplicar(field){
+  const lista=_mergedField(field);
+  if(field==='cats'){
+    const vistos=new Set();
+    return lista.filter(c=>{ const k=String(c.id); if(vistos.has(k)) return false; vistos.add(k); return true; });
+  }
+  if(field==='familia'){
+    const porNome=new Map(), mapaId={}, out=[];
+    const chave=n=>_normTxt(String(n||'')).trim();
+    // raízes primeiro, depois membros (para remapear o grupo de cada membro)
+    [...lista.filter(f=>!f.parentId),...lista.filter(f=>f.parentId)].forEach(f=>{
+      const k=chave(f.name);
+      if(porNome.has(k)){ mapaId[f.id]=porNome.get(k).id; return; }
+      const novo={...f}; if(novo.parentId&&mapaId[novo.parentId]!=null) novo.parentId=mapaId[novo.parentId];
+      porNome.set(k,novo); mapaId[f.id]=novo.id; out.push(novo);
+    });
+    // membro cujo grupo virou outro id: aponta para o grupo que ficou
+    out.forEach(f=>{ if(f.parentId&&mapaId[f.parentId]!=null) f.parentId=mapaId[f.parentId]; if(f.parentId===f.id) f.parentId=null; });
+    return out;
+  }
+  return lista;
+}
 function _ctlNormSel(){
   // Garante que A.ctlMultiSel só contenha ids de controles existentes e nunca fique
   // vazio/dessincronizado de A.controleAtivo. Chamar sempre antes de ler ou alterar a seleção.
@@ -5936,7 +6239,7 @@ function _ctlMultiNoteHtml(){
     window[name]=function(m){
       if(_multiActive()){
         const backup={};
-        MERGE_FIELDS.forEach(k=>{ backup[k]=A[k]; A[k]=_mergedField(k); });
+        MERGE_FIELDS.forEach(k=>{ backup[k]=A[k]; A[k]=_mergedSemDuplicar(k); });
         try{ orig(m); } finally { MERGE_FIELDS.forEach(k=>{ A[k]=backup[k]; }); }
         if(m) m.insertAdjacentHTML('afterbegin', _ctlMultiNoteHtml());
       } else {
@@ -5966,6 +6269,7 @@ function _runContentSchemaMigrations(){
   _repairAccountIds();
   _normalizarCategorias();
   if(!Array.isArray(A.catRegras)) A.catRegras=[];
+  _compart();
   (A.fixas||[]).forEach(f=>{
     if(!f.inicioEm){
       const pagMeses=Object.keys(f.pagamentos||{}).sort();
@@ -6733,45 +7037,85 @@ window._fbAuthReady = new Promise(resolve => { window._fbAuthReadyResolve = reso
    ═══════════════════════════════════════════════════════════ */
 
 // ── Mapeamento de palavras-chave → categoria ──
+// Testado contra a descrição normalizada (minúsculas, sem acento) e com fronteira de palavra,
+// para "99" não pegar qualquer número nem "extra" pegar "extrato". Cada item diz o tipo (despesa/receita)
+// e o nome da categoria padrão — se você renomeou/apagou a categoria do id, o app procura pelo nome.
 const CSV_CAT_MAP = [
-  // Alimentação
-  { pat: /supermercado|mercado|atacad|carrefour|extra|assai|pao de acucar|hortifruti|feira|sacolao/i, catId: 11 },
-  { pat: /restaurante|lanchonete|ifood|rappi|uber\s?eat|mcdonalds|burger|pizza|habib|subway|sushi/i, catId: 12 },
-  { pat: /padaria|cafe|coffee|panific/i, catId: 14 },
-  { pat: /delivery|rappi|ifood/i, catId: 15 },
-  // Transporte
-  { pat: /combustivel|gasolina|etanol|alcool|posto|shell|ipiranga|br.rede/i, catId: 21 },
-  { pat: /uber|99|taxi|cabify/i, catId: 22 },
-  { pat: /onibus|metro|trem|brt|passagem|bilhete/i, catId: 23 },
-  { pat: /pedagio|estacionamento|park/i, catId: 25 },
-  // Moradia
-  { pat: /aluguel|condominio/i, catId: 31 },
-  { pat: /energia|enel|cemig|cpfl|light|coelba|celpe|elektro|eletropaulo|edp/i, catId: 32 },
-  { pat: /internet|claro|vivo|tim|net\b|oi\b|starlink|anatel|banda larga/i, catId: 33 },
-  { pat: /agua|sabesp|saneamento|saae|caern|cagece/i, catId: 34 },
-  { pat: /gas\b|comgas|gas natural/i, catId: 35 },
-  // Saúde
-  { pat: /plano.*saude|unimed|amil|sulamerica|hapvida|prevent/i, catId: 41 },
-  { pat: /consulta|medico|clinica|hospital|laboratorio|exame/i, catId: 42 },
-  { pat: /farmacia|drogaria|drogas/i, catId: 43 },
-  { pat: /academia|palestra|crossfit|gym/i, catId: 44 },
-  // Educação
-  { pat: /escola|faculdade|universidade|mensalidade|colegio|curso|livraria|amazon.*livro/i, catId: 51 },
-  // Lazer
-  { pat: /netflix|spotify|amazon|disney|hbo|prime|deezer|globoplay/i, catId: 61 },
-  { pat: /cinema|teatro|show|ingresso/i, catId: 62 },
-  { pat: /steam|playstation|xbox|game|nintendo/i, catId: 64 },
-  // Financeiro
-  { pat: /seguro/i, catId: 94 },
-  { pat: /emprestimo|financiamento/i, catId: 92 },
-  { pat: /juros|tarifa|iof|anuidade/i, catId: 93 },
-  // Receitas
-  { pat: /salario|pagamento|folha|holerite/i, catId: 201 },
-  { pat: /freelance|honorario|servico.*prestado|autonomo/i, catId: 202 },
-  { pat: /dividendo|rendimento|juros.*receb|investimento|cdb|lci|lca|tesouro/i, catId: 203 },
-  // Transferências (sem catId → será tratado como transferência)
-  { pat: /pix|ted|doc|transferencia|transf\b/i, catId: null, isTransf: true },
+  // ── Despesas ──
+  { pat: /\b(supermerc\w*|mercado\w*|atacad\w*|carrefour|assai|pao de acucar|hortifruti|sams club|dia brasil|oba hortifruti|swift|minimercado|mercadinho)\b/, catId: 11, nomes:['Supermercado'], tipo:'despesa' },
+  { pat: /\b(ifood|rappi|ze delivery|aiqfome|delivery)\b/, catId: 15, nomes:['Delivery'], tipo:'despesa' },
+  { pat: /\b(restaurante\w*|lanchonete|lanches|uber\s?eats?|mc ?donalds?|burger\w*|bk brasil|pizza\w*|habibs?|subway|sushi|outback|churrascaria|bar e restaurante|giraffas|spoleto)\b/, catId: 12, nomes:['Restaurante'], tipo:'despesa' },
+  { pat: /\b(padaria|panificadora|panific\w*|cafeteria|starbucks|coffee|cafe)\b/, catId: 14, nomes:['Padaria/Café'], tipo:'despesa' },
+  { pat: /\b(feira|sacolao|hortifrut\w*|quitanda)\b/, catId: 13, nomes:['Feira/Sacolão'], tipo:'despesa' },
+  { pat: /\b(combustive\w*|gasolina|etanol|posto\w*|auto ?posto|shell|ipiranga|petrobras|br mania|ale combust\w*)\b/, catId: 21, nomes:['Combustível'], tipo:'despesa' },
+  { pat: /\b(uber(?!\s?eats?)|99 ?(?:app|pop|taxi|tecnologia)|99app|taxi|cabify|indrive)\b/, catId: 22, nomes:['Uber/Táxi'], tipo:'despesa' },
+  { pat: /\b(onibus|metro|cptm|sptrans|bilhete unico|top ?sp|recarga transporte|brt|emtu)\b/, catId: 23, nomes:['Ônibus/Metrô'], tipo:'despesa' },
+  { pat: /\b(pedagio|sem ?parar|conectcar|veloe|estacionamento|estapar|zona azul)\b/, catId: 25, nomes:['Pedágio/Estacionamento'], tipo:'despesa' },
+  { pat: /\b(oficina|auto ?pecas|mecanica|pneus?|borracharia|lava ?rapido)\b/, catId: 24, nomes:['Manutenção Veículo'], tipo:'despesa' },
+  { pat: /\b(ipva|licenc\w*|detran|dpvat)\b/, catId: 101, nomes:['IPVA'], tipo:'despesa' },
+  { pat: /\b(aluguel|imobiliaria)\b/, catId: 31, nomes:['Aluguel'], tipo:'despesa' },
+  { pat: /\b(condominio|cond\.?\s?res\w*)\b/, catId: 36, nomes:['Condomínio'], tipo:'despesa' },
+  { pat: /\b(energia|enel|eletropaulo|cemig|cpfl|light|coelba|celpe|elektro|edp|neoenergia|equatorial|copel|celesc)\b/, catId: 32, nomes:['Energia Elétrica'], tipo:'despesa' },
+  { pat: /\b(sabesp|saneamento|saae|semae|caern|cagece|copasa|sanepar|embasa|cedae|agua)\b/, catId: 34, nomes:['Água/Saneamento'], tipo:'despesa' },
+  { pat: /\b(comgas|gas natural|naturgy|ultragaz|liquigas|supergasbras|gas)\b/, catId: 35, nomes:['Gás'], tipo:'despesa' },
+  { pat: /\b(vivo fixo|telefone fixo|linha fixa)\b/, catId: 82, nomes:['Telefone Fixo'], tipo:'despesa' },
+  { pat: /\b(recarga celular|pre-?pago\w*|tim celular|vivo movel|claro movel)\b/, catId: 81, nomes:['Celular'], tipo:'despesa' },
+  { pat: /\b(internet|claro|vivo|tim|net|oi|starlink|sky|banda larga|telefonica)\b/, catId: 33, nomes:['Internet/TV'], tipo:'despesa' },
+  { pat: /\b(iptu|pm \w+|prefeitura|pref mun\w*)\b/, catId: 37, nomes:['IPTU'], tipo:'despesa' },
+  { pat: /\b(darf|receita federal|irpf|carne leao|tesouro nac\w*)\b/, catId: 102, nomes:['IR/DARF'], tipo:'despesa' },
+  { pat: /\b(das simples|das mei|pgdas\w*|gps inss|inss contrib\w*|fgts|gru|taxa municipal)\b/, catId: 103, nomes:['Outros Impostos'], tipo:'despesa' },
+  { pat: /\b(plano de saude|unimed|amil|sulamerica saude|hapvida|notredame|prevent senior|bradesco saude|porto saude)\b/, catId: 41, nomes:['Plano de Saúde'], tipo:'despesa' },
+  { pat: /\b(consulta|medic\w*|clinica|hospital|laboratorio|exame\w*|fleury|dasa|delboni|lavoisier)\b/, catId: 42, nomes:['Consulta/Exame'], tipo:'despesa' },
+  { pat: /\b(odonto\w*|dentista)\b/, catId: 45, nomes:['Dentista'], tipo:'despesa' },
+  { pat: /\b(farmacia|drogaria|drogasil|droga raia|raia|pague menos|panvel|pacheco|drogas)\b/, catId: 43, nomes:['Farmácia'], tipo:'despesa' },
+  { pat: /\b(academia|smart ?fit|bodytech|crossfit|gympass|wellhub|gym)\b/, catId: 44, nomes:['Academia/Esporte'], tipo:'despesa' },
+  { pat: /\b(escola|faculdade|universidade|mensalidade|colegio)\b/, catId: 51, nomes:['Mensalidade Escola'], tipo:'despesa' },
+  { pat: /\b(curso\w*|udemy|alura|hotmart|coursera|estrategia concursos|gran cursos)\b/, catId: 52, nomes:['Cursos/Capacitação'], tipo:'despesa' },
+  { pat: /\b(livraria|livros?|kindle|saraiva)\b/, catId: 54, nomes:['Livros'], tipo:'despesa' },
+  { pat: /\b(netflix|spotify|disney|hbo|max|prime video|amazon prime|deezer|globoplay|youtube premium|apple\.com|paramount|crunchyroll)\b/, catId: 61, nomes:['Streaming'], tipo:'despesa' },
+  { pat: /\b(cinema|cinemark|teatro|show|ingresso\w*|sympla|eventim)\b/, catId: 62, nomes:['Cinema/Teatro'], tipo:'despesa' },
+  { pat: /\b(hotel|pousada|airbnb|booking|decolar|latam|gol linhas|azul linhas|smiles|passage\w*)\b/, catId: 63, nomes:['Viagem/Hospedagem'], tipo:'despesa' },
+  { pat: /\b(steam|playstation|xbox|nintendo|games?)\b/, catId: 64, nomes:['Games/Hobbies'], tipo:'despesa' },
+  { pat: /\b(renner|riachuelo|c ?& ?a|cea|zara|centauro|netshoes|marisa|hering|calcados)\b/, catId: 71, nomes:['Roupas/Calçados'], tipo:'despesa' },
+  { pat: /\b(petz|cobasi|petshop|pet shop|racao)\b/, catId: 161, nomes:['Ração/Petshop'], tipo:'despesa' },
+  { pat: /\b(veterinari\w*|vet)\b/, catId: 162, nomes:['Vet/Banho/Tosa'], tipo:'despesa' },
+  { pat: /\b(seguro\w*|porto seguro|azul seguros)\b/, catId: 94, nomes:['Seguro'], tipo:'despesa' },
+  { pat: /\b(emprestimo|financiamento|consignado|parc emprest\w*)\b/, catId: 92, nomes:['Empréstimo'], tipo:'despesa' },
+  { pat: /\b(juros|tarifa\w*|tar\b|iof|anuidade|cesta|pacote serv\w*|encargos?|mora)\b/, catId: 93, nomes:['Juros/Tarifas'], tipo:'despesa' },
+  { pat: /\b(fatura|pagto cartao|pag(?:amento)? cartao|cartao credito|itaucard|nubank fatura)\b/, catId: 91, nomes:['Cartão de Crédito'], tipo:'despesa' },
+  { pat: /\b(doacao|dizimo|oferta|vakinha)\b/, catId: 17, nomes:['Presentes/Doações'], tipo:'despesa' },
+  // ── Receitas ──
+  { pat: /\b(salario|folha|holerite|proventos|remuneracao|pagto salario|sispag salario|adiantamento salarial|13o? salario|ferias)\b/, catId: 201, nomes:['Salário'], tipo:'receita' },
+  { pat: /\b(rend\w*|rendimento\w*|dividendo\w*|jcp|juros s\/? ?capital|resgate|cdb|lci|lca|tesouro|aplic aut|aplicacao)\b/, catId: 203, nomes:['Investimentos'], tipo:'receita' },
+  { pat: /\b(freelance|honorario\w*|servico prestado|autonomo|nf-?e? servico)\b/, catId: 202, nomes:['Freelance/Autônomo'], tipo:'receita' },
+  { pat: /\b(reembolso|estorno|devolucao|dev pix|dev ted|cashback)\b/, catId: 205, nomes:['Reembolso'], tipo:'receita' },
+  { pat: /\b(aluguel)\b/, catId: 204, nomes:['Aluguel Recebido'], tipo:'receita' },
+  { pat: /\b(inss|beneficio|aposentadoria|vale alimentacao|vale refeicao|bolsa familia|seguro desemprego|pis|abono)\b/, catId: 206, nomes:['Benefícios'], tipo:'receita' },
+  { pat: /\b(venda\w*|mercado ?pago|pagseguro|stone|cielo|getnet|sumup)\b/, catId: 207, nomes:['Vendas'], tipo:'receita' },
+  // ── Investimento saindo da conta (aplicação) ──
+  { pat: /\b(aplicacao|aplic\w*|cdb|tesouro direto|corretora|xp invest\w*|btg|rico|clear|nuinvest)\b/, catId: 303, nomes:['Investimento','Investimentos','Aplicação','Aplicações'], tipo:'despesa', soNome:true },
 ];
+// Prefixos dos extratos que não dizem nada sobre a categoria (Itaú, Bradesco, BB, Santander, Caixa, Nubank, Inter)
+const _EXTRATO_PREFIXOS = /^(?:(?:pix|ted|doc|tef|transf\w*|transferencia\w*|enviad[oa]|recebid[oa]|qrs|qr ?code|int|internet|mobile|mobilepag|pag|pagto|pagamento|tit|boleto|sispag|deb\w*|debito|aut\w*|automatico|cred\w*|credito|compra|cartao|visa|elo|master\w*|maestro|electron|cielo|da|de|do|em|no|na|para|p\/|-|\/)\s+)+/;
+// Descrição "limpa" para comparar com o histórico: sem prefixo do banco, datas, códigos e parcelas
+function _descLimpa(desc){
+  let d=_normTxt(_regraLimparTexto(desc||''))
+    .replace(/\d{2}\/\d{2}(?:\/\d{2,4})?\s*$/,'')   // "LUZINET06/05" → "LUZINET"
+    .replace(/[\/*#|]+/g,' ').replace(/\s+/g,' ').trim();
+  const sem=d.replace(_EXTRATO_PREFIXOS,'').trim();
+  return sem||d;
+}
+// Categoria pela palavra-chave padrão (tipo precisa bater; se a categoria do id não existir mais, procura pelo nome)
+function _catPorPalavra(desc,tipo){
+  const d=' '+_normTxt(desc||'').replace(/[\/*#|.,]+/g,' ').replace(/\s+/g,' ')+' ';
+  for(const rule of CSV_CAT_MAP){
+    if(rule.tipo!==tipo||!rule.pat.test(d)) continue;
+    let c=rule.soNome?null:_catById(rule.catId);
+    if(!c||c.tipo!==tipo) c=A.cats.find(x=>x.tipo===tipo&&rule.nomes.some(n=>_normTxt(x.name)===_normTxt(n)))||null;
+    if(c) return c.id;
+  }
+  return null;
+}
 
 // ── Regras de categoria: "se a descrição contém X → categoria Y" ──
 const REGRA_MODOS={contem:'contém',comeca:'começa com',igual:'é igual a'};
@@ -6796,23 +7140,37 @@ function _catPorRegra(desc,tipo){
   }
   return null;
 }
+// Membro da família pela regra (a mais específica que tenha membro gravado)
+function _famPorRegra(desc,tipo){
+  const d=_regraNorm(desc); if(!d) return null;
+  const nomes=famNames();
+  const lista=_regras().filter(r=>r.ativa!==false&&r.familia&&nomes.includes(r.familia)).slice().sort((a,b)=>_regraNorm(b.texto).length-_regraNorm(a.texto).length);
+  for(const r of lista){
+    const c=_catById(r.catId);
+    if(tipo&&c&&c.tipo!==tipo) continue;
+    if(_regraBate(r,d)) return {familia:r.familia,regra:r};
+  }
+  return null;
+}
 function _regraUsos(r){ const d=x=>_regraNorm(x.desc||''); return (A.txs||[]).filter(t=>t.type!=='transferencia'&&_regraBate(r,d(t))).length; }
 function _catEhOutros(id){ const c=_catById(id); return !c||_normTxt(c.name)==='outros'; }
 
-function _rgForm(){ if(!A.rgForm) A.rgForm={id:null,texto:'',modo:'contem',catId:null}; return A.rgForm; }
+function _rgForm(){ if(!A.rgForm) A.rgForm={id:null,texto:'',modo:'contem',catId:null,familia:''}; if(A.rgForm.familia===undefined) A.rgForm.familia=''; return A.rgForm; }
 function rgSalvar(){
   const f=_rgForm(); const texto=_regraLimparTexto(f.texto);
   if(!texto){ toast('Digite o texto que deve aparecer na descrição.','var(--expense)'); document.getElementById('rg-texto')?.focus(); return; }
-  if(!_catById(f.catId)){ toast('Escolha a categoria.','var(--expense)'); return; }
+  const catOk=!!_catById(f.catId); const fam=f.familia||'';
+  if(!catOk&&!fam){ toast('Escolha a categoria e/ou o membro da família.','var(--expense)'); return; }
+  const setFam=r=>{ if(fam) r.familia=fam; else delete r.familia; };
   const igual=_regras().find(r=>r.id!==f.id&&_regraNorm(r.texto)===_regraNorm(texto)&&r.modo===f.modo);
-  if(igual){ igual.catId=f.catId; toast(`A regra “${igual.texto}” já existia — categoria atualizada.`); }
-  else if(f.id){ const r=_regras().find(x=>x.id===f.id); if(r){ r.texto=texto; r.modo=f.modo; r.catId=f.catId; delete r.auto; } toast('Regra atualizada.'); }
-  else { _regras().push({id:A.nid++,texto,modo:f.modo,catId:f.catId,ativa:true}); toast(`Regra criada: ${REGRA_MODOS[f.modo]} “${texto}” → ${_catNomeCompleto(_catById(f.catId))}`,'var(--income)',4500); }
-  A.rgForm={id:null,texto:'',modo:f.modo,catId:f.catId};
+  if(igual){ if(catOk) igual.catId=f.catId; setFam(igual); toast(`A regra “${igual.texto}” já existia — atualizada.`); }
+  else if(f.id){ const r=_regras().find(x=>x.id===f.id); if(r){ r.texto=texto; r.modo=f.modo; r.catId=catOk?f.catId:null; setFam(r); delete r.auto; } toast('Regra atualizada.'); }
+  else { const nr={id:A.nid++,texto,modo:f.modo,catId:catOk?f.catId:null,ativa:true}; setFam(nr); _regras().push(nr); toast(`Regra criada: ${REGRA_MODOS[f.modo]} “${texto}” → ${[catOk?_catNomeCompleto(_catById(f.catId)):'',fam?'👤 '+fam:''].filter(Boolean).join(' · ')}`,'var(--income)',4500); }
+  A.rgForm={id:null,texto:'',modo:f.modo,catId:f.catId,familia:fam};
   render(); setTimeout(()=>document.getElementById('rg-texto')?.focus(),30);
 }
-function rgEditar(id){ const r=_regras().find(x=>x.id===id); if(!r) return; A.rgForm={id:r.id,texto:r.texto,modo:r.modo||'contem',catId:r.catId}; render(); setTimeout(()=>{const i=document.getElementById('rg-texto'); if(i){i.focus(); i.select();}},30); }
-function rgCancelar(){ A.rgForm={id:null,texto:'',modo:'contem',catId:null}; render(); }
+function rgEditar(id){ const r=_regras().find(x=>x.id===id); if(!r) return; A.rgForm={id:r.id,texto:r.texto,modo:r.modo||'contem',catId:r.catId,familia:r.familia||''}; render(); setTimeout(()=>{const i=document.getElementById('rg-texto'); if(i){i.focus(); i.select();}},30); }
+function rgCancelar(){ A.rgForm={id:null,texto:'',modo:'contem',catId:null,familia:''}; render(); }
 function rgApagar(id){
   const r=_regras().find(x=>x.id===id); if(!r) return;
   _showConfirm('Apagar regra?',`“<strong>${H(r.texto)}</strong>” → ${H(_catNomeCompleto(_catById(r.catId))||'—')}<br><span style="font-size:12px;color:var(--gray-500)">Os lançamentos já classificados não mudam.</span>`,()=>{ A.catRegras=_regras().filter(x=>x.id!==id); if(A.rgForm&&A.rgForm.id===id) A.rgForm=null; toast('Regra apagada.','#888780'); render(); },{okLabel:'Apagar'});
@@ -6828,9 +7186,11 @@ function rgAplicarExistentes(){
 function _rgTesteHtml(){
   const v=(A.rgTeste||'').trim(); if(!v) return '<span class="rg-teste-vazio">Digite uma descrição para ver qual regra seria usada.</span>';
   const m=_catPorRegra(v,null)||null;
-  if(!m) return `<span class="rg-teste-nao">Nenhuma regra — ficaria em “Outros” (ou pela sugestão do histórico).</span>`;
+  const mf=_famPorRegra(v,null);
+  const famTxt=mf?` <span class="rg-fam" title="Membro pela regra “${H(mf.regra.texto)}”">👤 ${H(mf.familia)}</span>`:'';
+  if(!m) return mf?`<span class="rg-teste-nao">Sem regra de categoria.</span>${famTxt}`:`<span class="rg-teste-nao">Nenhuma regra — ficaria em “Outros” (ou pela sugestão do histórico).</span>`;
   const c=_catById(m.catId);
-  return `<span class="rg-teste-sim"><span class="ctp-idot" style="background:${catColor(c.id)}"></span> ${H(_catNomeCompleto(c))}</span> <span class="rg-teste-por">pela regra ${REGRA_MODOS[m.regra.modo||'contem']} “${H(m.regra.texto)}”</span>`;
+  return `<span class="rg-teste-sim"><span class="ctp-idot" style="background:${catColor(c.id)}"></span> ${H(_catNomeCompleto(c))}</span>${famTxt} <span class="rg-teste-por">pela regra ${REGRA_MODOS[m.regra.modo||'contem']} “${H(m.regra.texto)}”</span>`;
 }
 function rgTestar(el){ A.rgTeste=el.value; const o=document.getElementById('rg-teste-res'); if(o) o.innerHTML=_rgTesteHtml(); }
 function rgFiltrar(el){ A.rgBusca=el.value; const q=_normTxt(el.value.trim()); document.querySelectorAll('#rg-lista .rg-item').forEach(li=>{ li.style.display=!q||li.dataset.busca.includes(q)?'':'none'; }); }
@@ -6841,10 +7201,10 @@ function rRegrasHtml(){
   const linhas=ordenadas.map(r=>{
     const c=_catById(r.catId); const usos=_regraUsos(r);
     const autoTit=r.auto?`Criada automaticamente${r.fonte?' na importação de '+r.fonte:''}${r.criadaEm?' em '+D(r.criadaEm):''}${r.origem?' · pela '+(RG_ORIGEM[r.origem]||r.origem):''}${r.exemplo?' · ex.: '+r.exemplo:''}. Confira e confirme, edite ou apague.`:'';
-    return `<div class="rg-item ${f.id===r.id?'editando':''} ${r.auto?'auto':''}" data-busca="${H(_normTxt(r.texto+' '+(c?_catNomeCompleto(c):'')))}">
+    return `<div class="rg-item ${f.id===r.id?'editando':''} ${r.auto?'auto':''}" data-busca="${H(_normTxt(r.texto+' '+(c?_catNomeCompleto(c):'')+' '+(r.familia||'')))}">
       <div class="rg-se"><span class="rg-modo">${REGRA_MODOS[r.modo||'contem']}</span><span class="rg-txt">${H(r.texto)}</span>${r.auto?`<span class="rg-auto" title="${H(autoTit)}">⚡ automática</span>`:''}</div>
       <svg class="ic sm rg-seta" aria-hidden="true"><use href="#i-chevron-right"/></svg>
-      <div class="rg-cat">${c?`<span class="ctp-idot" style="background:${catColor(c.id)}"></span><span>${H(_catNomeCompleto(c))}</span>`:'<span class="rg-orfa">categoria apagada</span>'}</div>
+      <div class="rg-cat">${c?`<span class="ctp-idot" style="background:${catColor(c.id)}"></span><span>${H(_catNomeCompleto(c))}</span>`:r.catId?'<span class="rg-orfa">categoria apagada</span>':'<span class="rg-semcat">só membro</span>'}${r.familia?`<span class="rg-fam" title="Membro da família gravado na regra">👤 ${H(r.familia)}</span>`:''}</div>
       <span class="rg-usos" title="Lançamentos atuais cuja descrição bate com a regra">${usos} lanç.</span>
       <span class="row-actions">
         ${r.auto?`<button class="icon-btn ok-rg" onclick="rgConfirmar(${r.id})" title="Confirmar regra" aria-label="Confirmar regra ${H(r.texto)}"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></button>`:''}
@@ -6855,12 +7215,14 @@ function rRegrasHtml(){
   }).join('');
   return `<div class="rg-wrap">
     <label class="rg-opcao"><input type="checkbox" ${_rgAutoLigado()?'checked':''} onchange="_rgAutoSet(this.checked);toast(this.checked?'As importações vão criar regras automaticamente.':'Importações não vão mais criar regras sozinhas.')"> Criar regras automaticamente nas importações (a partir das categorias encontradas e das que você ajustar na revisão)</label>
-    <p class="rg-intro">Quando a descrição de um lançamento <strong>contiver o texto</strong>, a categoria é escolhida sozinha — ao importar fatura em PDF ou extrato e ao digitar um lançamento novo. Maiúsculas, acentos e o número da parcela (8/10) não importam.</p>
+    <p class="rg-intro">Quando a descrição de um lançamento <strong>contiver o texto</strong>, a categoria e o membro da família são escolhidos sozinhos — ao importar fatura em PDF ou extrato e ao digitar um lançamento novo. Maiúsculas, acentos e o número da parcela (8/10) não importam.</p>
     <div class="rg-form ${f.id?'editando':''}">
       <div class="rg-campo rg-c-txt"><label for="rg-texto">Se a descrição</label>
         <div class="rg-linha"><select id="rg-modo" aria-label="Como comparar" onchange="A.rgForm.modo=this.value">${Object.entries(REGRA_MODOS).map(([k,v])=>`<option value="${k}" ${f.modo===k?'selected':''}>${v}</option>`).join('')}</select>
         <input id="rg-texto" value="${H(f.texto)}" placeholder="Ex.: SIMOES, NETFLIX, POSTO" maxlength="60" oninput="A.rgForm.texto=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();rgSalvar();}"></div></div>
       <div class="rg-campo rg-c-cat"><label>vai para a categoria</label>${buildCatTreePicker(f.catId,null,'rg','A.rgForm.catId',{placeholder:'Escolha a categoria'})}</div>
+      <div class="rg-campo rg-c-fam"><div class="fr-label-row"><label for="rg-fam" style="margin-bottom:0">e o membro</label><button type="button" class="fr-add-btn" onclick="qamFam('rg','familia','add')" title="Novo membro da família">＋ Novo</button></div>
+        <select id="rg-fam" onchange="A.rgForm.familia=this.value"><option value="">— Não alterar —</option>${_famOptsHtml(f.familia)}</select></div>
       <div class="rg-botoes">${f.id?'<button class="btn-g" onclick="rgCancelar()">Cancelar</button>':''}<button class="btn-r" onclick="rgSalvar()"><svg class="ic sm" aria-hidden="true"><use href="#i-${f.id?'check':'plus'}"/></svg> ${f.id?'Salvar':'Adicionar regra'}</button></div>
     </div>
     <div class="rg-teste"><label for="rg-teste-in">Testar</label><input id="rg-teste-in" value="${H(A.rgTeste||'')}" placeholder="Cole uma descrição da fatura, ex.: SIMOES - Parcela 8/10" oninput="rgTestar(this)"><div id="rg-teste-res" class="rg-teste-res" aria-live="polite">${_rgTesteHtml()}</div></div>
@@ -6872,7 +7234,7 @@ function rRegrasHtml(){
         <button class="rg-chip ${filtro==='minhas'?'on':''}" onclick="A.rgFiltro='minhas';render()">Confirmadas (${lista.length-nAuto})</button>
       </div>
       ${nAuto?`<button class="btn-g" onclick="rgConfirmarTodas()"><svg class="ic sm" aria-hidden="true"><use href="#i-check"/></svg> Confirmar automáticas</button>`:''}
-      ${lista.length?'<button class="btn-g" onclick="rgAplicarExistentes()" title="Reclassifica os lançamentos que estão em “Outros” ou sem categoria"><svg class="ic sm" aria-hidden="true"><use href="#i-sparkles"/></svg> Aplicar nos lançamentos em “Outros”</button>':''}
+      <button class="btn-g" onclick="openRecategorizar()" title="Revisa os lançamentos em “Outros” com regras, IA, histórico e palavras-chave"><svg class="ic sm" aria-hidden="true"><use href="#i-sparkles"/></svg> Recategorizar lançamentos em “Outros”</button>
     </div>
     <div id="rg-lista" class="rg-lista">${linhas||`<div class="empty-state" style="padding:26px 12px"><div class="es-ic"><svg class="ic" aria-hidden="true"><use href="#i-sparkles"/></svg></div><strong>Nenhuma regra ainda</strong><span style="font-size:13px;color:var(--gray-500)">Crie aqui ou direto na revisão da importação, pelo botão ⚡ ao lado da categoria.</span></div>`}</div>
   </div>`;
@@ -6881,14 +7243,16 @@ function rRegrasHtml(){
 const RG_AUTO_KEY='pfp_rg_auto';
 function _rgAutoLigado(){ try{ return localStorage.getItem(RG_AUTO_KEY)!=='0'; }catch(e){ return true; } }
 function _rgAutoSet(v){ try{ localStorage.setItem(RG_AUTO_KEY,v?'1':'0'); }catch(e){} }
-const RG_ORIGEM={ia:'leitura com IA',historico:'histórico de lançamentos',palavra:'palavra-chave padrão',manual:'escolha na revisão'};
+const RG_ORIGEM={ia:'sugestão da IA',historico:'histórico de lançamentos',palavra:'palavra-chave padrão',planilha:'categoria da planilha',manual:'escolha na revisão'};
 // Texto da regra a partir da descrição: corta no 1º código/número longo (ex.: "JIM.COM 55021848 VICTOR S" → "JIM.COM")
 function _regraTextoAuto(desc){
-  const base=_regraLimparTexto(desc);
+  const base=_regraLimparTexto(desc).replace(/(\D)\d{2}\/\d{2}(?:\/\d{2,4})?\s*$/,'$1').trim();
   const toks=base.split(' '); const out=[];
   for(const t of toks){ if((t.match(/\d/g)||[]).length>=4) break; out.push(t); }
   let txt=out.join(' ').replace(/[\s\-–*#.,:;\/]+$/,'').trim();
   if(_regraNorm(txt).replace(/[^a-z0-9]/g,'').length<3) txt=base;
+  // só prefixo de banco ("PIX TRANSF", "INT", "MOBILE PAG TIT") pegaria tudo: usa a descrição inteira
+  if(_normTxt(txt+' ').replace(/[\/*#|]+/g,' ').replace(_EXTRATO_PREFIXOS,'').replace(/[^a-z0-9]/g,'').length<3) txt=base;
   return txt;
 }
 // Quais linhas da revisão viram regra nova (categoria achada sem regra, e diferente de "Outros")
@@ -6897,21 +7261,36 @@ function _rgAutoPlano(){
   const plano=[]; const vistos=new Set();
   s.rows.forEach((r,i)=>{
     if(!s.selected.has(i)||r.isTransf) return;
-    const origem=r._catManual?'manual':r.catOrigem; if(!origem||origem==='regra') return;
-    if(_catEhOutros(r.catId)) return;
-    const tipo=r.val>=0?'receita':'despesa'; const c=_catById(r.catId); if(!c||c.tipo!==tipo) return;
-    const ja=_catPorRegra(r.desc,tipo); if(ja&&ja.catId===r.catId) return; // já coberta
-    const texto=_regraTextoAuto(r.desc); const k=_regraNorm(texto); if(!k||vistos.has(k)) return; vistos.add(k);
-    plano.push({texto,catId:r.catId,origem,exemplo:r.desc,conflito:ja?ja.regra:null});
+    const tipo=r.val>=0?'receita':'despesa';
+    // categoria: achada sem regra e diferente de "Outros"
+    let catId=null, origem=null, conflito=null;
+    const origemC=r._catManual?'manual':r.catOrigem; const c=_catById(r.catId);
+    const ja=_catPorRegra(r.desc,tipo);
+    if(origemC&&origemC!=='regra'&&!_catEhOutros(r.catId)&&c&&c.tipo===tipo&&!(ja&&ja.catId===r.catId)){ catId=r.catId; origem=origemC; conflito=ja?ja.regra:null; }
+    // membro da família: gravado junto com a regra nova, ou quando você escolheu/veio do portador
+    let familia=null; const fam=r.fam||'';
+    const jaF=_famPorRegra(r.desc,tipo);
+    if(fam&&famNames().includes(fam)&&!(jaF&&jaF.familia===fam)&&(r._famManual||(catId&&r.famOrigem!=='portador'))) familia=fam;
+    if(!catId&&!familia) return;
+    // só o membro mudou e a categoria veio de uma regra: grava o membro nessa mesma regra
+    const regraId=(!catId&&ja&&ja.regra)?ja.regra.id:null;
+    const texto=regraId?ja.regra.texto:_regraTextoAuto(r.desc); const k=_regraNorm(texto); if(!k||vistos.has(k)) return; vistos.add(k);
+    plano.push({texto,catId,familia,regraId,origem:origem||'manual',exemplo:r.desc,conflito});
   });
   return plano;
 }
 function _rgAutoCriar(plano,fonte){
   let novas=0, atualizadas=0;
   plano.forEach(p=>{
-    const igual=_regras().find(x=>_regraNorm(x.texto)===_regraNorm(p.texto)&&(x.modo||'contem')==='contem');
-    if(igual){ if(igual.catId!==p.catId){ igual.catId=p.catId; igual.auto=true; igual.origem=p.origem; igual.criadaEm=today(); igual.fonte=fonte; igual.exemplo=p.exemplo; atualizadas++; } return; }
-    _regras().push({id:A.nid++,texto:p.texto,modo:'contem',catId:p.catId,ativa:true,auto:true,origem:p.origem,criadaEm:today(),fonte,exemplo:p.exemplo});
+    const igual=p.regraId?_regras().find(x=>x.id===p.regraId):_regras().find(x=>_regraNorm(x.texto)===_regraNorm(p.texto)&&(x.modo||'contem')==='contem');
+    if(igual){
+      let mudou=false;
+      if(p.catId&&igual.catId!==p.catId){ igual.catId=p.catId; mudou=true; }
+      if(p.familia&&igual.familia!==p.familia){ igual.familia=p.familia; mudou=true; }
+      if(mudou){ igual.auto=true; igual.origem=p.origem; igual.criadaEm=today(); igual.fonte=fonte; igual.exemplo=p.exemplo; atualizadas++; }
+      return;
+    }
+    _regras().push({id:A.nid++,texto:p.texto,modo:'contem',catId:p.catId||null,...(p.familia?{familia:p.familia}:{}),ativa:true,auto:true,origem:p.origem,criadaEm:today(),fonte,exemplo:p.exemplo});
     novas++;
   });
   return {novas,atualizadas};
@@ -6921,46 +7300,93 @@ function rgConfirmarTodas(){ let n=0; _regras().forEach(r=>{ if(r.auto){ delete 
 function _csvCriarRegra(i){
   const r=_csvState.rows[i]; if(!r) return;
   const tipo=r.val>=0?'receita':'despesa';
-  if(_catEhOutros(r.catId)){ toast('Escolha a categoria desta linha primeiro; depois clique em ⚡ para lembrar.','var(--amber)',4500); return; }
+  const temCat=!_catEhOutros(r.catId); const fam=(r.fam&&famNames().includes(r.fam))?r.fam:'';
+  if(!temCat&&!fam){ toast('Escolha a categoria ou o membro desta linha primeiro; depois clique em ⚡ para lembrar.','var(--amber)',4500); return; }
   const texto=_regraLimparTexto(r.desc);
   let reg=_regras().find(x=>_regraNorm(x.texto)===_regraNorm(texto)&&(x.modo||'contem')==='contem');
-  if(reg) reg.catId=r.catId; else { reg={id:A.nid++,texto,modo:'contem',catId:r.catId,ativa:true}; _regras().push(reg); }
+  if(!reg){ reg={id:A.nid++,texto,modo:'contem',catId:null,ativa:true}; _regras().push(reg); }
+  if(temCat) reg.catId=r.catId;
+  if(fam) reg.familia=fam; else delete reg.familia;
   // aplica nas outras linhas desta importação que você não mexeu
-  let n=0; _csvState.rows.forEach((o,k)=>{ if(k===i||o._catManual) return; const tp=o.val>=0?'receita':'despesa'; const m=_catPorRegra(o.desc,tp); if(m&&m.regra.id===reg.id&&o.catId!==m.catId){ o.catId=m.catId; o.regraTxt=reg.texto; n++; } });
-  r.regraTxt=reg.texto;
+  let n=0; _csvState.rows.forEach((o,k)=>{ if(k===i) return; const tp=o.val>=0?'receita':'despesa'; let mexeu=false;
+    if(!o._catManual){ const m=_catPorRegra(o.desc,tp); if(m&&m.regra.id===reg.id&&o.catId!==m.catId){ o.catId=m.catId; o.regraTxt=reg.texto; mexeu=true; } }
+    if(!o._famManual&&reg.familia){ const mf=_famPorRegra(o.desc,tp); if(mf&&mf.regra.id===reg.id&&o.fam!==mf.familia){ o.fam=mf.familia; o.famOrigem='regra'; mexeu=true; } }
+    if(mexeu) n++; });
+  if(temCat) r.regraTxt=reg.texto;
+  if(fam){ r.famOrigem='regra'; }
   scheduleSave(); _renderCsvModal();
-  toast(`Regra salva: contém “${texto}” → ${_catNomeCompleto(_catById(r.catId))}${n?` · ${n} outra(s) linha(s) ajustada(s)`:''}. Edite em Categorias › Regras.`,'var(--income)',5000);
+  toast(`Regra salva: contém “${texto}” → ${[reg.catId?_catNomeCompleto(_catById(reg.catId)):'',fam?'👤 '+fam:''].filter(Boolean).join(' · ')}${n?` · ${n} outra(s) linha(s) ajustada(s)`:''}. Edite em Categorias › Regras.`,'var(--income)',5000);
 }
 
 function csvGuessCategory(desc, val) {
   const d = desc || '';
+  const tipo = val >= 0 ? 'receita' : 'despesa';
   // 1º: suas regras (Categorias › Regras)
-  const _rg = _catPorRegra(d, val >= 0 ? 'receita' : 'despesa');
+  const _rg = _catPorRegra(d, tipo);
   if (_rg) return { catId: _rg.catId, isTransf: false, regraTxt: _rg.regra.texto };
-  for (const rule of CSV_CAT_MAP) {
-    if (rule.pat.test(d)) {
-      if (rule.isTransf) return { catId: null, isTransf: true };
-      return { catId: rule.catId, isTransf: false };
-    }
-  }
-  // Fallback: 'Outros' para despesa ou receita
-  const defCat = val >= 0
-    ? (A.cats.find(c => c.tipo === 'receita' && c.name === 'Outros') || A.cats.find(c => c.tipo === 'receita'))
-    : (A.cats.find(c => c.tipo === 'despesa' && c.name === 'Outros') || A.cats.find(c => c.tipo === 'despesa'));
+  // 2º: palavra-chave padrão (na descrição inteira e na descrição sem o prefixo do banco)
+  const pc = _catPorPalavra(d, tipo) || _catPorPalavra(_descLimpa(d), tipo);
+  if (pc) return { catId: pc, isTransf: false, palavra: true };
+  // Fallback: 'Outros' do tipo
+  const defCat = A.cats.find(c => c.tipo === tipo && _normTxt(c.name) === 'outros') || A.cats.find(c => c.tipo === tipo);
   return { catId: defCat ? defCat.id : null, isTransf: false };
 }
 
+/* ═══ Categorização automática — a MESMA cadeia para fatura PDF, extrato e planilha ═══
+   1. Regra sua (Categorias › Regras)       — sempre ganha
+   2. Categoria escrita na própria planilha  — se o nome bater com uma categoria sua
+   3. IA (Claude), quando ligada              — PDF: vem junto da leitura; extrato/planilha: só as descrições são enviadas
+   4. Histórico                               — mesma categoria do último lançamento parecido
+   5. Palavra-chave padrão                    — mercado, posto, Sabesp, rendimento...
+   6. "Outros"                                                                                    */
+const CAT_ORIGEM_INFO={
+  regra:{ic:'⚡',txt:'regra',tit:'Pela sua regra de categorização'},
+  planilha:{ic:'📄',txt:'planilha',tit:'Categoria que já veio escrita no arquivo'},
+  ia:{ic:'✨',txt:'IA',tit:'Sugerida pelo Claude'},
+  historico:{ic:'🕘',txt:'histórico',tit:'Mesma categoria de um lançamento parecido que você já tem'},
+  palavra:{ic:'🔤',txt:'palavra-chave',tit:'Pela palavra-chave padrão'},
+  manual:{ic:'✋',txt:'você',tit:'Escolhida por você'}
+};
+function _aplicarAutoCat(rows){
+  _histCache=null;
+  const cont={regra:0,planilha:0,ia:0,historico:0,palavra:0,nenhuma:0};
+  rows.forEach(r=>{
+    const tipo=r.val>=0?'receita':'despesa';
+    const ok=id=>{ const c=_catById(id); return c&&c.tipo===tipo&&!_catEhOutros(id)?id:null; };
+    const g=csvGuessCategory(r.desc,r.val);
+    delete r.regraTxt; r.isTransf=false;
+    let catId=null, origem=null;
+    if(g.regraTxt){ catId=g.catId; origem='regra'; r.regraTxt=g.regraTxt; }
+    else if(ok(r.catPlanilha)){ catId=r.catPlanilha; origem='planilha'; }
+    else if(ok(r.catIA)){ catId=r.catIA; origem='ia'; }
+    else { const h=ok(_catAprendida(r.desc,tipo)); if(h){ catId=h; origem='historico'; }
+      else if(g.palavra){ catId=g.catId; origem='palavra'; }
+      else catId=g.catId; }
+    r.catId=catId; r.catOrigem=origem; cont[origem||'nenhuma']++;
+  });
+  return cont;
+}
+
 // ── Parsers de formatos conhecidos ──
+// Texto salvo em UTF-8 e relido como Latin-1 ("DISPONÃVEL") → volta ao normal
+function _fixMojibake(t){ t=String(t||''); if(!/Ã[\u0080-¿]|Â[\u0080-¿]/.test(t)) return t; try{ return decodeURIComponent(escape(t)); }catch(e){ return t; } }
 function csvDetectAndParse(text) {
+  const res = _csvDetectAndParse(text);
+  res.rows.forEach(r => { r.desc = _fixMojibake(r.desc).replace(/\s+/g, ' ').trim(); if (r.familia) r.familia = _fixMojibake(r.familia); });
+  return res;
+}
+function _csvDetectAndParse(text) {
   // Remove BOM UTF-8 se presente
-  text = text.replace(/^\uFEFF/, '');
+  text = text.replace(/^﻿/, '');
   const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
   if (!lines.length) return { rows: [], format: 'desconhecido' };
 
   // Itaú conta corrente: tem metadados no topo, depois header "data,lançamento,...,valor (R$),saldos (R$)"
   const itauHeaderIdx = lines.findIndex(l => /data.*lan.*amento.*valor/i.test(l));
   if (itauHeaderIdx >= 0) {
-    return { rows: csvParseItau(lines, itauHeaderIdx), format: 'Itaú (conta corrente)' };
+    const futuros = { n: 0 };
+    const rows = csvParseItau(lines, itauHeaderIdx, futuros);
+    if (rows.length) return { rows, format: 'Itaú (conta corrente)', futuros: futuros.n };
   }
 
   const h = lines[0].toLowerCase();
@@ -6973,6 +7399,9 @@ function csvDetectAndParse(text) {
   if (h.includes('date') && h.includes('category') && h.includes('title') && h.includes('amount')) {
     return { rows: csvParseNubankCartao(lines), format: 'Nubank (cartão)' };
   }
+  // Qualquer planilha: acha a linha de cabeçalho e as colunas (data, descrição, valor ou débito/crédito, tipo, categoria)
+  const tab = csvParseTabela(lines);
+  if (tab && tab.rows.length) return tab;
   // Nubank conta: "Data,Descrição,Valor"  (pt-BR, sem category)
   if ((h.includes('data') && h.includes('descri') && h.includes('valor')) && !h.includes('category')) {
     return { rows: csvParseGeneric(lines, { dateCol: 0, descCol: 1, valCol: 2, sep: ',', dateFormat: 'dmy' }), format: 'Nubank (conta)' };
@@ -6987,6 +7416,92 @@ function csvDetectAndParse(text) {
   }
   // Genérico vírgula
   return { rows: csvParseGeneric(lines, { dateCol: 0, descCol: 1, valCol: 2, sep: ',', dateFormat: 'auto' }), format: 'Genérico (,)' };
+}
+
+// ── Planilha qualquer (controle de finanças, extrato de outro banco, export de app) ──
+// Procura nas primeiras 40 linhas um cabeçalho com data + descrição + (valor | débito/crédito).
+// Entende também colunas de tipo (Receita/Despesa, Entrada/Saída, D/C), categoria/subcategoria e membro.
+const _TAB_COLS = {
+  data:  /^(data|date|dt|dia)\b|data (do |da |de )?(lancamento|movimento|movimentacao|compra|transacao|pagamento)|^vencimento$/,
+  desc:  /descri|historico|^lancamento$|estabelecimento|^title$|memo|detalhe|^item$|^nome$|favorecido|beneficiario|^local$|^o que/,
+  valor: /^valor|amount|quantia|montante|^r\$|^total$|^gasto|^preco/,
+  deb:   /debito|^saida|^saidas|despesa$|^despesas$|retirada|^pago$/,
+  cred:  /credito|^entrada|^entradas|receita$|^receitas$|deposito|^recebido$/,
+  tipo:  /^tipo|natureza|^d\/c$|^dc$|^c\/d$|entrada\/saida|^movimento$|^operacao$/,
+  cat:   /^categoria|^category|classifica|^grupo$|^conta contabil/,
+  sub:   /^sub ?categoria|^subcategory/,
+  membro:/^membro|^pessoa|responsavel|^portador|^titular|^quem/,
+};
+function _tabSep(l){ const c={';':(l.match(/;/g)||[]).length,'\t':(l.match(/\t/g)||[]).length,',':(l.match(/,/g)||[]).length}; return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; }
+function _tabValor(str){
+  if (str == null) return null; let t = String(str).trim(); if (!t) return null;
+  let neg = false;
+  if (/^\(.*\)$/.test(t)) { neg = true; t = t.slice(1, -1); }
+  const dc = t.match(/\s*([DC])$/i); if (dc) { if (dc[1].toUpperCase() === 'D') neg = true; t = t.slice(0, -1); }
+  if (/-\s*$/.test(t)) { neg = true; t = t.replace(/-\s*$/, ''); }
+  const v = csvParseVal(t); if (v === null) return null;
+  return neg ? -Math.abs(v) : v;
+}
+function _tabCat(nome, sub, tipo){
+  const n = s => _normTxt(s).replace(/\s*(›|>|»|:|\s-\s)\s*/g, ' › ').replace(/\s+/g, ' ').trim();
+  const alvo = [sub, nome].filter(Boolean).map(n).filter(Boolean); if (!alvo.length) return null;
+  const tipos = tipo ? [tipo] : ['despesa', 'receita'];
+  for (const a of alvo) {
+    for (const tp of tipos) {
+      const c = A.cats.find(c => c.tipo === tp && (n(_catNomeCompleto(c)) === a || n(c.name) === a))
+        || (a.includes(' › ') ? A.cats.find(c => c.tipo === tp && n(c.name) === a.split(' › ').pop()) : null);
+      if (c) return c;
+    }
+  }
+  return null;
+}
+function csvParseTabela(lines) {
+  let hi = -1, sep = ',', col = null;
+  for (let i = 0; i < Math.min(lines.length, 40); i++) {
+    const sp = _tabSep(lines[i]);
+    const cells = csvSplit(lines[i], sp).map(c => _normTxt(c).replace(/\s+/g, ' ').trim());
+    const ach = {};
+    Object.keys(_TAB_COLS).forEach(k => { const j = cells.findIndex((c, ix) => c && _TAB_COLS[k].test(c) && !Object.values(ach).includes(ix) && !(k === 'valor' && /saldo/.test(c)) && !(k === 'cat' && _TAB_COLS.sub.test(c))); if (j >= 0) ach[k] = j; });
+    if (ach.data >= 0 && ach.desc >= 0 && (ach.valor >= 0 || ach.deb >= 0 || ach.cred >= 0)) { hi = i; sep = sp; col = ach; break; }
+  }
+  if (hi < 0) return null;
+  const brutas = [];
+  for (let i = hi + 1; i < lines.length; i++) {
+    const c = csvSplit(lines[i], sep);
+    // padrão brasileiro: "8/1/2024" é 8 de janeiro (completa os zeros antes de interpretar)
+    const date = csvParseDate(String(c[col.data] || '').trim().replace(/^(\d)(?=[\/.-])/, '0$1').replace(/^(\d{2})([\/.-])(\d)(?=[\/.-])/, '$1$2' + '0$3').replace(/^(\d{2})[.-](\d{2})[.-](\d{2,4})/, '$1/$2/$3'));
+    const desc = (c[col.desc] || '').trim();
+    if (!date || !desc || /^saldo\b/i.test(_normTxt(desc))) continue;
+    let val = null;
+    if (col.valor >= 0) val = _tabValor(c[col.valor]);
+    if ((val === null || val === 0) && (col.deb >= 0 || col.cred >= 0)) {
+      const d = col.deb >= 0 ? _tabValor(c[col.deb]) : null, k = col.cred >= 0 ? _tabValor(c[col.cred]) : null;
+      if (d) val = -Math.abs(d); else if (k) val = Math.abs(k);
+    }
+    if (val === null || val === 0) continue;
+    let tipoTxt = col.tipo >= 0 ? _normTxt(c[col.tipo] || '').trim() : '';
+    let tipo = null;
+    if (/^(d|deb|debito|despesa|saida|gasto|pagamento|-)\b/.test(tipoTxt)) tipo = 'despesa';
+    else if (/^(c|cred|credito|receita|entrada|recebimento|\+)\b/.test(tipoTxt)) tipo = 'receita';
+    brutas.push({ date, desc, val, tipo, cat: col.cat >= 0 ? (c[col.cat] || '').trim() : '', sub: col.sub >= 0 ? (c[col.sub] || '').trim() : '', membro: col.membro >= 0 ? (c[col.membro] || '').trim() : '' });
+  }
+  // planilha de gastos com todos os valores positivos e sem coluna de tipo: é despesa, salvo se a categoria for de receita
+  const semSinal = col.tipo === undefined && col.deb === undefined && col.cred === undefined && brutas.length && brutas.every(b => b.val > 0);
+  const rows = brutas.map(b => {
+    let val = b.val;
+    if (b.tipo === 'despesa') val = -Math.abs(val); else if (b.tipo === 'receita') val = Math.abs(val);
+    else if (semSinal) {
+      const cr = _tabCat(b.cat, b.sub, 'receita'), cd = _tabCat(b.cat, b.sub, 'despesa');
+      val = (cr && !cd) || (!b.cat && _catPorPalavra(b.desc, 'receita') && !_catPorPalavra(b.desc, 'despesa')) ? Math.abs(val) : -Math.abs(val);
+    }
+    const tipo = val >= 0 ? 'receita' : 'despesa';
+    const r = { date: b.date, desc: b.desc, val };
+    if (b.cat || b.sub) { const c = _tabCat(b.cat, b.sub, tipo); r.catTexto = [b.cat, b.sub].filter(Boolean).join(' › '); if (c) r.catPlanilha = c.id; }
+    if (b.membro) r.familia = b.membro;
+    return r;
+  });
+  const achou = ['tipo', 'cat', 'membro'].filter(k => col[k] >= 0).map(k => ({ tipo: 'tipo', cat: 'categoria', membro: 'membro' })[k]);
+  return { rows, format: 'Planilha' + (col.deb >= 0 || col.cred >= 0 ? ' (débito/crédito)' : '') + (achou.length ? ' · com ' + achou.join(', ') : ''), semSinal };
 }
 
 // Parser fatura de cartão: Data;Estabelecimento;Portador;Valor;Parcela
@@ -7019,7 +7534,7 @@ function csvParseFaturaCartao(lines) {
 // Header: data,lançamento,ag./origem,valor (R$),saldos (R$)
 // Linhas de saldo/anterior devem ser ignoradas
 const ITAU_SKIP = /saldo\s*(total|anterior|disponível|dia)|^,+$|lançamentos/i;
-function csvParseItau(lines, headerIdx) {
+function csvParseItau(lines, headerIdx, futuros) {
   const rows = [];
   // Detecta separador do header
   const headerLine = lines[headerIdx];
@@ -7031,7 +7546,12 @@ function csvParseItau(lines, headerIdx) {
 
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const line = lines[i];
-    if (!line.trim() || ITAU_SKIP.test(line)) continue;
+    // "lançamentos futuros / saídas futuras": agendamentos que ainda não aconteceram — ficam de fora
+    if (/^[,;\s"]*(lan\S*amentos futuros|sa\S*das futuras|entradas futuras)/i.test(line)) {
+      if (futuros) futuros.n = lines.slice(i + 1).filter(l => /^[\s"]*\d{2}\/\d{2}\/\d{4}/.test(l)).length;
+      break;
+    }
+    if (!line.trim() || ITAU_SKIP.test(_fixMojibake(line))) continue;
     const cols = csvSplit(line, sep);
     const date = csvParseDate(cols[dateCol >= 0 ? dateCol : 0]);
     const desc = (cols[descCol >= 0 ? descCol : 1] || '').trim();
@@ -7190,6 +7710,8 @@ function _renderCsvModal() {
   const inputBorder = isDark ? '#2e3d55' : '#CBD5E1';
 
   const s = _csvState;
+  // a conta do estado precisa existir — senão o select mostra a 1ª conta mas grava outra coisa
+  if (!s.recat && !_accExiste(s.accId)) s.accId = _allAccounts()[0]?.id ?? null;
 
   // ── STEP 1: UPLOAD ──
   if (s.step === 'upload') {
@@ -7226,7 +7748,8 @@ function _renderCsvModal() {
       <div style="margin-top:14px;padding:10px 12px;background:${isDark?'#0a0f1a':'#F8FAFC'};border-radius:10px;font-size:11px;color:${textSec};line-height:1.7">
         <strong style="color:${textPrimary}">Formatos suportados:</strong><br>
         <strong style="color:${textPrimary}">PDF da fatura do cartão:</strong> ${iaCfg().motor==='claude'?'lido pelo Claude (IA) — funciona até com PDF escaneado':'lido no próprio aparelho, sem enviar nada para fora'} · <a href="#" onclick="closeCsvImport();A.tab='armazenamento';render();return false" style="color:var(--blue)">configurar IA</a><br>
-        <strong style="color:${textPrimary}">Extrato:</strong> Nubank, Inter, Bradesco, BB, Itaú · qualquer CSV, XLS ou XLSX com data, descrição e valor
+        <strong style="color:${textPrimary}">Extrato ou planilha:</strong> Nubank, Inter, Bradesco, BB, Itaú (até o .xls do Itaú salvo como .csv) · qualquer CSV, XLS ou XLSX com data, descrição e valor (ou débito/crédito; colunas de tipo, categoria e membro são aproveitadas)<br>
+        <strong style="color:${textPrimary}">Categorias:</strong> ⚡ suas regras › 📄 categoria da planilha › ✨ IA${iaCfg().motor==='claude'&&iaCfg().chave?'':' (desligada)'} › 🕘 histórico › 🔤 palavra-chave — a mesma lógica da fatura em PDF
       </div>
     </div>`;
     return;
@@ -7236,8 +7759,8 @@ function _renderCsvModal() {
   if (s.step === 'loading') {
     el.innerHTML = `<div style="background:${bg};border:${border};border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.22);padding:32px 24px;width:100%;max-width:420px;font-family:var(--font-sans);text-align:center" role="status" aria-live="polite">
       <div class="ia-spin" aria-hidden="true"></div>
-      <div style="font-size:16px;font-weight:700;color:${textPrimary};margin-top:14px">Lendo a fatura…</div>
-      <div style="font-size:12.5px;color:${textSec};margin-top:4px">${H(s.fileName)} · ${iaCfg().motor==='claude'?'enviando para o Claude':'leitura no aparelho'}</div>
+      <div style="font-size:16px;font-weight:700;color:${textPrimary};margin-top:14px">${H(s.loadingMsg||'Lendo a fatura…')}</div>
+      <div style="font-size:12.5px;color:${textSec};margin-top:4px">${H(s.fileName)} · ${s.loadingSub?H(s.loadingSub):iaCfg().motor==='claude'?'enviando para o Claude':'leitura no aparelho'}</div>
     </div>`;
     return;
   }
@@ -7250,7 +7773,7 @@ function _renderCsvModal() {
   function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
 
   // Detecta duplicatas com lançamentos já existentes
-  const existingHashes = new Set(
+  const existingHashes = s.recat ? new Set() : new Set(
     A.txs.map(t => t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val))
     .concat(A.txs.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
   );
@@ -7259,8 +7782,33 @@ function _renderCsvModal() {
   const dupCount = rows.filter(r => existingHashes.has(rowHash(r))).length;
   const selCount = selected.size;
 
-  const hasFamilia = rows.some(r => r.familia);
-  const rowsHtml = rows.map((r, i) => {
+  rows.forEach(r => { if (r.fam === undefined) _csvFamInicial(r); });
+  // Ordenação pelas colunas (clique no cabeçalho)
+  const _srt = s.sort || null;
+  const _ordem = rows.map((_, i) => i);
+  if (_srt) {
+    const _cmpTxt = (a, b) => String(a||'').localeCompare(String(b||''), 'pt-BR', { sensitivity: 'base', numeric: true });
+    const _key = i => { const r = rows[i];
+      if (_srt.col === 'data') return r.date || '';
+      if (_srt.col === 'desc') return r.desc || '';
+      if (_srt.col === 'valor') return r.val || 0;
+      if (_srt.col === 'membro') return r.fam || '';
+      if (_srt.col === 'cat') { const t = r.val >= 0 ? 'receita' : 'despesa'; const cid = r.catId !== undefined ? r.catId : csvGuessCategory(r.desc, r.val).catId; const c = A.cats.find(x => x.id == cid); return c ? _catNomeCompleto(c) : ''; }
+      return i; };
+    _ordem.sort((a, b) => { const ka = _key(a), kb = _key(b);
+      const c = (typeof ka === 'number' && typeof kb === 'number') ? ka - kb : _cmpTxt(ka, kb);
+      return (c || (rows[a].date||'').localeCompare(rows[b].date||'') || a - b) * (_srt.dir === 'desc' ? -1 : 1); });
+  }
+  const _th = (col, label, align) => { const on = _srt && _srt.col === col; const seta = on ? (_srt.dir === 'asc' ? '▲' : '▼') : '⇅';
+    return `<th class="csv-th-sort ${on?'on':''}" style="padding:8px 6px;font-size:11px;color:${on?(isDark?'#93c5fd':'#2563EB'):textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:${align}" aria-sort="${on?(_srt.dir==='asc'?'ascending':'descending'):'none'}"><button type="button" onclick="_csvSort('${col}')" title="Ordenar por ${label.toLowerCase()}">${label} <span class="csv-sort-ic">${seta}</span></button></th>`; };
+  const _vis = _csvVisiveis();
+  const _visSet = new Set(_vis);
+  const _ordemVis = _ordem.filter(i => _visSet.has(i));
+  const _filtroOn = _csvFiltroAtivo();
+  const _ver = s.verSel || 'todos';
+  const _nSel = selected.size, _nNao = rows.length - selected.size;
+  const _visSel = _vis.filter(i => selected.has(i)).length;
+  const rowsHtml = (_ordemVis.length ? '' : `<tr><td colspan="6" style="padding:22px;text-align:center;font-size:13px;color:${textSec}">${_csvFiltroTermos().length?`Nenhuma linha com “${H(s.filtro||'')}” na descrição`:'Nenhuma linha aqui'}${_ver==='sim'?' entre as marcadas':_ver==='nao'?' entre as não marcadas':''}.</td></tr>`) + _ordemVis.map(i => { const r = rows[i];
     const isDup = existingHashes.has(rowHash(r));
     const isSel = selected.has(i);
     const type = r.val >= 0 ? 'receita' : 'despesa';
@@ -7286,9 +7834,9 @@ function _renderCsvModal() {
       </td>
       <td style="padding:8px 6px;font-size:12px;color:${isDark?'#8aafd4':'#64748B'};white-space:nowrap">${D(r.date)}</td>
       <td style="padding:8px 6px;font-size:13px;color:${isDark?'#c8daf0':'#0F172A'};max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(r.desc)}">${H(r.desc)}</td>
-      ${hasFamilia ? `<td style="padding:8px 6px;font-size:11px;color:${isDark?'#8aafd4':'#64748B'};white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">${H(r.familia||'')}</td>` : ''}
+      <td style="padding:4px 6px">${_csvFamSelHtml(i, r)}</td>
       <td style="padding:4px 6px;text-align:center;overflow:visible;position:relative">
-        <div class="csv-cat-cel">${buildCsvCatPicker(i, catId, type)}<button type="button" class="csv-regra ${r.regraTxt?'on':''}" onclick="_csvCriarRegra(${i})" title="${r.regraTxt?`Categoria pela regra “${H(r.regraTxt)}” — clique para atualizar a regra com a categoria atual`:'Lembrar: sempre usar esta categoria para esta descrição'}" aria-label="Criar regra para ${H(r.desc)}">⚡</button></div>
+        <div class="csv-cat-cel">${buildCsvCatPicker(i, catId, type)}${_csvOrigemBadge(r)}<button type="button" class="csv-regra ${r.regraTxt?'on':''}" onclick="_csvCriarRegra(${i})" title="${r.regraTxt?`Categoria pela regra “${H(r.regraTxt)}” — clique para atualizar a regra com a categoria atual`:'Lembrar: sempre usar esta categoria para esta descrição'}" aria-label="Criar regra para ${H(r.desc)}">⚡</button></div>
       </td>
       <td style="padding:8px 6px;font-size:13px;font-weight:700;text-align:right;white-space:nowrap;color:${r.val>=0?'var(--income)':'var(--expense)'}">${r.val>=0?'+':'−'}${R(Math.abs(r.val))}</td>
     </tr>`;
@@ -7298,9 +7846,9 @@ function _renderCsvModal() {
   <div style="background:${bg};border:${border};border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.22);padding:24px;width:96vw;max-width:1000px;max-height:92vh;display:flex;flex-direction:column;font-family:var(--font-sans)">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
       <div>
-        <div style="font-size:17px;font-weight:700;color:${textPrimary}">📋 Revisar Importação</div>
+        <div style="font-size:17px;font-weight:700;color:${textPrimary}">${s.recat?'🔁 Recategorizar lançamentos em “Outros”':'📋 Revisar Importação'}</div>
         <div style="font-size:12px;color:${textSec};margin-top:3px">
-          <strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_renderCsvModal()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:accName}
+          ${s.recat?`Lançamentos que você já tem · só a categoria (e o membro, se você mudar) é alterada · ${format}`:`<strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_renderCsvModal()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:accName}`}
         </div>
       </div>
       <button onclick="closeCsvImport()" aria-label="Fechar" style="background:none;border:none;font-size:20px;cursor:pointer;color:${textSec};padding:0;line-height:1;flex-shrink:0">✕</button>
@@ -7321,7 +7869,7 @@ function _renderCsvModal() {
     })():''}
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-shrink:0;flex-wrap:wrap">
       <div style="background:${isDark?'#0f1e35':'#F1F5F9'};border:1px solid ${inputBorder};border-radius:10px;padding:8px 14px;font-size:12px">
-        <span style="color:${textSec}">Total no arquivo</span><br>
+        <span style="color:${textSec}">${s.recat?'Em “Outros”':'Total no arquivo'}</span><br>
         <strong style="font-size:16px;color:${textPrimary}">${allCount}</strong>
       </div>
       ${dupCount>0?`<div style="background:${isDark?'#1a1008':'#FFFBEB'};border:1px solid ${isDark?'#3a2800':'#FDE68A'};border-radius:10px;padding:8px 14px;font-size:12px">
@@ -7334,33 +7882,49 @@ function _renderCsvModal() {
       </div>
       ${_csvRgAutoHtml()}
     </div>
+    ${_csvCatResumoHtml()}
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0">
-      <button onclick="_csvSelectAll()" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary};cursor:pointer;font-family:var(--font-sans)">✅ Marcar todos</button>
-      <button onclick="_csvSelectNone()" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary};cursor:pointer;font-family:var(--font-sans)">☐ Desmarcar todos</button>
-      <span style="font-size:11px;color:${textSec}">⚠️ = possível duplicata (desmarcado por padrão)</span>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0;flex-wrap:wrap">
+      <div class="csv-filtro ${_filtroOn?'on':''}">
+        <svg class="ic sm" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="csv-filtro" type="search" value="${H(s.filtro||'')}" placeholder="Filtrar descrição… ex.: pix transf" aria-label="Filtrar lançamentos pela descrição" oninput="_csvFiltrar(this.value)" onkeydown="if(event.key==='Escape'){this.value='';_csvFiltrar('',true)}">
+        ${_csvFiltroTermos().length?`<span class="csv-filtro-n" title="Linhas que contêm o texto · quantas delas estão marcadas">${_vis.length} de ${allCount} · ${_visSel} marc.</span><button type="button" class="csv-filtro-x" onclick="_csvFiltrar('',true)" title="Limpar filtro" aria-label="Limpar filtro">✕</button>`:''}
+      </div>
+      <div class="csv-ver" role="group" aria-label="Mostrar linhas">
+        <button type="button" class="${_ver==='todos'?'on':''}" aria-pressed="${_ver==='todos'}" onclick="_csvVer('todos')">Todos <b>${rows.length}</b></button>
+        <button type="button" class="sim ${_ver==='sim'?'on':''}" aria-pressed="${_ver==='sim'}" onclick="_csvVer('sim')" title="${s.recat?'Só o que vai ser recategorizado':'Só o que vai ser importado'}">☑ Marcados <b>${_nSel}</b></button>
+        <button type="button" class="nao ${_ver==='nao'?'on':''}" aria-pressed="${_ver==='nao'}" onclick="_csvVer('nao')" title="${s.recat?'O que ainda falta (continua em “Outros”)':'O que ainda falta marcar (não será importado)'}">☐ Não marcados <b>${_nNao}</b></button>
+      </div>
+      <button onclick="_csvSelectAll()" title="${_filtroOn?'Marca só as linhas que aparecem no filtro':'Marca todas as linhas'}" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary};cursor:pointer;font-family:var(--font-sans)">✅ ${_filtroOn?`Marcar filtrados (${_vis.length})`:'Marcar todos'}</button>
+      <button onclick="_csvSelectNone()" title="${_filtroOn?'Desmarca só as linhas que aparecem no filtro — as outras continuam como estão':'Desmarca todas as linhas'}" style="font-size:12px;padding:5px 11px;border-radius:8px;border:1px solid ${_filtroOn?'var(--expense)':inputBorder};background:${inputBg};color:${_filtroOn?'var(--expense)':textPrimary};cursor:pointer;font-family:var(--font-sans);font-weight:${_filtroOn?700:400}">☐ ${_filtroOn?`Desmarcar filtrados (${_vis.length})`:'Desmarcar todos'}</button>
+      <select id="csv-cat-todos" class="csv-fam" aria-label="Categoria para as linhas filtradas" title="Aplica a categoria em todas as linhas que aparecem agora (só nas do mesmo tipo)" onchange="_csvCatTodos(this.value)" style="width:auto;max-width:240px">
+        <option value="" selected>🏷 Categoria p/ ${_filtroOn?`filtrados (${_vis.length})`:'todos'}…</option>${_csvCatOptsHtml()}</select>
+      <select id="csv-fam-todos" class="csv-fam" aria-label="Membro para todos os selecionados" onchange="_csvFamTodos(this.value)" style="width:auto;max-width:230px">
+        <option value="__x__" selected>👤 Membro p/ selecionados…</option><option value="">— Nenhum —</option>${_famOptsHtml(null)}<option value="__novo__">＋ Novo membro…</option></select>
+      ${s.recat?'':`<span style="font-size:11px;color:${textSec}">⚠️ = possível duplicata (desmarcado por padrão)</span>`}
     </div>
 
-    <div style="overflow-y:auto;overflow-x:visible;flex:1;border:1px solid ${inputBorder};border-radius:12px">
+    <div class="csv-tbl-wrap" style="overflow-y:auto;overflow-x:visible;flex:1;border:1px solid ${inputBorder};border-radius:12px">
       <table style="width:100%;border-collapse:collapse">
         <thead style="position:sticky;top:0;background:${isDark?'#0a0f1a':'#F8FAFC'};z-index:1">
           <tr>
             <th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};width:36px"></th>
-            <th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:left">Data</th>
-            <th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:left">Descrição</th>
-            ${hasFamilia ? `<th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:left">Portador</th>` : ''}
-            <th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:center">Categoria</th>
-            <th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:right">Valor</th>
+            ${_th('data','Data','left')}
+            ${_th('desc','Descrição','left')}
+            ${_th('membro','Membro','left')}
+            ${_th('cat','Categoria','center')}
+            ${_th('valor','Valor','right')}
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;flex-shrink:0;justify-content:flex-end">
-      <button onclick="_csvState.step='upload';_renderCsvModal()" style="padding:10px 18px;border-radius:10px;border:1.5px solid ${inputBorder};background:${inputBg};color:${textPrimary};font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">← Voltar</button>
-      <button onclick="_csvConfirmImport()" ${selCount===0?'disabled':''} style="padding:10px 22px;border-radius:10px;border:none;background:${selCount===0?'#94A3B8':'#2563EB'};color:#fff;font-size:14px;font-weight:700;cursor:${selCount===0?'not-allowed':'pointer'};font-family:var(--font-sans)">
-        Importar ${selCount} lançamento${selCount!==1?'s':''}
+    <div style="display:flex;gap:10px;margin-top:16px;flex-shrink:0;justify-content:flex-end;align-items:center;flex-wrap:wrap">
+      ${_csvTotaisHtml(_vis)}
+      <button onclick="${s.recat?'closeCsvImport()':"_csvState.step='upload';_renderCsvModal()"}" style="padding:10px 18px;border-radius:10px;border:1.5px solid ${inputBorder};background:${inputBg};color:${textPrimary};font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">${s.recat?'Cancelar':'← Voltar'}</button>
+      <button onclick="${s.recat?'_recatConfirmar()':'_csvConfirmImport()'}" ${selCount===0?'disabled':''} style="padding:10px 22px;border-radius:10px;border:none;background:${selCount===0?'#94A3B8':'#2563EB'};color:#fff;font-size:14px;font-weight:700;cursor:${selCount===0?'not-allowed':'pointer'};font-family:var(--font-sans)">
+        ${s.recat?'Recategorizar':'Importar'} ${selCount} lançamento${selCount!==1?'s':''}
       </button>
     </div>
   </div>`;
@@ -7521,17 +8085,24 @@ Regras: "valor" positivo para compras, tarifas, juros e IOF; negativo para estor
   return {vencimento:d.vencimento||null,total:d.total!=null?+d.total:null,itens,ignorados};
 }
 
-// Categoria "aprendida": usa a mesma categoria do último lançamento parecido
-function _chaveDesc(d){return _normTxt(d).replace(/\(\d+\/\d+\)/,'').replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!/^\d+$/.test(w)).slice(0,2).join(' ');}
-function _catAprendida(desc){
+// Categoria "aprendida": usa a mesma categoria do último lançamento parecido (mesmo tipo)
+// A chave ignora o prefixo do banco: "PIX TRANSF SIDNEY 06/05" → "sidney"; "INT /SABESP 0812" → "sabesp"
+function _chaveDesc(d){return _descLimpa(d).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>2&&!/\d{3,}/.test(w)).slice(0,2).join(' ');}
+let _histCache=null;
+function _catAprendida(desc,tipo){
+  tipo=tipo||'despesa';
   const k=_chaveDesc(desc); if(!k) return null;
-  for(let i=A.txs.length-1;i>=0;i--){const t=A.txs[i]; if(t.type==='despesa'&&t.catId&&_chaveDesc(t.desc)===k) return t.catId;}
-  return null;
+  if(!_histCache||_histCache.n!==A.txs.length||_histCache.ref!==A.txs){
+    const m=new Map();
+    for(let i=0;i<A.txs.length;i++){ const t=A.txs[i]; if(!t.catId||t.type==='transferencia'||_catEhOutros(t.catId)) continue; const kk=_chaveDesc(t.desc); if(kk) m.set(t.type+'|'+kk,t.catId); }
+    _histCache={n:A.txs.length,ref:A.txs,m};
+  }
+  return _histCache.m.get(tipo+'|'+k)||null;
 }
 
 // Fluxo: arquivo PDF → leitura → tela de revisão (a mesma da importação de extrato)
 async function _pdfHandleFile(file){
-  _csvState.step='loading'; _csvState.fileName=file.name; _renderCsvModal();
+  _csvState.step='loading'; _csvState.fileName=file.name; _csvState.loadingMsg=null; _csvState.loadingSub=null; _renderCsvModal();
   const cfg=iaCfg(); let res, motor=cfg.motor;
   try{
     const buf=await file.arrayBuffer();
@@ -7550,17 +8121,15 @@ async function _pdfHandleFile(file){
   }
   const existing=new Set(A.txs.map(t=>t.date+'|'+(t.desc||'')+'|'+(t.type==='despesa'?-t.val:t.val)));
   const selected=new Set();
+  const _cont=_aplicarAutoCat(res.itens);
   res.itens.forEach((r,i)=>{
-    const g=csvGuessCategory(r.desc,r.val);
-    const _hist=_catAprendida(r.desc);
-    r.catId=g.regraTxt?g.catId:(r.catIA||_hist||g.catId); r.isTransf=false; if(g.regraTxt) r.regraTxt=g.regraTxt;
-    r.catOrigem=g.regraTxt?'regra':r.catIA?'ia':_hist?'historico':(!_catEhOutros(g.catId)?'palavra':null);
+    _csvFamInicial(r);
     if(!existing.has(r.date+'|'+r.desc+'|'+r.val)) selected.add(i);
   });
   // fatura de destino: a do vencimento lido no PDF
   const acc=accBy(_csvState.accId);
-  Object.assign(_csvState,{rows:res.itens,selected,step:'preview',format:motor==='claude'?'Fatura PDF · lida pelo Claude':'Fatura PDF · leitura no aparelho',
-    pdf:{vencimento:res.vencimento,total:res.total,ignorados:res.ignorados,faturaAlvo:res.vencimento?res.vencimento.slice(0,7):(isCC(acc)?faturaMesDe(acc,today()):null)}});
+  Object.assign(_csvState,{rows:res.itens,selected,step:'preview',filtro:'',verSel:'todos',format:motor==='claude'?'Fatura PDF · lida pelo Claude':'Fatura PDF · leitura no aparelho',
+    catCont:_cont, futuros:0, semSinal:false, pdf:{vencimento:res.vencimento,total:res.total,ignorados:res.ignorados,faturaAlvo:res.vencimento?res.vencimento.slice(0,7):(isCC(acc)?faturaMesDe(acc,today()):null)}});
   _renderCsvModal();
 }
 // Ao importar para um cartão: cada compra entra na fatura do PDF (a data vai para o ciclo certo; a data original fica na observação)
@@ -7572,18 +8141,120 @@ function _ajustarParaFatura(r,acc,faturaAlvo){
   return {date:localDate(d),obs:'Compra original em '+D(r.date)};
 }
 
+// ── Recategorizar o que já está em "Outros" com a mesma cadeia (regra › IA › histórico › palavra-chave) ──
+function _recatCandidatos(){ return (A.txs||[]).filter(t=>(t.type==='despesa'||t.type==='receita')&&_catEhOutros(t.catId)); }
+async function openRecategorizar(){
+  const txs=_recatCandidatos();
+  if(!txs.length){ toast('Nenhum lançamento em “Outros” ou sem categoria.','var(--amber)'); return; }
+  const rows=txs.map(t=>({date:t.date,desc:t.desc||'',val:t.type==='despesa'?-Math.abs(t.val):Math.abs(t.val),txId:t.id,fam:t.familia||'',famOrigem:'atual'}));
+  _csvState={step:'loading',recat:true,accId:null,rows:[],selected:new Set(),format:'',fileName:'Lançamentos em “Outros”',filtro:'',verSel:'todos',
+    loadingMsg:'Procurando categorias…',loadingSub:`${txs.length} lançamento(s) em “Outros”`};
+  _renderCsvModal();
+  let iaUsada=false;
+  if(iaCfg().motor==='claude'&&iaCfg().chave){
+    _csvState.loadingMsg='Categorizando com o Claude…'; _csvState.loadingSub=`${txs.length} lançamentos · só as descrições são enviadas`; _renderCsvModal();
+    const ia=await iaCategorizarLinhas(rows); if(!_csvState) return;
+    if(ia.erro) toast('IA indisponível ('+ia.erro.message+'). Segui com regras, histórico e palavras-chave.','var(--amber)',6500); else iaUsada=true;
+  }
+  _aplicarAutoCat(rows);
+  const temSug=r=>r.catId&&!_catEhOutros(r.catId);
+  // com sugestão primeiro (marcadas); depois as sem pista (desmarcadas — escolha a categoria e a linha se marca)
+  rows.sort((a,b)=>(temSug(b)-temSug(a))||(b.date||'').localeCompare(a.date||''));
+  const nCom=rows.filter(temSug).length;
+  const sel=new Set(); rows.forEach((r,i)=>{ if(temSug(r)) sel.add(i); });
+  Object.assign(_csvState,{rows,selected:sel,step:'preview',recatSem:rows.length-nCom,recatIA:iaUsada,verSel:nCom?'todos':'nao',
+    format:`${nCom} com sugestão · ${rows.length-nCom} sem pista`,pdf:null,futuros:0,semSinal:false});
+  _renderCsvModal();
+}
+function _recatConfirmar(){
+  const s=_csvState; let n=0;
+  s.selected.forEach(i=>{
+    const r=s.rows[i]; const t=A.txs.find(x=>x.id===r.txId); if(!t) return;
+    const c=_catById(r.catId); if(!c||c.tipo!==t.type||_catEhOutros(r.catId)) return;
+    t.catId=r.catId; if(r._famManual) t.familia=r.fam; n++;
+  });
+  let rg=null;
+  if(s.criarRegras!==false&&_rgAutoLigado()) rg=_rgAutoCriar(_rgAutoPlano(),'recategorização');
+  closeCsvImport(); render();
+  const msg=rg&&(rg.novas||rg.atualizadas)?` ⚡ ${rg.novas} regra(s) nova(s)${rg.atualizadas?`, ${rg.atualizadas} atualizada(s)`:''}.`:'';
+  toast(`✅ ${n} lançamento(s) recategorizado(s).${msg}`,'var(--income)',msg?6000:4000);
+}
+
+// ── IA para extrato/planilha: envia só descrição, tipo e valor (sem conta, saldo ou nome do arquivo) ──
+async function iaCategorizarLinhas(rows){
+  const cfg=iaCfg(); if(cfg.motor!=='claude'||!cfg.chave) return {n:0};
+  const grupos=new Map();
+  rows.forEach((r,i)=>{
+    const tipo=r.val>=0?'receita':'despesa';
+    if(_catPorRegra(r.desc,tipo)) return;                               // regra já resolve
+    if(r.catPlanilha&&_catById(r.catPlanilha)) return;                 // planilha já trouxe
+    const k=tipo+'|'+_regraNorm(_regraLimparTexto(r.desc).replace(/(\D)\d{2}\/\d{2}(?:\/\d{2,4})?\s*$/,'$1'));
+    if(!grupos.has(k)) grupos.set(k,{tipo,desc:r.desc,val:Math.abs(r.val),idx:[]});
+    grupos.get(k).idx.push(i);
+  });
+  const lista=[...grupos.values()]; if(!lista.length) return {n:0};
+  const nomes=tp=>A.cats.filter(c=>c.tipo===tp).map(c=>_catNomeCompleto(c));
+  const instr=`Você categoriza lançamentos de extrato bancário e de planilhas de finanças pessoais no Brasil.
+Para cada item escolha UMA categoria da lista do tipo dele (despesa ou receita), copiando o nome exatamente como está na lista.
+Se não houver pista suficiente (ex.: PIX para uma pessoa física só com o primeiro nome), responda "Outros".
+Pistas comuns de extrato: "REND PAGO APLIC" = rendimento de investimento; "PIX QRS"/"QR" = compra por QR code no estabelecimento indicado; "INT"/"INTERNET"/"MOBILE PAG TIT"/"SISPAG" = pagamento de conta ou boleto do favorecido indicado; "TAR"/"CESTA" = tarifa bancária; "IOF"/"JUROS" = encargos; "DEV PIX" = devolução; "RESGATE"/"APLICACAO" = investimentos.
+Responda SOMENTE com JSON válido, sem texto antes ou depois: {"r":[{"i":0,"c":"nome da categoria"}]}
+Categorias de DESPESA: ${nomes('despesa').join(' | ')}
+Categorias de RECEITA: ${nomes('receita').join(' | ')}`;
+  const acha=(nome,tp)=>{ const n=_normTxt(String(nome||'')).replace(/\s*(›|>)\s*/g,' › ').trim(); if(!n||n==='outros') return null;
+    const c=A.cats.find(c=>c.tipo===tp&&_normTxt(_catNomeCompleto(c))===n)||A.cats.find(c=>c.tipo===tp&&_normTxt(c.name)===n.split(' › ').pop());
+    return c&&!_catEhOutros(c.id)?c.id:null; };
+  const LOTE=120; const lotes=[]; for(let i=0;i<lista.length;i+=LOTE) lotes.push(lista.slice(i,i+LOTE));
+  let n=0, erro=null;
+  await Promise.all(lotes.map(async(lote,li)=>{
+    const itens=lote.map((g,j)=>({i:j,tipo:g.tipo,d:g.desc,v:+g.val.toFixed(2)}));
+    try{
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':cfg.chave,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:cfg.modelo,max_tokens:6000,messages:[{role:'user',content:instr+'\n\nItens:\n'+JSON.stringify(itens)}]})});
+      if(!resp.ok){ let m=''; try{const j=await resp.json(); m=j.error&&j.error.message||'';}catch(e){} throw new Error(resp.status===401?'Chave da API inválida.':('A API do Claude respondeu com erro '+resp.status+(m?': '+m:''))); }
+      const j=await resp.json();
+      const txt=(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('').trim();
+      const d=JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
+      (d.r||[]).forEach(x=>{ const g=lote[+x.i]; if(!g) return; const id=acha(x.c,g.tipo); if(!id) return; g.idx.forEach(k=>{ rows[k].catIA=id; }); n+=g.idx.length; });
+    }catch(e){ erro=e; }
+  }));
+  return {n,erro};
+}
+
+// Lê os bytes e decide: Excel (.xls antigo, .xlsx, ou HTML "disfarçado" de .xls) ou texto (UTF-8 / Windows-1252)
+function _arqTipo(u8){
+  if(u8[0]===0xD0&&u8[1]===0xCF&&u8[2]===0x11&&u8[3]===0xE0) return 'excel';   // XLS (OLE) — o Itaú exporta assim, às vezes com nome .csv
+  if(u8[0]===0x50&&u8[1]===0x4B&&u8[2]===0x03&&u8[3]===0x04) return 'excel';   // XLSX (zip)
+  const ini=new TextDecoder('latin1').decode(u8.subarray(0,512)).trim().toLowerCase();
+  if(/^<(\?xml|html|table|!doctype)/.test(ini)&&/<(table|workbook)/.test(new TextDecoder('latin1').decode(u8.subarray(0,20000)).toLowerCase())) return 'excel';
+  return 'texto';
+}
+function _textoDeBytes(u8){
+  const t=new TextDecoder('utf-8').decode(u8);
+  return t.includes(' ')?new TextDecoder('windows-1252').decode(u8):t;   // CSV de banco costuma vir em Latin-1
+}
+
 function _csvHandleFile(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
   if (ext === 'pdf') { _pdfHandleFile(file); return; }
-  const isExcel = ext === 'xls' || ext === 'xlsx';
 
-  function processText(text) {
-    const { rows, format } = csvDetectAndParse(text);
+  async function processar(res) {
+    const { rows, format } = res;
     if (!rows.length) {
-      toast('Nenhum lançamento encontrado no arquivo. Verifique o formato.', 'var(--expense)', 5000);
+      _csvState.step = 'upload'; _renderCsvModal();
+      toast('Nenhum lançamento encontrado no arquivo. Verifique se ele tem colunas de data, descrição e valor.', 'var(--expense)', 6000);
       return;
     }
+    // IA (se ligada) antes do histórico e da palavra-chave — mesma ordem da fatura em PDF
+    let ia = null;
+    if (iaCfg().motor === 'claude' && iaCfg().chave) {
+      _csvState.step = 'loading'; _csvState.fileName = file.name; _csvState.loadingMsg = 'Categorizando com o Claude…'; _csvState.loadingSub = `${rows.length} lançamentos · só as descrições são enviadas`; _renderCsvModal();
+      ia = await iaCategorizarLinhas(rows);
+      if (!_csvState) return;
+      if (ia.erro) toast('IA indisponível (' + ia.erro.message + '). Segui com regras, histórico e palavras-chave.', 'var(--amber)', 6500);
+    }
+    const cont = _aplicarAutoCat(rows);
     const existingHashes = new Set(
       A.txs.flatMap(t => [
         t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
@@ -7593,76 +8264,191 @@ function _csvHandleFile(file) {
     function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
     const selected = new Set();
     rows.forEach((r, i) => {
-      const guess = csvGuessCategory(r.desc, r.val);
-      r.catId = guess.catId;
-      r.isTransf = guess.isTransf;
-      if (guess.regraTxt) r.regraTxt = guess.regraTxt;
-      r.catOrigem = guess.regraTxt ? 'regra' : (!guess.isTransf && !_catEhOutros(guess.catId) ? 'palavra' : null);
+      _csvFamInicial(r);
       if (!existingHashes.has(rowHash(r))) selected.add(i);
     });
-    _csvState.rows = rows;
-    _csvState.format = format;
-    _csvState.selected = selected;
-    _csvState.fileName = file.name;
-    _csvState.step = 'preview';
+    Object.assign(_csvState, { rows, format, selected, fileName: file.name, step: 'preview', filtro: '', verSel: 'todos', catCont: cont, futuros: res.futuros || 0, semSinal: !!res.semSinal, pdf: null });
     _renderCsvModal();
   }
 
-  if (isExcel) {
-    // Usa SheetJS para converter XLS/XLSX → CSV
-    if (typeof XLSX === 'undefined') {
-      toast('Biblioteca de leitura de Excel ainda carregando. Aguarde um instante e tente novamente.', '#D97706', 4000);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, {
-          type: 'array',
-          cellDates: true,   // converte seriais de data em objetos Date
-          cellText: false,
-          raw: false,
+  const reader = new FileReader();
+  reader.onload = e => {
+    const u8 = new Uint8Array(e.target.result);
+    try {
+      if (_arqTipo(u8) === 'excel' || ext === 'xls' || ext === 'xlsx') {
+        if (typeof XLSX === 'undefined') { toast('Biblioteca de leitura de Excel ainda carregando. Aguarde um instante e tente novamente.', '#D97706', 4000); return; }
+        // datas como número de série + formato BR (cellDates:true desloca um dia em alguns fusos)
+        const wb = XLSX.read(u8, { type: 'array', cellDates: false, dateNF: 'DD/MM/YYYY', raw: false });
+        // testa todas as abas e fica com a que tiver mais lançamentos (o Itaú põe "Posição Consolidada" e "Limites" junto)
+        let melhor = { rows: [], format: '' };
+        wb.SheetNames.forEach(nm => {
+          const csv = XLSX.utils.sheet_to_csv(wb.Sheets[nm], { dateNF: 'DD/MM/YYYY', blankrows: false });
+          const r = csvDetectAndParse(csv);
+          if (r.rows.length > melhor.rows.length) { melhor = r; if (wb.SheetNames.length > 1) melhor.format += ' · aba “' + nm + '”'; }
         });
-        // Usa a primeira aba
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        // Converte para CSV com datas em formato dd/mm/yyyy (padrão BR)
-        const csv = XLSX.utils.sheet_to_csv(ws, { dateNF: 'DD/MM/YYYY', blankrows: false });
-        processText(csv);
-      } catch(err) {
-        toast('Erro ao ler arquivo Excel: ' + err.message, 'var(--expense)', 5000);
+        processar(melhor);
+      } else {
+        processar(csvDetectAndParse(_textoDeBytes(u8)));
       }
-    };
-    reader.readAsArrayBuffer(file);
-  } else {
-    // CSV normal
-    const reader = new FileReader();
-    reader.onload = e => processText(e.target.result);
-    reader.readAsText(file, 'UTF-8');
-  }
+    } catch (err) {
+      toast('Erro ao ler o arquivo: ' + err.message, 'var(--expense)', 5000);
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
+// Clique no cabeçalho: crescente → decrescente → ordem original do arquivo
+function _csvSort(col) {
+  const s = _csvState; const cur = s.sort;
+  if (!cur || cur.col !== col) s.sort = { col, dir: 'asc' };
+  else if (cur.dir === 'asc') s.sort = { col, dir: 'desc' };
+  else s.sort = null;
+  const box = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); const top = box ? box.scrollTop : 0;
+  _renderCsvModal();
+  const box2 = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); if (box2) box2.scrollTop = top;
+}
 function _csvToggle(i) {
   if (_csvState.selected.has(i)) _csvState.selected.delete(i);
   else _csvState.selected.add(i);
-  _renderCsvModal();
+  _csvRenderMantendo();
 }
 
 function _csvSelectAll() {
-  _csvState.rows.forEach((_, i) => _csvState.selected.add(i));
-  _renderCsvModal();
+  const v = _csvVisiveis(); v.forEach(i => _csvState.selected.add(i));
+  _csvRenderMantendo();
+  if (_csvFiltroAtivo()) toast(`${v.length} lançamento(s) do filtro marcados.`);
 }
 
 function _csvSelectNone() {
-  _csvState.selected.clear();
+  const v = _csvVisiveis(); v.forEach(i => _csvState.selected.delete(i));
+  _csvRenderMantendo();
+  if (_csvFiltroAtivo()) toast(`${v.length} lançamento(s) desmarcados${_csvFiltroTermos().length ? ` com “${_csvState.filtro.trim()}”` : ''}. O restante continua como estava.`, 'var(--amber)', 4500);
+}
+
+// ── Filtro por descrição na revisão ──
+// Sem acento e sem diferenciar maiúsculas. Vírgula = qualquer um dos termos ("pix transf, ted").
+// Termo começando com "-" esconde quem contém ("-rend" = tudo menos rendimento).
+function _csvFiltroTermos() {
+  const f = (_csvState && _csvState.filtro) || '';
+  return f.split(',').map(t => _normTxt(t).replace(/\s+/g, ' ').trim()).filter(t => t && t !== '-');
+}
+function _csvVisiveis() {
+  const s = _csvState; if (!s || !s.rows) return [];
+  const ver = s.verSel || 'todos';
+  const okSel = i => ver === 'todos' || (ver === 'sim' ? s.selected.has(i) : !s.selected.has(i));
+  const tt = _csvFiltroTermos(); if (!tt.length) return s.rows.map((_, i) => i).filter(okSel);
+  const inc = tt.filter(t => t[0] !== '-'), exc = tt.filter(t => t[0] === '-').map(t => t.slice(1).trim()).filter(Boolean);
+  return s.rows.map((r, i) => i).filter(i => {
+    const d = _normTxt(s.rows[i].desc || '').replace(/\s+/g, ' ');
+    return okSel(i) && (!inc.length || inc.some(t => d.includes(t))) && !exc.some(t => d.includes(t));
+  });
+}
+// Totalizador do rodapé: receitas, despesas e saldo do que está marcado (e do que aparece no filtro)
+function _csvTotais(idx) {
+  const rows = _csvState.rows; let rec = 0, desp = 0, nr = 0, nd = 0;
+  idx.forEach(i => { const v = rows[i].val; if (v >= 0) { rec += v; nr++; } else { desp += -v; nd++; } });
+  return { rec, desp, saldo: rec - desp, nr, nd };
+}
+function _csvTotaisHtml(vis) {
+  const s = _csvState; const t = _csvTotais([...s.selected]);
+  const sal = t.saldo >= 0 ? 'pos' : 'neg';
+  let extra = '';
+  if (_csvFiltroAtivo()) {
+    const f = _csvTotais(vis);
+    extra = `<div class="csv-tot-filtro" title="Soma das linhas que aparecem agora na tabela, marcadas ou não">No filtro (${vis.length}): <span class="val-income">+${R(f.rec)}</span> · <span class="val-expense">−${R(f.desp)}</span> · saldo <strong>${f.saldo < 0 ? '−' : ''}${R(Math.abs(f.saldo))}</strong></div>`;
+  }
+  return `<div class="csv-tot" aria-live="polite">
+    <div class="csv-tot-lin">
+      <div class="csv-tot-tit">${s.recat?'A recategorizar':'A importar'}<br><span>${s.selected.size} marcado${s.selected.size !== 1 ? 's' : ''}</span></div>
+      <div class="csv-tot-c rec" title="${t.nr} receita(s)"><span>Receitas</span><strong>+${R(t.rec)}</strong></div>
+      <div class="csv-tot-c desp" title="${t.nd} despesa(s)"><span>Despesas</span><strong>−${R(t.desp)}</strong></div>
+      <div class="csv-tot-c saldo ${sal}"><span>Saldo</span><strong>${t.saldo < 0 ? '−' : '+'}${R(Math.abs(t.saldo))}</strong></div>
+    </div>${extra}
+  </div>`;
+}
+function _csvFiltroAtivo() { return !!_csvFiltroTermos().length || ((_csvState && _csvState.verSel) || 'todos') !== 'todos'; }
+function _csvVer(v) { _csvState.verSel = v; const box = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); if (box) box.scrollTop = 0; _csvRenderMantendo(); }
+// Redesenha mantendo o foco/cursor no campo de filtro e a rolagem da tabela
+function _csvRenderMantendo() {
+  const inp = document.getElementById('csv-filtro'); const foco = inp && document.activeElement === inp; const pos = foco ? inp.selectionStart : null;
+  const box = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); const top = box ? box.scrollTop : 0;
   _renderCsvModal();
+  const box2 = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); if (box2) box2.scrollTop = top;
+  if (foco) { const i2 = document.getElementById('csv-filtro'); if (i2) { i2.focus(); try { i2.setSelectionRange(pos, pos); } catch (e) {} } }
+}
+let _csvFiltroT = null;
+function _csvFiltrar(v, ja) {
+  _csvState.filtro = v;
+  clearTimeout(_csvFiltroT);
+  const go = () => { const box = document.querySelector('#csv-modal-overlay .csv-tbl-wrap'); if (box) box.scrollTop = 0; _csvRenderMantendo(); if (ja) { const i = document.getElementById('csv-filtro'); if (i) i.focus(); } };
+  if (ja) go(); else _csvFiltroT = setTimeout(go, 180);
 }
 
 
+// ── Membro da família na revisão da importação ──
+function _famOptsHtml(sel){
+  return famRoots().map(rt=>[rt,...famChildren(rt.id)]).flat().map(f=>`<option value="${H(f.name)}" ${f.name===sel?'selected':''}>${f.parentId?'\u00A0\u00A0└ ':''}${H(f.name)}</option>`).join('');
+}
+// Membro inicial da linha: regra › portador do cartão › padrão (1º membro)
+function _csvFamInicial(r){
+  const tipo=r.val>=0?'receita':'despesa'; const nomes=famNames();
+  const mr=_famPorRegra(r.desc,tipo);
+  if(mr){ r.fam=mr.familia; r.famOrigem='regra'; return; }
+  const porta=r.familia||r.titular||'';
+  if(porta){
+    const tn=_normTxt(porta);
+    const fm=nomes.find(n=>{ const nn=_normTxt(n); return nn.length>2&&(tn===nn||tn.startsWith(nn+' ')||tn.split(' ')[0]===nn||tn.includes(nn)||nn.includes(tn.split(' ')[0])); });
+    if(fm){ r.fam=fm; r.famOrigem='portador'; return; }
+  }
+  r.fam=(A.familia[0]&&A.familia[0].name)||''; r.famOrigem='padrao';
+}
+function _csvFamSelHtml(i,r){
+  const porta=r.familia||r.titular||'';
+  const tit=r.famOrigem==='regra'?'Membro definido por uma regra':r.famOrigem==='portador'?`Pelo portador do cartão: ${porta}`:porta?`Portador no arquivo: ${porta}`:'Membro da família deste lançamento';
+  return `<select class="csv-fam ${r.famOrigem==='regra'?'regra':''}" aria-label="Membro da família" title="${H(tit)}" onchange="_csvPickFam(${i},this)">
+    <option value="" ${!r.fam?'selected':''}>— Nenhum —</option>${_famOptsHtml(r.fam)}<option value="__novo__">＋ Novo membro…</option></select>`;
+}
+function _csvSetFam(i,v){ const r=_csvState.rows[i]; if(!r) return; r.fam=v; r._famManual=true; r.famOrigem='manual'; }
+function _csvPickFam(i,el){
+  if(el.value==='__novo__'){ el.value=_csvState.rows[i].fam||''; qamFam('csv',i,'add'); return; }
+  _csvSetFam(i,el.value); el.classList.remove('regra'); el.title='Escolhido por você';
+  _csvRgAutoAtualizar();
+}
+function _csvFamTodos(v){
+  if(v==='__novo__'){ qamFam('csv','todos','add'); return; }
+  if(v==='__x__') return;
+  const s=_csvState; let n=0;
+  s.selected.forEach(i=>{ _csvSetFam(i,v); n++; const el=document.querySelector(`.csv-row[data-idx="${i}"] select.csv-fam`); if(el){ el.value=v; el.classList.remove('regra'); } });
+  const b=document.getElementById('csv-fam-todos'); if(b) b.value='__x__';
+  _csvRgAutoAtualizar();
+  toast(`${n} lançamento(s) marcados para ${v||'nenhum membro'}.`);
+}
+// Selo de origem da categoria em cada linha da revisão
+function _csvOrigemBadge(r){
+  const o=r._catManual?'manual':r.catOrigem; const inf=CAT_ORIGEM_INFO[o];
+  if(!inf) return `<span class="csv-orig vazio" title="Nenhuma pista: ficou em “Outros”${r.catTexto?` (no arquivo: ${H(r.catTexto)}, sem categoria com esse nome)`:''}">·</span>`;
+  const extra=o==='regra'&&r.regraTxt?` “${r.regraTxt}”`:o==='planilha'&&r.catTexto?`: ${r.catTexto}`:'';
+  return `<span class="csv-orig o-${o}" title="${H(inf.tit+extra)}">${inf.ic}</span>`;
+}
+// Resumo: de onde veio a categoria de cada linha
+function _csvCatResumoHtml(){
+  const s=_csvState; if(!s||!s.rows) return '';
+  const c={regra:0,planilha:0,ia:0,historico:0,palavra:0,manual:0,nenhuma:0};
+  s.rows.forEach(r=>{ const o=r._catManual?'manual':(r.catOrigem||'nenhuma'); c[o]=(c[o]||0)+1; });
+  const ped=Object.keys(CAT_ORIGEM_INFO).filter(k=>c[k]).map(k=>`<span class="csv-cr o-${k}" title="${H(CAT_ORIGEM_INFO[k].tit)}">${CAT_ORIGEM_INFO[k].ic} ${c[k]} ${CAT_ORIGEM_INFO[k].txt}</span>`);
+  if(c.nenhuma) ped.push(`<span class="csv-cr o-nenhuma" title="Sem regra, histórico ou palavra-chave: ficaram em “Outros”. Escolha a categoria e o ⚡ lembra da próxima vez.">· ${c.nenhuma} em Outros</span>`);
+  const ia=iaCfg(); const iaOff=!s.pdf&&!(ia.motor==='claude'&&ia.chave);
+  const notas=[];
+  if(s.recat&&s.recatSem) notas.push(`${s.recatSem} lançamento(s) sem pista (nenhuma regra, histórico${s.recatIA?', IA':''} ou palavra-chave): estão na lista desmarcados. Escolha a categoria na linha — ou filtre e use “Categoria p/ filtrados” — e a linha é marcada sozinha.`);
+  if(s.futuros) notas.push(`${s.futuros} lançamento(s) futuro(s) do extrato (agendados) ficaram de fora.`);
+  if(s.semSinal) notas.push('A planilha não tem sinal nem coluna de tipo: tratei como despesa, menos o que a categoria ou a descrição indicam ser receita.');
+  if(iaOff) notas.push('Dica: ligue o Claude em Configurações › Armazenamento para sugerir categorias das linhas que ficaram em “Outros”.');
+  return `<div class="csv-cat-resumo"><strong>Categorização automática:</strong> ${ped.join('')}</div>${notas.length?`<div class="csv-cat-nota">${notas.map(H).join(' ')}</div>`:''}`;
+}
 // Quadro "⚡ Criar regras ao importar" (recalculado a cada escolha de categoria)
-function _csvRgAutoHtml(){ const pl=_rgAutoPlano(); const on=_csvState.criarRegras!==false&&_rgAutoLigado(); return `<label id="csv-rg-auto" class="csv-rg-auto ${on?'on':''}" title="${pl.length?H(pl.slice(0,12).map(p=>p.texto+' → '+_catNomeCompleto(_catById(p.catId))).join('\n'))+(pl.length>12?'\n…':''):'Nenhuma regra nova: as categorias desta importação já estão cobertas ou estão em “Outros”.'}">
+function _csvRgAutoHtml(){ const pl=_rgAutoPlano(); const on=_csvState.criarRegras!==false&&_rgAutoLigado(); return `<label id="csv-rg-auto" class="csv-rg-auto ${on?'on':''}" title="${pl.length?H(pl.slice(0,12).map(p=>p.texto+' → '+[p.catId?_catNomeCompleto(_catById(p.catId)):'',p.familia?'👤 '+p.familia:''].filter(Boolean).join(' · ')).join('\n'))+(pl.length>12?'\n…':''):'Nenhuma regra nova: as categorias e membros desta importação já estão cobertos ou estão em “Outros”.'}">
         <input type="checkbox" ${on?'checked':''} onchange="_csvState.criarRegras=this.checked;_rgAutoSet(this.checked);_renderCsvModal()">
-        <span><span class="csv-rg-tit">⚡ Criar regras ao importar</span><br><strong>${on?pl.length:0}</strong> <span class="csv-rg-sub">${on?(pl.length===1?'regra nova':'regras novas'):'desligado'}</span></span>
+        <span><span class="csv-rg-tit">⚡ Criar regras ${_csvState&&_csvState.recat?'ao recategorizar':'ao importar'}</span><br><strong>${on?pl.length:0}</strong> <span class="csv-rg-sub">${on?(pl.length===1?'regra nova':'regras novas'):'desligado'}</span></span>
       </label>`; }
 function _csvRgAutoAtualizar(){ const el=document.getElementById('csv-rg-auto'); if(el) el.outerHTML=_csvRgAutoHtml(); }
 function _csvPickCat(i, catId) {
@@ -7671,7 +8457,25 @@ function _csvPickCat(i, catId) {
   delete _csvState.rows[i].regraTxt;
   const _b=document.querySelector(`.csv-row[data-idx="${i}"] .csv-regra`); if(_b){ _b.classList.remove('on'); _b.title='Lembrar: sempre usar esta categoria para esta descrição'; }
   _ctpSetTrigger('csvcat'+i, catId);
+  const _o=document.querySelector(`.csv-row[data-idx="${i}"] .csv-orig`); if(_o) _o.outerHTML=_csvOrigemBadge(_csvState.rows[i]);
+  const _cr=document.querySelector('#csv-modal-overlay .csv-cat-resumo'); if(_cr){ const tmp=document.createElement('div'); tmp.innerHTML=_csvCatResumoHtml(); const n=tmp.querySelector('.csv-cat-resumo'); if(n) _cr.replaceWith(n); }
   _csvRgAutoAtualizar();
+  if (_csvState.recat) { if (!_catEhOutros(catId)) _csvState.selected.add(i); else _csvState.selected.delete(i); _csvRenderMantendo(); }
+}
+
+// Categoria para todas as linhas que aparecem no filtro (só as do mesmo tipo: despesa ou receita)
+function _csvCatOptsHtml(){
+  const g=tp=>A.cats.filter(c=>c.tipo===tp).map(c=>({id:c.id,n:_catNomeCompleto(c)})).sort((a,b)=>a.n.localeCompare(b.n,'pt-BR')).map(c=>`<option value="${c.id}">${H(c.n)}</option>`).join('');
+  return `<optgroup label="Despesa">${g('despesa')}</optgroup><optgroup label="Receita">${g('receita')}</optgroup>`;
+}
+function _csvCatTodos(v){
+  const el=document.getElementById('csv-cat-todos'); if(el) el.value='';
+  if(!v) return; const c=_catById(+v); if(!c) return;
+  const s=_csvState; let n=0, outro=0;
+  _csvVisiveis().forEach(i=>{ const r=s.rows[i]; const tp=r.val>=0?'receita':'despesa'; if(tp!==c.tipo){ outro++; return; }
+    r.catId=c.id; r._catManual=true; delete r.regraTxt; if(!_catEhOutros(c.id)) s.selected.add(i); n++; });
+  _csvRenderMantendo(); _csvRgAutoAtualizar();
+  toast(`${n} lançamento(s) em ${_catNomeCompleto(c)}${outro?` · ${outro} de ${c.tipo==='despesa'?'receita':'despesa'} não mudaram`:''}.`,'var(--income)',4500);
 }
 
 function buildCsvCatPicker(rowIdx, selId, tipo) {
@@ -7679,6 +8483,7 @@ function buildCsvCatPicker(rowIdx, selId, tipo) {
 }
 
 function _csvConfirmImport() {
+  if (!_accExiste(_csvState.accId)) { toast('Escolha a conta de destino antes de importar.', 'var(--expense)', 4500); return; }
   const { rows, selected, accId } = _csvState;
   let count = 0;
   const famDefault = A.familia[0]?.name || '';
@@ -7690,8 +8495,9 @@ function _csvConfirmImport() {
     const type = r.val >= 0 ? 'receita' : 'despesa';
     const _aj = _csvState.pdf ? _ajustarParaFatura(r, _acc, _alvo) : { date: r.date, obs: '' };
     const catId = r.catId || (A.cats.find(c => c.tipo === type && c.name === 'Outros') || A.cats.find(c => c.tipo === type))?.id || null;
-    // Usa família do parser (ex: Portador da fatura) ou o padrão
+    // Membro escolhido na revisão (regra, portador ou o que você marcou)
     let familia = famDefault;
+    if (r.fam !== undefined) familia = r.fam; else {
     // fatura com cartões adicionais: usa o membro da família com o mesmo nome do portador, se houver
     if (!r.familia && r.titular) {
       const tn = _normTxt(r.titular);
@@ -7702,6 +8508,7 @@ function _csvConfirmImport() {
       // Tenta encontrar membro da família pelo nome (match parcial case-insensitive)
       const famMatch = famNames().find(n => r.familia.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(r.familia.split(' ')[0].toLowerCase()));
       familia = famMatch || r.familia;
+    }
     }
     A.txs.push({
       id: A.nid++,
@@ -8477,8 +9284,10 @@ function _relFiltResumo(f){
 function rRelatorio(m){
   if(!A.relFilt){A.relFilt={period:'mes',mes:thisMonth(),dtIni:'',dtFim:'',tipo:'todos',accId:'all',catId:'all',grp:'data',showCats:true,showFixas:false,showPlan:true};}
   if(A.relFilt.showPlan===undefined)A.relFilt.showPlan=true;
+  if(!A.relFilt.ano)A.relFilt.ano=Number(A.anoFilt)||new Date().getFullYear();
+  A.relFilt.tipo='todos'; A.relFilt.catId='all'; // filtros de tipo e categoria removidos
   const f=A.relFilt;
-  const ano=String(A.anoFilt);
+  const ano=String(f.ano);
 
   // ── helper de filtro de período ──
   function filtPeriodo(t){
@@ -8495,6 +9304,7 @@ function rRelatorio(m){
   txs=txs.filter(filtPeriodo);
   if(f.tipo!=='todos')txs=txs.filter(t=>t.type===f.tipo);
   if(f.catId!=='all'){const _ci=_catIdsCom(f.catId);txs=txs.filter(t=>_ci.has(String(t.catId)));}
+  const _ff=_relFamFiltro(f.fam); if(_ff)txs=txs.filter(_ff);
   txs=[...txs].sort((a,b)=>a.date.localeCompare(b.date));
 
   // ── lançamentos planejados (planned=true, done=false) ──
@@ -8505,6 +9315,7 @@ function rRelatorio(m){
     planTxs=planTxs.filter(filtPeriodo);
     if(f.tipo!=='todos')planTxs=planTxs.filter(t=>t.type===f.tipo);
     if(f.catId!=='all'){const _ci=_catIdsCom(f.catId);planTxs=planTxs.filter(t=>_ci.has(String(t.catId)));}
+    if(_ff)planTxs=planTxs.filter(_ff);
     planTxs=[...planTxs].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   }
 
@@ -8531,7 +9342,7 @@ function rRelatorio(m){
 
   // ── label período ──
   let periodoLabel='';
-  if(f.period==='mes'){const[yy,mm]=f.mes.split('-');periodoLabel=MNLONG[mm]+' / '+yy;}
+  if(f.period==='mes'){const[yy,mm]=f.mes.split('-');periodoLabel=MNLONG[mm]+' / '+ano;}
   else if(f.period==='ano')periodoLabel='Ano '+ano;
   else if(f.period==='custom'&&f.dtIni&&f.dtFim)periodoLabel=f.dtIni.split('-').reverse().join('/')+' a '+f.dtFim.split('-').reverse().join('/');
   else periodoLabel='Período personalizado';
@@ -8666,8 +9477,12 @@ function rRelatorio(m){
   }
 
   // ── montar options ──
-  const mesOpts=Object.entries(MNLONG).map(([v,n])=>`<option value="${ano}-${v}" ${f.mes===ano+'-'+v?'selected':''}>${n}</option>`).join('');
-  const accOpts=`<option value="all">Todas</option>`+_allAccounts().map(a=>`<option value="${a.id}" ${String(f.accId)===String(a.id)?'selected':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
+  const mesOpts=Object.keys(MNLONG).sort().map(v=>`<option value="${ano}-${v}" ${(f.mes||'').slice(5,7)===v?'selected':''}>${MNLONG[v]}</option>`).join('');
+  const _anosSet=new Set([new Date().getFullYear(),Number(ano)]);
+  (A.txs||[]).forEach(t=>{const y=parseInt((t.date||'').slice(0,4));if(y>1990&&y<2100)_anosSet.add(y);});
+  const _anosArr=[..._anosSet].sort((a,b)=>b-a);
+  const anoOpts=_anosArr.map(y=>`<option value="${y}" ${String(y)===ano?'selected':''}>${y}</option>`).join('');
+  const accOpts=`<option value="all">Todas</option>`+_allAccounts().filter((a,i,arr)=>arr.findIndex(x=>String(x.id)===String(a.id))===i).map(a=>`<option value="${a.id}" ${String(f.accId)===String(a.id)?'selected':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗 (compartilhada)':a._ctlNome&&_multiActive()?' · '+H(a._ctlNome):''}</option>`).join('');
   const catOpts=`<option value="all">Todas</option>`+['despesa','receita','transferencia'].map(tp=>_catArvoreLista(tp,false).map(({c,n})=>`<option value="${c.id}" ${String(f.catId)===String(c.id)?'selected':''}>${n?'&nbsp;&nbsp;'.repeat(n)+'↳ ':''}${H(c.name)}</option>`).join('')).join('');
 
   // ── card de planejados (resumo) ──
@@ -8711,6 +9526,7 @@ function rRelatorio(m){
           <option value="custom" ${f.period==='custom'?'selected':''}>Personalizado</option>
         </select>
       </div>
+      ${f.period==='mes'||f.period==='ano'?`<div class="rel-group"><label>Ano</label><select aria-label="Ano do relatório" onchange="A.relFilt.ano=+this.value;A.relFilt.mes=this.value+'-'+((A.relFilt.mes||'').slice(5,7)||'01');render()">${anoOpts}</select></div>`:''}
       ${f.period==='mes'?`<div class="rel-group"><label>Mês</label><select onchange="A.relFilt.mes=this.value;render()">${mesOpts}</select></div>`:''}
       ${f.period==='custom'?`
         <div class="rel-group"><label>De</label><input type="date" value="${f.dtIni}" onblur="A.relFilt.dtIni=this.value;render()"></div>
@@ -8720,18 +9536,14 @@ function rRelatorio(m){
         <label>Conta</label>
         <select onchange="A.relFilt.accId=this.value;render()">${accOpts}</select>
       </div>
-      <div class="rel-group">
-        <label>Tipo</label>
-        <select onchange="A.relFilt.tipo=this.value;render()">
-          <option value="todos" ${f.tipo==='todos'?'selected':''}>Receitas e Despesas</option>
-          <option value="receita" ${f.tipo==='receita'?'selected':''}>Só Receitas</option>
-          <option value="despesa" ${f.tipo==='despesa'?'selected':''}>Só Despesas</option>
+      ${famNames().length?`<div class="rel-group">
+        <label>Membro</label>
+        <select aria-label="Filtrar por membro da família" onchange="A.relFilt.fam=this.value;render()">
+          <option value="all" ${!f.fam||f.fam==='all'?'selected':''}>Toda a família</option>
+          ${famRoots().map(rt=>[rt,...famChildren(rt.id)]).flat().map(m=>`<option value="${H(m.name)}" ${f.fam===m.name?'selected':''}>${m.parentId?'&nbsp;&nbsp;↳ ':''}${H(m.name)}${!m.parentId&&famChildren(m.id).length?' (grupo)':''}</option>`).join('')}
+          <option value="__none__" ${f.fam==='__none__'?'selected':''}>Sem membro</option>
         </select>
-      </div>
-      <div class="rel-group">
-        <label>Categoria</label>
-        <select onchange="A.relFilt.catId=this.value;render()">${catOpts}</select>
-      </div>
+      </div>`:''}
       <div class="rel-group">
         <label>Agrupar por</label>
         <select onchange="A.relFilt.grp=this.value;render()">
@@ -8759,7 +9571,7 @@ function rRelatorio(m){
       <div class="rh-top">
         <div>
           <div class="rh-title">Minhas Finanças</div>
-          <div class="rh-sub">Relatório de Lançamentos · ${H(periodoLabel)} · ${H(accLabel)} · ${H(tipoLabel)}</div>
+          <div class="rh-sub">Relatório de Lançamentos · ${H(periodoLabel)} · ${H(accLabel)}${_relFamLabel(f.fam)?' · 👤 '+H(_relFamLabel(f.fam)):''}</div>
           <div style="font-size:11px;color:var(--gray-400);margin-top:2px">Gerado em ${geradoEm}</div>
         </div>
         <div class="rh-logo"><svg class="ic lg" aria-hidden="true"><use href="#i-wallet"/></svg></div>
@@ -8877,10 +9689,19 @@ function printRelatorio(){
   window.print();
 }
 
+// Filtro por membro da família no relatório: um grupo inclui os membros dentro dele
+function _relFamFiltro(v){
+  if(!v||v==='all') return null;
+  if(v==='__none__') return t=>!t.familia;
+  const nomes=new Set([v]); const it=A.familia.find(x=>x.name===v);
+  if(it&&!it.parentId) famChildren(it.id).forEach(c=>nomes.add(c.name));
+  return t=>nomes.has(t.familia);
+}
+function _relFamLabel(v){ return !v||v==='all'?'':v==='__none__'?'Sem membro':v; }
 function exportRelatorioXLSX(){
   if(!A.relFilt)return;
   const f=A.relFilt;
-  const ano=String(A.anoFilt);
+  const ano=String(f.ano||A.anoFilt);
 
   function filtPeriodo(t){
     if(!t.date)return false;
@@ -8895,6 +9716,7 @@ function exportRelatorioXLSX(){
   txs=txs.filter(filtPeriodo);
   if(f.tipo!=='todos')txs=txs.filter(t=>t.type===f.tipo);
   if(f.catId!=='all'){const _ci=_catIdsCom(f.catId);txs=txs.filter(t=>_ci.has(String(t.catId)));}
+  const _ff=_relFamFiltro(f.fam); if(_ff)txs=txs.filter(_ff);
   txs=[...txs].sort((a,b)=>a.date.localeCompare(b.date));
 
   let planTxs=[];
@@ -8904,11 +9726,12 @@ function exportRelatorioXLSX(){
     planTxs=planTxs.filter(filtPeriodo);
     if(f.tipo!=='todos')planTxs=planTxs.filter(t=>t.type===f.tipo);
     if(f.catId!=='all'){const _ci=_catIdsCom(f.catId);planTxs=planTxs.filter(t=>_ci.has(String(t.catId)));}
+    if(_ff)planTxs=planTxs.filter(_ff);
     planTxs=[...planTxs].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   }
 
   let periodoLabel='';
-  if(f.period==='mes'){const[yy,mm]=f.mes.split('-');periodoLabel=MNLONG[mm]+'_'+yy;}
+  if(f.period==='mes'){const[yy,mm]=f.mes.split('-');periodoLabel=MNLONG[mm]+'_'+ano;}
   else if(f.period==='ano')periodoLabel='Ano_'+ano;
   else if(f.period==='custom'&&f.dtIni&&f.dtFim)periodoLabel=f.dtIni.replace(/-/g,'')+'_a_'+f.dtFim.replace(/-/g,'');
   else periodoLabel='Personalizado';
@@ -8928,6 +9751,7 @@ function exportRelatorioXLSX(){
       'Status':status,
       'Conta':acc.name||'',
       'Categoria':cat.name||'',
+      'Membro':t.familia||'',
       'Valor':+(t.val*sinal).toFixed(2),
       'Observacao':t.obs||''
     };
@@ -8938,8 +9762,8 @@ function exportRelatorioXLSX(){
     ...planTxs.map(t=>txToRow(t,'Planejado'))
   ];
 
-  const wsLanc=XLSX.utils.json_to_sheet(rowsLanc,{header:['Data','Descricao','Tipo','Status','Conta','Categoria','Valor','Observacao']});
-  wsLanc['!cols']=[{wch:12},{wch:36},{wch:12},{wch:12},{wch:18},{wch:22},{wch:14},{wch:28}];
+  const wsLanc=XLSX.utils.json_to_sheet(rowsLanc,{header:['Data','Descricao','Tipo','Status','Conta','Categoria','Membro','Valor','Observacao']});
+  wsLanc['!cols']=[{wch:12},{wch:36},{wch:12},{wch:12},{wch:18},{wch:22},{wch:16},{wch:14},{wch:28}];
   XLSX.utils.book_append_sheet(wb,wsLanc,'Lancamentos');
 
   if(f.showCats&&txs.length>0){
@@ -8968,7 +9792,7 @@ function exportRelatorioXLSX(){
     }
   }
 
-  const fileName='Relatorio_'+periodoLabel+'.xlsx';
+  const fileName='Relatorio_'+periodoLabel+(_relFamLabel(f.fam)?'_'+_relFamLabel(f.fam).replace(/[^\wÀ-ú-]+/g,'_'):'')+'.xlsx';
   XLSX.writeFile(wb,fileName);
   toast('Exportado: '+fileName,'var(--income)');
 }
