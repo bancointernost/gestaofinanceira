@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://api.anthropic.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; worker-src 'self' blob: https://cdn.jsdelivr.net; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>Minhas Finanças</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1891,8 +1893,8 @@ if (_fbInstance) {
 }
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" integrity="sha384-dug+JxfBvklEQdJ4AYuBBAIScUz0bVN73xpy273gcAwHjb3qI0fXmuYNaNfdyYJG" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
 
 <script>
 // Datas no fuso LOCAL do usuário. toISOString() usa UTC e, em São Paulo,
@@ -1905,7 +1907,11 @@ const thisMonth=()=>localDate().slice(0,7);
 // Para exibir só o módulo (quando o sinal já vem de outro lugar), use R(Math.abs(v)).
 const R=v=>{const n=Number(v)||0;return (n<=-0.005?'−':'')+'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
 const D=d=>{if(!d)return'';const[y,m,i]=d.split('-');return i+'/'+m+'/'+y;};
-const H=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const H=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// [SEG] texto dentro de string JS em atributo on*="...'${HJ(x)}'..." (escapa \ ' e quebras antes do HTML)
+const HJ=s=>H(String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029'));
+// [SEG] só aceita links http(s) — bloqueia javascript:, data:, vbscript: etc.
+const _safeUrl=u=>{ const s=String(u||'').trim(); if(!s) return ''; if(/^https?:\/\//i.test(s)) return s; if(/^[a-z][a-z0-9+.-]*:/i.test(s)) return ''; return 'https://'+s.replace(/^\/+/,''); };
 // Lê um token de cor do CSS (para Chart.js, que desenha em canvas e não entende var())
 function _cv(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()||'#888';}
 function _cvA(name,alpha){
@@ -2426,11 +2432,13 @@ function _ctpConfirmar(pid,id){
 function _ctpAplicar(pid,id){
   const r=_ctpReg[pid]; if(!r) return;
   r.selId=id;
-  if(r.onPick){ (new Function('id',r.onPick))(id); return; }
-  if(r.stateKey){ (new Function('v',r.stateKey+'=v'))(id); if(r.stateKey.indexOf('A.tf')===0&&A.tf) A.tf._catManual=true; }
+  if(r.onPick){ if(typeof r.onPick==='function') r.onPick(id); return; }
+  if(r.stateKey){ _setPath(r.stateKey,id); if(r.stateKey.indexOf('A.tf')===0&&A.tf) A.tf._catManual=true; }
   render();
 }
 function _ctpPick(pid,id){ _ctpConfirmar(pid,id); }
+// [SEG] grava "A.tf.catId" sem eval/new Function
+function _setPath(path,v){ const p=String(path).split('.'); if(p[0]!=='A'||p.some(k=>k==='__proto__'||k==='constructor'||k==='prototype')) return; let o=A; for(let i=1;i<p.length-1;i++){ if(o[p[i]]==null||typeof o[p[i]]!=='object') return; o=o[p[i]]; } o[p[p.length-1]]=v; }
 // ── Ações da árvore ──
 function _ctpAdicionar(pid,sub,daBusca){
   const r=_ctpReg[pid]; r.edit=null; const c=_ctpHlCat(pid);
@@ -2819,7 +2827,7 @@ function updSel(){
       const selIds=_ctlNormSel();
       const isMulti=selIds.length>1;
       const ativo=A.controles.find(c=>c.id===A.controleAtivo);
-      const label=isMulti?`🗂️ ${selIds.length} controles`:`${ativo?(ativo.icone||'💼'):'💼'} ${ativo?H(ativo.nome):''}`;
+      const label=isMulti?`🗂️ ${selIds.length} controles`:`${ativo?H(ativo.icone||'💼'):'💼'} ${ativo?H(ativo.nome):''}`;
       // Só reconstrói o painel quando algo mudou. Reconstruir a cada render
       // fazia a lista "pular" (rolagem voltava ao topo e o destaque sumia),
       // e o próximo clique caía em outro controle.
@@ -2840,7 +2848,7 @@ function updSel(){
             <div class="ctl-row ${atual?'atual':''}">
               <button type="button" class="ctl-abrir" onclick="ctlSoEste(${c.id})" aria-pressed="${atual?'true':'false'}" title="Abrir só ${H(c.nome)}">
                 <span class="ctl-radio" aria-hidden="true"></span>
-                <span class="ctl-nome">${c.icone||'💼'} ${H(c.nome)}</span>
+                <span class="ctl-nome">${H(c.icone||'💼')} ${H(c.nome)}</span>
                 ${atual?'<span class="ctl-ativo">aberto</span>':''}
               </button>
               <label class="ctl-somar ${marcado?'on':''} ${marcado&&!isMulti?'unico':''}" title="${marcado&&!isMulti?'Este é o controle aberto — marque outro para somar':'Somar '+H(c.nome)+' na visualização combinada'}">
@@ -3283,8 +3291,8 @@ function iRow(t,click,rowIdx){
       <span class="tx-desc">${H(t.desc)}</span>
       <span class="tx-chips">${famHtml}${refHtml}${_ctlBadgeHtml(t)}${(()=>{const ac=accBy(t.accId);if(!isCC(ac)||t.type==='transferencia'||!_ccOk(ac))return'';const fm=faturaMesDe(ac,t.date);return `<span class="tx-fat" title="Fatura com vencimento em ${MNLONG[fm.slice(5,7)].toLowerCase()}/${fm.slice(0,4)}">fatura ${MNSHORT[fm.slice(5,7)].toLowerCase()}</span>`;})()}</span>
     </div>
-    <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${_accExiste(t.accId)?acc:`<button type="button" class="tx-semconta" onclick="event.stopPropagation();corrigirContas()" title="A conta deste lançamento não existe mais — clique para gravar uma conta">⚠ sem conta</button>`}</div>
-    <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${isT?'Transferência':(cat.name)}</span></span></div>
+    <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${_accExiste(t.accId)?H(acc):`<button type="button" class="tx-semconta" onclick="event.stopPropagation();corrigirContas()" title="A conta deste lançamento não existe mais — clique para gravar uma conta">⚠ sem conta</button>`}</div>
+    <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${isT?'Transferência':H(cat.name)}</span></span></div>
     <div class="tx-cell tx-cell-val" style="${cellBg}"><span class="tx-val" style="color:${vc}">${pf}${R(t.val)}</span></div>
     <div class="tx-cell tx-cell-date" style="${cellBg}">${dateStr}</div>
     ${click&&!A.bulkMode?`<div class="tx-cell tx-cell-actions act3" style="${cellBg};padding:6px 8px">
@@ -3352,7 +3360,7 @@ function rFixas(m){
   const totalRec=ativasNoMes.filter(f=>f.type==='receita').reduce((s,f)=>s+f.val,0);
   const totalPago=pagas.filter(f=>f.type==='despesa').reduce((s,f)=>s+f.val,0);
   const pct=ativasNoMes.length>0&&totalExp>0?Math.round(totalPago/totalExp*100):ativasNoMes.length===0?100:0;
-  const aOpts=_allAccounts().map(a=>`<option value="${a.id}" ${a.id==A.ff.accId?'selected':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
+  const aOpts=_allAccounts().map(a=>`<option value="${a.id}" ${a.id==A.ff.accId?'selected':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const iconList=(A.ff.type==='receita'?ICONS_REC:ICONS_EXP).map(ic=>`<button type="button" class="ic-pick ${A.ff.icon===ic?'on':''}" onclick="A.ff.icon='${ic}';render()" title="${FIXA_IC[ic]?FIXA_IC[ic][1]:''}" aria-label="Ícone ${FIXA_IC[ic]?FIXA_IC[ic][1]:''}" aria-pressed="${A.ff.icon===ic}"><svg class="ic" aria-hidden="true"><use href="#i-${FIXA_IC[ic]?FIXA_IC[ic][0]:'star'}"/></svg></button>`).join('');
 
   // helpers de row para fixas
@@ -3388,8 +3396,8 @@ function rFixas(m){
         <span class="tx-desc" style="${pago?'text-decoration:line-through;color:var(--color-text-tertiary)':''}">${H(f.desc)}</span>
         <span class="tx-chips">${f.recur&&f.recur!=='mensal'?`<span class="badge b-rep" style="font-size:9px">${f.recur}</span>`:''}${f.parcelas?`<span class="badge b-rep" style="font-size:9px;background:#EFF6FF;color:#1D4ED8">${fixaParcelaAtual(f,secao==='inativa'?(f.inicioEm||mes):mes)||'—'}/${f.parcelas}</span>`:''}<span style="font-size:13px;color:var(--color-text-tertiary)">dia ${f.diaVenc}</span>${vencInfo}${_ctlBadgeHtml(f)}</span>
       </div>
-      <div class="tx-cell tx-cell-acc" title="${accBy(f.accId).name}">${accBy(f.accId).name}</div>
-      <div class="tx-cell tx-cell-cat"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${cat.name}</span></span></div>
+      <div class="tx-cell tx-cell-acc" title="${H(accBy(f.accId).name)}">${H(accBy(f.accId).name)}</div>
+      <div class="tx-cell tx-cell-cat"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${H(cat.name)}</span></span></div>
       <div class="tx-cell tx-cell-val"><span class="tx-val" style="color:${inativa?'var(--color-text-tertiary)':vc}">${f.type==='receita'?'+':'−'}${R(f.val)}</span></div>
       <div class="tx-cell tx-cell-date" style="color:var(--gray-400);font-size:13px">dia ${f.diaVenc}</div>
       <div class="tx-cell tx-cell-actions" style="padding:6px 8px">${actions}</div>
@@ -3842,7 +3850,7 @@ function rLanc(m){
                 const isDirectRoot=(leaf.id===root.id);
                 const leafLabel=isDirectRoot?'(direto)':leaf.name;
                 const txRows=txDetailRows(ltxs,leafExpKey);
-                return`<tr class="grp-cat-row grp-sub-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${leafExpKey}']=!A.lancGrpExp['${leafExpKey}'];render()">
+                return`<tr class="grp-cat-row grp-sub-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${HJ(leafExpKey)}']=!A.lancGrpExp['${HJ(leafExpKey)}'];render()">
                   <td style="padding-left:32px"><span class="grp-toggle">${leafExpanded?'▼':'▶'}</span><span class="grp-dot" style="background:${root.color};opacity:.7"></span>${H(leafLabel)}</td>
                   ${QTD(`<td class="grp-qtd">${ltxs.length} lançamento${ltxs.length!==1?'s':''}</td>`)}
                   <td class="grp-pct">${leafPct}%</td>
@@ -3855,7 +3863,7 @@ function rLanc(m){
             }
           }
 
-          return`<tr class="grp-cat-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${rootExpKey}']=!A.lancGrpExp['${rootExpKey}'];render()">
+          return`<tr class="grp-cat-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${HJ(rootExpKey)}']=!A.lancGrpExp['${HJ(rootExpKey)}'];render()">
             <td><span class="grp-toggle">${rootExpanded?'▼':'▶'}</span><span class="grp-dot" style="background:${root.color}"></span>${H(root.name)}</td>
             ${QTD(`<td class="grp-qtd">${rtxs.length} lançamento${rtxs.length!==1?'s':''}</td>`)}
             <td class="grp-pct">${rootPct}%</td>
@@ -3877,8 +3885,8 @@ function rLanc(m){
           const expKey=cls+'|'+k;
           const expanded=A.lancGrpExp&&A.lancGrpExp[expKey];
           const txSubRows=txDetailRows(stxs,expKey);
-          return`<tr class="grp-cat-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${expKey}']=!A.lancGrpExp['${expKey}'];render()">
-            <td><span class="grp-toggle">${expanded?'▼':'▶'}</span><span class="grp-dot" style="background:${col}"></span>${keyLabel(k)}</td>
+          return`<tr class="grp-cat-row" onclick="if(!A.lancGrpExp)A.lancGrpExp={};A.lancGrpExp['${HJ(expKey)}']=!A.lancGrpExp['${HJ(expKey)}'];render()">
+            <td><span class="grp-toggle">${expanded?'▼':'▶'}</span><span class="grp-dot" style="background:${col}"></span>${H(keyLabel(k))}</td>
             ${QTD(`<td class="grp-qtd">${stxs.length} lançamento${stxs.length!==1?'s':''}</td>`)}
             <td class="grp-pct">${pct}%</td>
             <td class="grp-soma">${R(soma)}</td>
@@ -4071,11 +4079,11 @@ function fHTML(){
   const f=A.tf;
   const isT=A.mode==='transferencia';
   const editing=typeof A.txId==='number';
-  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':!_accExiste(sel)?'<option value="" selected>⚠ Conta não existe mais — escolha</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
+  const aOpts=(sel,excl)=>(sel==null?'<option value="">— Selecione —</option>':!_accExiste(sel)?'<option value="" selected>⚠ Conta não existe mais — escolha</option>':'')+_allAccounts().map(a=>`<option value="${a.id}" ${a.id==sel?'selected':''} ${excl!=null&&a.id==excl?'disabled':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
   const orig=accBy(f.accId),dest=accBy(f.accDest);
   const oB=bal(orig),dB=bal(dest),amt=parseFloat(f.val)||0;
   const temFam=famNames().length>0;
-  const famOpts='<option value="" '+((!f.familia||f.familia==='')?'selected':'')+'>— Nenhum —</option>'+famNames().map(fm=>`<option value="${fm}" ${fm===(f.familia||'')?'selected':''}>${fm}</option>`).join('');
+  const famOpts='<option value="" '+((!f.familia||f.familia==='')?'selected':'')+'>— Nenhum —</option>'+famNames().map(fm=>`<option value="${H(fm)}" ${fm===(f.familia||'')?'selected':''}>${H(fm)}</option>`).join('');
   const famField=temFam?`<div class="fr"><label>Família</label><select id="tf-fam-sel" onchange="A.tf.familia=this.value;A.tf._famSug=false">${famOpts}</select></div>`:'';
 
 
@@ -4306,7 +4314,7 @@ function _qamRender(){
     const editing=_qam.editId!==null;
     const roots=famRoots();
     const parentOpts='<option value="">— Grupo raiz —</option>'+roots.map(r=>`<option value="${r.id}" ${_qam.form.parentId===r.id?'selected':''}>${H(r.name)}</option>`).join('');
-    const famList=A.familia.map(f=>`<div onclick="_qam.editId=${f.id};_qam.form={name:'${f.name.replace(/'/g,"\\'")}',parentId:${f.parentId||null}};_qamRender()" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;${_qam.editId===f.id?'background:'+( isDark?'#2e1065':'#F5F3FF')+';':''}" onmouseover="this.style.background='${isDark?'#162035':'#F1F5F9'}'" onmouseout="this.style.background='${_qam.editId===f.id?(isDark?'#2e1065':'#F5F3FF'):'transparent'}'"><span style="font-size:13px">👤</span><span style="font-size:13px;color:${isDark?'#c8daf0':'#334155'};flex:1">${f.parentId?'└ ':''} ${H(f.name)}</span></div>`).join('');
+    const famList=A.familia.map(f=>`<div onclick="_qam.editId=${f.id};_qam.form={name:(A.familia.find(x=>x.id===${Number(f.id)})||{}).name||'',parentId:${f.parentId||null}};_qamRender()" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;${_qam.editId===f.id?'background:'+( isDark?'#2e1065':'#F5F3FF')+';':''}" onmouseover="this.style.background='${isDark?'#162035':'#F1F5F9'}'" onmouseout="this.style.background='${_qam.editId===f.id?(isDark?'#2e1065':'#F5F3FF'):'transparent'}'"><span style="font-size:13px">👤</span><span style="font-size:13px;color:${isDark?'#c8daf0':'#334155'};flex:1">${f.parentId?'└ ':''} ${H(f.name)}</span></div>`).join('');
     inner=`
       <div style="margin-bottom:12px"><label style="${lbStyle}">Nome</label><input id="qam-fam-name" value="${H(_qam.form.name)}" placeholder="Ex: Eu, Filha, Cônjuge..." style="${inputStyle}" oninput="_qam.form.name=this.value"/></div>
       <div style="margin-bottom:12px"><label style="${lbStyle}">Pertence a (opcional)</label><select style="${selStyle}" onchange="_qam.form.parentId=this.value?parseInt(this.value):null">${parentOpts}</select></div>
@@ -4642,16 +4650,26 @@ function _ccSelBarra(f){
 }
 function ccExcluirSel(){
   const ids=[...(A.ccMarc||[])]; if(!ids.length) return;
-  const txs=A.txs.filter(t=>ids.includes(t.id));
+  // Busca nas mesmas compras que a fatura exibe: em cartão compartilhado elas
+  // podem estar gravadas em outro controle (A.controlesCache), não só em A.txs.
+  const idsStr=new Set(ids.map(String));
+  const _visiveis=(window._ccItensVisiveis||[]);
+  const _vistos=new Set();
+  const txs=[..._visiveis,..._allTxsAcrossControles()].filter(t=>{ const k=String(t.id); if(!idsStr.has(k)||_vistos.has(k)) return false; _vistos.add(k); return true; });
   const soma=txs.reduce((s,t)=>s+(t.type==='receita'?-t.val:t.val),0);
   const parc=txs.filter(t=>t.parcGrupo).length;
   const lista=txs.slice(0,6).map(t=>`<li>${D(t.date).slice(0,5)} · ${H(t.desc)} · ${R(t.val)}</li>`).join('')+(txs.length>6?`<li>… e mais ${txs.length-6}</li>`:'');
   _showConfirm(`Excluir ${txs.length} compra${txs.length!==1?'s':''}?`,
     `<ul class="cc-del-lista">${lista}</ul>Total: <strong>${R(soma)}</strong>.${parc?`<br><span style="font-size:12px;color:var(--amber)">${parc} são parcelas — só as parcelas selecionadas serão apagadas (as outras faturas não mudam).</span>`:''}<br><span style="font-size:12px;color:var(--gray-500)">Esta ação não pode ser desfeita.</span>`,
     ()=>{
-      const set=new Set(ids);
-      A.fixas.forEach(fx=>{ if(fx.pagamentos) Object.keys(fx.pagamentos).forEach(m=>{ if(set.has(fx.pagamentos[m])) delete fx.pagamentos[m]; }); });
-      A.txs=A.txs.filter(t=>!set.has(t.id));
+      const set=idsStr;
+      const _limpar=d=>{
+        if(!d) return;
+        (d.fixas||[]).forEach(fx=>{ if(fx.pagamentos) Object.keys(fx.pagamentos).forEach(m=>{ if(set.has(String(fx.pagamentos[m]))) delete fx.pagamentos[m]; }); });
+        if(Array.isArray(d.txs)) d.txs=d.txs.filter(t=>!set.has(String(t.id)));
+      };
+      _limpar(A);
+      if(A.controlesCache) Object.keys(A.controlesCache).forEach(k=>{ if(Number(k)!==A.controleAtivo) _limpar(A.controlesCache[k]); });
       A.ccSelMode=false; A.ccMarc=new Set();
       toast(`${txs.length} compra${txs.length!==1?'s':''} excluída${txs.length!==1?'s':''}.`,'#888780'); render();
     },{okLabel:`Excluir ${txs.length}`});
@@ -4856,7 +4874,7 @@ function rContas(m){
       + accIcon(a.type)
       + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:14px;font-weight:600;color:var(--gray-900)">' + H(a.name) + '</div>'
-        + '<div style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + '<span>' + a.type + (a.familia?' · <span style="color:var(--transfer);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg class="ic sm" aria-hidden="true"><use href="#i-user"/></svg>'+H(a.familia)+'</span>':'') + '</span>' + (shared?'<span title="Compartilhada entre todos os controles" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--transfer);background:var(--transfer-border);border-radius:99px;padding:1px 7px;white-space:nowrap">🔗 Compartilhada</span>':'') + _ctlBadgeHtml(a) + '</div>'
+        + '<div style="font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:6px;flex-wrap:wrap">' + '<span>' + H(a.type) + (a.familia?' · <span style="color:var(--transfer);font-weight:600;display:inline-flex;align-items:center;gap:3px"><svg class="ic sm" aria-hidden="true"><use href="#i-user"/></svg>'+H(a.familia)+'</span>':'') + '</span>' + (shared?'<span title="Compartilhada entre todos os controles" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--transfer);background:var(--transfer-border);border-radius:99px;padding:1px 7px;white-space:nowrap">🔗 Compartilhada</span>':'') + _ctlBadgeHtml(a) + '</div>'
         + (a.obs ? '<div style="font-size:11px;color:var(--gray-400);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + H(a.obs) + '</div>' : '')
       + '</div>'
       + '<div style="text-align:right;flex-shrink:0;margin-right:4px">'
@@ -4899,7 +4917,7 @@ function accFHTML(){
   <div class="fg">
     <div class="fr"><label>Nome</label><input value="${H(f.name)}" oninput="A.af.name=this.value"/></div>
     <div class="fr"><label>Tipo</label><select onchange="A.af.type=this.value;render()">${ATYPES.map(t=>`<option value="${t.t}" ${t.t===f.type?'selected':''}>${t.t}</option>`).join('')}</select></div>
-    <div class="fr"><label>Proprietário</label><select onchange="A.af.familia=this.value"><option value="">— Nenhum —</option>${famNames().map(fm=>`<option value="${fm}" ${fm===(f.familia||'')?'selected':''}>${fm}</option>`).join('')}</select></div>
+    <div class="fr"><label>Proprietário</label><select onchange="A.af.familia=this.value"><option value="">— Nenhum —</option>${famNames().map(fm=>`<option value="${H(fm)}" ${fm===(f.familia||'')?'selected':''}>${H(fm)}</option>`).join('')}</select></div>
     ${f.type==='Cartão de crédito'?`
     <div class="fr full cc-cfg">
       <div class="cc-cfg-title"><svg class="ic" aria-hidden="true"><use href="#i-credit-card"/></svg> Dados da fatura</div>
@@ -5221,7 +5239,7 @@ function rControles(m){
   const cards=A.controles.map(c=>{
     const isActive=c.id===A.controleAtivo;
     return '<div class="acc-c ' + (A.cteId===c.id?'hl':'') + '" style="' + (isActive?'border-color:#2563EB':'') + '">'
-      + '<div class="acc-ic" style="background:var(--blue-mid)">' + (c.icone||'💼') + '</div>'
+      + '<div class="acc-ic" style="background:var(--blue-mid)">' + H(c.icone||'💼') + '</div>'
       + '<div style="flex:1;min-width:0">'
         + '<div style="font-size:14px;font-weight:600;color:var(--gray-900)">' + H(c.nome) + (isActive?' <span style="font-size:11px;color:var(--blue);font-weight:700">● Ativo agora</span>':'') + '</div>'
         + '<div style="font-size:12px;color:var(--gray-500)">' + (c.id===A.controleAtivo?A.accounts.length:((A.controlesCache&&A.controlesCache[c.id]&&A.controlesCache[c.id].accounts)||[]).length) + ' conta(s) cadastrada(s)</div>'
@@ -6221,11 +6239,11 @@ function ctlDeselAll(){
 }
 function _ctlBadgeHtml(item){
   if(!item || !item._ctlNome) return '';
-  return `<span title="Controle: ${H(item._ctlNome)}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-light);border-radius:99px;padding:1px 7px;white-space:nowrap;flex-shrink:0">${item._ctlIcone||'💼'} ${H(item._ctlNome)}</span>`;
+  return `<span title="Controle: ${H(item._ctlNome)}" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-light);border-radius:99px;padding:1px 7px;white-space:nowrap;flex-shrink:0">${H(item._ctlIcone||'💼')} ${H(item._ctlNome)}</span>`;
 }
 function _ctlMultiNoteHtml(){
   const ids=_ctlNormSel();
-  const nomes=ids.map(id=>{ const c=A.controles.find(x=>x.id===id); return c?`${c.icone||'💼'} ${H(c.nome)}`:''; }).filter(Boolean).join(' + ');
+  const nomes=ids.map(id=>{ const c=A.controles.find(x=>x.id===id); return c?`${H(c.icone||'💼')} ${H(c.nome)}`:''; }).filter(Boolean).join(' + ');
   return `<div style="display:flex;align-items:center;gap:8px;background:var(--blue-light);border:1px solid var(--blue-mid);color:var(--blue);border-radius:var(--radius-md);padding:8px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600"><svg class="ic" aria-hidden="true"><use href="#i-folder"/></svg><span>Visualização combinada (somente leitura): ${nomes}</span></div>`;
 }
 // Faz as telas de conteúdo enxergarem os dados mesclados quando há mais de
@@ -6249,7 +6267,7 @@ function _ctlMultiNoteHtml(){
   });
   const GUARD_FNS=[
     'openFixaForm','editFixa','saveFixa','askDelFixa','marcarPago','desmarcarPago','toggleAtiva',
-    'openForm','editTx','copyTx','saveTx','askDel','bulkDelete',
+    'openForm','editTx','copyTx','saveTx','askDel','bulkDelete','ccExcluirSel',
     'openAccForm','editAcc','saveAcc','askDelAcc','abrirPagarFatura','confirmarPagarFatura','novaCompraCartao'
   ];
   GUARD_FNS.forEach(name=>{
@@ -6264,7 +6282,21 @@ function _ctlMultiNoteHtml(){
 
 // ── Migrações de schema que precisam rodar sempre que dados de CONTEÚDO
 //    são carregados (no boot, no modo livre, e a cada troca de usuário) ──
+// [SEG] Neutraliza HTML em textos vindos de backup/nuvem/arquivos: < e > viram ‹ ›
+//       (descrições financeiras não precisam de tags) e links só http(s).
+const _SAN_SKIP=new Set(['enc','iv','salt','senhaHash','verifierEnc','verifierIv']);
+function _sanTxt(s){ return /[<>]/.test(s)?s.replace(/</g,'‹').replace(/>/g,'›'):s; }
+function _sanDeep(o,depth){
+  if(!o||typeof o!=='object'||depth>8) return;
+  for(const k of Object.keys(o)){
+    if(k==='__proto__'||k==='constructor'){ delete o[k]; continue; }
+    const v=o[k];
+    if(typeof v==='string'){ if(_SAN_SKIP.has(k)) continue; let n=_sanTxt(v); if(k==='url'&&n&&!_safeUrl(n)) n=''; if(n!==v) o[k]=n; }
+    else if(v&&typeof v==='object' && !(v instanceof Set)) _sanDeep(v,depth+1);
+  }
+}
 function _runContentSchemaMigrations(){
+  try{ USER_FIELDS.forEach(k=>_sanDeep(A[k],0)); _sanDeep(A.usuarios,0); }catch(e){}
   _ensureControles();
   _repairAccountIds();
   _normalizarCategorias();
@@ -6594,7 +6626,7 @@ function openFbModal() {
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Faça login para sincronizar seus dados entre dispositivos. O armazenamento local continua funcionando normalmente.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
+      <input id="fb-sw-email" type="email" placeholder="E-mail" value="${H(localStorage.getItem('pfp_fb_last_email')||'')}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
       <div style="position:relative">
@@ -6628,7 +6660,7 @@ function openFbModal() {
       <div style="font-size:14px;font-weight:600;color:${clr}">Configurado, faça login</div>
     </div>
     <div style="background:${isDark?'#2D0A0A':'#FEF3C7'};border:1px solid ${isDark?'#7F1D1D':'#FDE68A'};border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#FCA5A5':'#92400E'};line-height:1.5">
-      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
+      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
     </div>
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:6px">
       Cole o objeto firebaseConfig (JSON)
@@ -6682,7 +6714,7 @@ function _fbShowSwitchAccount() {
     </div>
     <p style="font-size:13px;color:#6B7280;margin:0 0 14px;line-height:1.5">Entre com outra conta Firebase. A sessão atual será encerrada.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <input id="fb-sw-email" type="email" placeholder="E-mail" value="${localStorage.getItem('pfp_fb_last_email')||''}"
+      <input id="fb-sw-email" type="email" placeholder="E-mail" value="${H(localStorage.getItem('pfp_fb_last_email')||'')}"
         style="border:1px solid ${bdr};border-radius:9px;padding:10px 12px;font-size:14px;font-family:inherit;background:${inpBg};color:${clr};outline:none;box-sizing:border-box"
         onkeydown="if(event.key==='Enter')document.getElementById('fb-sw-pass').focus()">
       <div style="position:relative">
@@ -6718,7 +6750,7 @@ function _fbShowReconfig() {
       <button onclick="openFbModal();openFbModal()" style="background:none;border:none;cursor:pointer;color:#6B7280;font-size:13px;font-family:inherit;padding:0;display:flex;align-items:center;gap:4px">← Voltar</button>
     </div>
     <div style="background:${isDark?'#2D0A0A':'#FEF3C7'};border:1px solid ${isDark?'#7F1D1D':'#FDE68A'};border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:${isDark?'#FCA5A5':'#92400E'};line-height:1.5">
-      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
+      🛈 Crie um projeto em <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" style="color:inherit">console.firebase.google.com</a>, ative <strong>Firestore Database</strong> e o provedor <strong>Email/senha</strong> em Authentication. Cole abaixo a configuração do app web (Configurações do projeto → Seus apps → SDK).
     </div>
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B7280;margin-bottom:6px">
       Cole o objeto firebaseConfig (JSON)
@@ -7715,7 +7747,7 @@ function _renderCsvModal() {
 
   // ── STEP 1: UPLOAD ──
   if (s.step === 'upload') {
-    const accOpts = _allAccounts().map(a => `<option value="${a.id}" ${a.id == s.accId ? 'selected' : ''}>${a.name}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
+    const accOpts = _allAccounts().map(a => `<option value="${a.id}" ${a.id == s.accId ? 'selected' : ''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`).join('');
     el.innerHTML = `
     <div style="background:${bg};border:${border};border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.22);padding:24px;width:100%;max-width:480px;font-family:var(--font-sans)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
@@ -7848,7 +7880,7 @@ function _renderCsvModal() {
       <div>
         <div style="font-size:17px;font-weight:700;color:${textPrimary}">${s.recat?'🔁 Recategorizar lançamentos em “Outros”':'📋 Revisar Importação'}</div>
         <div style="font-size:12px;color:${textSec};margin-top:3px">
-          ${s.recat?`Lançamentos que você já tem · só a categoria (e o membro, se você mudar) é alterada · ${format}`:`<strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_renderCsvModal()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:accName}`}
+          ${s.recat?`Lançamentos que você já tem · só a categoria (e o membro, se você mudar) é alterada · ${format}`:`<strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_renderCsvModal()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:H(accName)}`}
         </div>
       </div>
       <button onclick="closeCsvImport()" aria-label="Fechar" style="background:none;border:none;font-size:20px;cursor:pointer;color:${textSec};padding:0;line-height:1;flex-shrink:0">✕</button>
@@ -7939,8 +7971,9 @@ function _renderCsvModal() {
    • "Claude (Anthropic)": envia o PDF para a API do Claude com a chave do
      próprio usuário. Lê também PDFs escaneados e sugere a categoria.
    O resultado sempre passa pela tela de revisão antes de virar lançamento. */
-const PDFJS_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-const PDFJS_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const PDFJS_URL='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+const PDFJS_SRI='sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e';
+const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 const IA_CFG_KEY='pfp_ia_cfg';
 const IA_MODELOS=[['claude-haiku-4-5-20251001','Claude Haiku 4.5 — rápido e barato'],['claude-sonnet-5-5','Claude Sonnet 5.5 — mais preciso']];
 function iaCfg(){try{return Object.assign({motor:'local',chave:'',modelo:IA_MODELOS[0][0]},JSON.parse(localStorage.getItem(IA_CFG_KEY)||'{}'));}catch(e){return {motor:'local',chave:'',modelo:IA_MODELOS[0][0]};}}
@@ -7951,8 +7984,8 @@ function _carregarPdfjs(){
   if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
   if(_pdfjsPromise) return _pdfjsPromise;
   _pdfjsPromise=new Promise((ok,erro)=>{
-    const sc=document.createElement('script'); sc.src=PDFJS_URL;
-    sc.onload=()=>{ try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; ok(window.pdfjsLib);}catch(e){erro(e);} };
+    const sc=document.createElement('script'); sc.src=PDFJS_URL; sc.integrity=PDFJS_SRI; sc.crossOrigin='anonymous';
+    sc.onload=()=>{ try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; ok(window.pdfjsLib);}catch(e){ _pdfjsPromise=null; erro(e);} };
     sc.onerror=()=>{ _pdfjsPromise=null; erro(new Error('Não foi possível carregar o leitor de PDF (verifique a internet).')); };
     document.head.appendChild(sc);
   });
@@ -7974,7 +8007,7 @@ function _pdfJuntar(seg){
 }
 async function _pdfLinhas(buf){
   const pdfjs=await _carregarPdfjs();
-  const doc=await pdfjs.getDocument({data:buf}).promise;
+  const doc=await pdfjs.getDocument({data:buf,isEvalSupported:false,enableXfa:false}).promise; // [SEG] CVE-2024-4367
   const linhas=[];
   for(let pn=1;pn<=doc.numPages;pn++){
     const pg=await doc.getPage(pn); const tc=await pg.getTextContent();
@@ -8278,7 +8311,10 @@ function _csvHandleFile(file) {
       if (_arqTipo(u8) === 'excel' || ext === 'xls' || ext === 'xlsx') {
         if (typeof XLSX === 'undefined') { toast('Biblioteca de leitura de Excel ainda carregando. Aguarde um instante e tente novamente.', '#D97706', 4000); return; }
         // datas como número de série + formato BR (cellDates:true desloca um dia em alguns fusos)
+        const _protoAntes = new Set(Object.getOwnPropertyNames(Object.prototype));
         const wb = XLSX.read(u8, { type: 'array', cellDates: false, dateNF: 'DD/MM/YYYY', raw: false });
+        const _poluido = Object.getOwnPropertyNames(Object.prototype).filter(k => !_protoAntes.has(k));
+        if (_poluido.length) { _poluido.forEach(k => { try { delete Object.prototype[k]; } catch(e) {} }); toast('Arquivo Excel recusado: conteúdo suspeito.', 'var(--expense)', 5000); return; }
         // testa todas as abas e fica com a que tiver mais lançamentos (o Itaú põe "Posição Consolidada" e "Limites" junto)
         let melhor = { rows: [], format: '' };
         wb.SheetNames.forEach(nm => {
@@ -8479,7 +8515,7 @@ function _csvCatTodos(v){
 }
 
 function buildCsvCatPicker(rowIdx, selId, tipo) {
-  return buildCatTreePicker(selId, tipo, 'csvcat'+rowIdx, null, {onPick:`_csvPickCat(${rowIdx},id)`, compact:true, placeholder:'Sem categoria'});
+  return buildCatTreePicker(selId, tipo, 'csvcat'+rowIdx, null, {onPick:id=>_csvPickCat(rowIdx,id), compact:true, placeholder:'Sem categoria'});
 }
 
 function _csvConfirmImport() {
@@ -8622,11 +8658,11 @@ function rSenhas(m){
       const mostrar=A.senhaMostrar&&A.senhaMostrar[s.id];
       const senhaDisplay=mostrar?H(dec._senha||''):'••••••••';
       const senhaClass=mostrar?'senha-val':'senha-val hidden';
-      const urlHtml=s.url?`<a class="senha-url" href="${H(s.url)}" target="_blank" rel="noopener"><svg class="ic sm" aria-hidden="true"><use href="#i-link"/></svg> ${H(s.url)}</a>`:''
+      const urlHtml=_safeUrl(s.url)?`<a class="senha-url" href="${H(_safeUrl(s.url))}" target="_blank" rel="noopener noreferrer"><svg class="ic sm" aria-hidden="true"><use href="#i-link"/></svg> ${H(s.url)}</a>`:''
       const obsHtml=s.obs?`<div class="senha-obs"><svg class="ic sm" aria-hidden="true"><use href="#i-notebook-pen"/></svg> ${H(s.obs)}</div>`:''
       const searchKey=((s.site||'')+' '+(dec._usuario||'')+' '+(s.url||'')+' '+(s.obs||'')).toLowerCase();
       const faviconDomain=s.url?((u=>{try{return new URL(u).hostname}catch(e){return ''}})(s.url)):'';
-      const iconHtml=faviconDomain
+      const iconHtml=false
         ?`<img src="https://www.google.com/s2/favicons?sz=32&domain=${faviconDomain}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" style="width:28px;height:28px;border-radius:8px"><span style="display:none"><svg class="ic lg" aria-hidden="true"><use href="#i-key-round"/></svg></span>`
         :`<svg class="ic lg" aria-hidden="true"><use href="#i-key-round"/></svg>`;
       return`<div class="senha-card" data-search-key="${H(searchKey)}">
@@ -8748,7 +8784,7 @@ function rSenhas(m){
       <div class="senha-info" style="flex:1">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <div class="senha-site">${H(u.nome||'Sem nome')}</div>
-          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${papelBg[papel]};color:${papelColor[papel]};border:1px solid ${papelBorder[papel]}">${papelLabel[papel]||papel}</span>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:${papelBg[papel]};color:${papelColor[papel]};border:1px solid ${papelBorder[papel]}">${H(papelLabel[papel]||papel)}</span>
           ${voceBadge}
         </div>
         <div class="senha-field">
@@ -9152,6 +9188,8 @@ async function vaultDoUnlock(){
   const p = document.getElementById('vault-pass1')?.value||'';
   const btn = document.getElementById('vault-submit-btn');
   if(!p){ _vaultShowErr('Digite a senha master ou sua senha de admin.'); return; }
+  const _esp=_rlEspera('pfp_vault_rl');
+  if(_esp){ _vaultShowErr('Muitas tentativas erradas. Aguarde '+_rlMsg(_esp)+'.'); return; }
   if(btn){ btn.textContent='⏳ Verificando…'; btn.disabled=true; }
 
   // 1ª tentativa: senha master
@@ -9176,6 +9214,7 @@ async function vaultDoUnlock(){
     }
   }
 
+  if(ok) _rlOk('pfp_vault_rl'); else _rlFalha('pfp_vault_rl');
   if(!ok){
     if(btn){ btn.textContent='Desbloquear'; btn.disabled=false; }
     await new Promise(r=>setTimeout(r,500));
@@ -9261,11 +9300,17 @@ function toggleMostrarSenha(id){
   render();
 }
 
+// [SEG] Cofre trava após 5 min sem uso; senha copiada sai da área de transferência em 30 s
+const VAULT_IDLE_MS=5*60e3; let _vaultUltUso=Date.now();
+['pointerdown','keydown','wheel','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{ _vaultUltUso=Date.now(); },{passive:true,capture:true}));
+setInterval(()=>{ if(A.cofre&&!A.cofre.locked&&Date.now()-_vaultUltUso>VAULT_IDLE_MS){ try{ vaultLock(); }catch(e){} } },20e3);
+let _clipTimer=null;
+function _limparClipDepois(){ clearTimeout(_clipTimer); _clipTimer=setTimeout(()=>{ try{ navigator.clipboard.writeText(''); }catch(e){} },30e3); }
 function copiarSenha(id,tipo){
   const dec=(A.cofre.senhasDecrypt||[]).find(x=>x.id==id);
   const txt=tipo==='u'?(dec?dec._usuario:''):(dec?dec._senha:'');
   if(!txt)return;
-  navigator.clipboard.writeText(txt).then(()=>toast('📋 Copiado!','#2563EB',1600)).catch(()=>{
+  navigator.clipboard.writeText(txt).then(()=>{ toast(tipo==='p'?'📋 Copiado! Será apagado em 30 s.':'📋 Copiado!','#2563EB',1800); if(tipo==='p') _limparClipDepois(); }).catch(()=>{
     const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 Copiado!','#2563EB',1600);
   });
 }
@@ -9901,6 +9946,12 @@ function _loginUseRecent() {
   setTimeout(() => document.getElementById('login-id-pass')?.focus(), 50);
 }
 
+// [SEG] Bloqueio progressivo após 5 erros (30s, 1min, 2min… até 15min)
+function _rlGet(k){ try{ return JSON.parse(localStorage.getItem(k)||'{}')||{}; }catch(e){ return {}; } }
+function _rlEspera(k){ const ms=(_rlGet(k).ate||0)-Date.now(); return ms>0?Math.ceil(ms/1000):0; }
+function _rlFalha(k){ const r=_rlGet(k); r.n=(r.n||0)+1; if(r.n>=5) r.ate=Date.now()+Math.min(15*60e3,30e3*Math.pow(2,r.n-5)); try{ localStorage.setItem(k,JSON.stringify(r)); }catch(e){} }
+function _rlOk(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function _rlMsg(s){ return s>=60?Math.ceil(s/60)+' min':s+' s'; }
 async function appLoginUnified() {
   const errEl = document.getElementById('login-err');
   if (errEl) errEl.style.display = 'none';
@@ -9982,7 +10033,10 @@ async function appLoginUnified() {
   }
 
   // ── Tentativa local (usuário + senha com PBKDF2) ──
+  const _esp = _rlEspera('pfp_login_rl');
+  if (_esp) { if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; } _loginErr('Muitas tentativas erradas. Aguarde ' + _rlMsg(_esp) + '.'); return; }
   const user = await _localAuth(idVal, passVal);
+  if (user) _rlOk('pfp_login_rl'); else _rlFalha('pfp_login_rl');
 
   if (btn) { btn.textContent = 'Entrar'; btn.disabled = false; }
 
