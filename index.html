@@ -1099,6 +1099,17 @@ html.dark .ctp-nsub{background:#1e2d45}
 .ctp-cancel{background:none;border:1px solid var(--gray-200);color:var(--color-text-primary)}
 .ctp-okbtn{background:var(--blue);border:1px solid var(--blue);color:#fff}
 .ctp-okbtn:disabled{opacity:.45;cursor:not-allowed}
+#ctpd-xp{z-index:8700}
+#ctpd-xp.sheet{z-index:8700}
+.xp-extra{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 8px 8px 30px}
+.xp-sel{flex:1 1 150px;min-width:0;font-size:13px!important;padding:6px 8px!important;border-radius:6px!important}
+.xp-ini{display:flex;align-items:center;gap:6px;flex:1 1 180px;font-size:12px;color:var(--gray-500)}
+.xp-ini .money-field{flex:1;min-width:0}
+.xp-sel{background:var(--color-background-primary)!important;color:var(--color-text-primary)!important;border:1px solid var(--gray-200)!important}
+html.dark .xp-sel{background:#0f1e35!important;border-color:#1e2d45!important;color:#c8daf0!important}
+.xp-tipo{font-size:11px;color:var(--gray-500);font-weight:400;flex-shrink:0}
+.ctp-row.hl .xp-tipo{color:rgba(255,255,255,.8)}
+#ctpd-xp .acc-ic{flex-shrink:0}
 .ctp-sug{font-size:11px;font-weight:600;color:var(--transfer);background:var(--transfer-bg);border-radius:99px;padding:1px 8px}
 @media (max-width:600px){
   .ctp-corpo{flex-direction:column-reverse}
@@ -4172,11 +4183,13 @@ function _qamSaveCat(){
 
 // ── Conta ──
 function qamAcc(stateObj, stateKey){
+  if(stateObj==='A.tf'||stateObj==='tf'||stateObj==='A.ff'||stateObj==='ff'){ _xpOpen('acc',stateObj,stateKey,'novo'); return; }
   _qam = { type:'acc', stateObj, stateKey, editId:null,
     form:{ name:'', type:'Conta corrente', ini:'', iniDate:'', iniDateActive:false, obs:'' } };
   _qamRender();
 }
 function _qamEditAcc(id){
+  if(_xp&&_xp.kind==='acc'){ if(_xp.edit&&_xp.edit.novo){ _xp.edit=null; } if(id!=null&&_xpItem(id)){ _xp.hl=id; _xpEditar(); } else _xpDesenhar(); return; }
   const a=_allAccounts().find(x=>x.id===id); if(!a)return;
   _qam.editId=id;
   _qam.form={ name:a.name, type:a.type, ini:a.ini, iniDate:a.iniDate||'', iniDateActive:!!a.iniDateActive, obs:a.obs||'' };
@@ -4205,6 +4218,7 @@ function _qamSaveAcc(){
 
 // ── Família ──
 function qamFam(stateObj, stateKey, mode){
+  _xpOpen('fam',stateObj,stateKey,mode==='edit'?'editar':'novo'); return;
   const curName = stateObj==='csv' ? ((_csvState&&_csvState.rows&&_csvState.rows[stateKey])||{}).fam||''
     : stateObj==='rg' ? (_rgForm().familia||'')
     : ((stateObj==='A.tf'||stateObj==='tf'?A.tf:A.ff)||{})[stateKey]||'';
@@ -5013,8 +5027,63 @@ function saveAcc(){
   }
   _applySaveAcc();
 }
+// Lista e resolve os lançamentos que impedem excluir uma conta
+// (inclui os pendentes/previstos, que não aparecem no Extrato).
+function _txsDaConta(id){
+  const shared=_isSharedAcc(id);
+  const fontes=[{ctl:A.controleAtivo,d:A}];
+  if(shared&&A.controlesCache) Object.keys(A.controlesCache).forEach(k=>{ if(Number(k)!==A.controleAtivo&&A.controlesCache[k]) fontes.push({ctl:Number(k),d:A.controlesCache[k]}); });
+  const out=[];
+  fontes.forEach(f=>(f.d.txs||[]).forEach(t=>{ if(t.accId==id||t.accDest==id) out.push({t,ctl:f.ctl,d:f.d}); }));
+  return out.sort((x,y)=>String(y.t.date||'').localeCompare(String(x.t.date||'')));
+}
+function _resolverLancsConta(id){
+  const a=_allAccounts().find(x=>x.id==id); if(!a) return false;
+  const lst=_txsDaConta(id); if(!lst.length) return false;
+  const nomeCtl=c=>{ const x=(A.controles||[]).find(z=>z.id===c); return x?((x.icone||'')+' '+x.nome).trim():''; };
+  const pend=lst.filter(x=>!x.t.done).length;
+  const ini=(a.iniDateActive===true||a.iniDateActive==='true')&&a.iniDate&&a.iniDate.length===10?a.iniDate:'';
+  const antes=ini?lst.filter(x=>x.t.done&&x.t.date<ini).length:0;
+  const outrosCtl=lst.filter(x=>x.ctl!==A.controleAtivo).length;
+  const anos=[...new Set(lst.map(x=>String(x.t.date||'').slice(0,4)).filter(Boolean))].sort();
+  const linhas=lst.map(x=>{ const t=x.t;
+    const tipo=t.type==='transferencia'?(t.accDest==id?'entrada (transf./pgto fatura)':'saída (transf.)'):t.type;
+    const st=!t.done?'<span style="color:var(--amber);font-weight:700">pendente</span>':(ini&&t.date<ini?'<span style="color:var(--gray-500)">antes do saldo inicial</span>':'realizado');
+    return `<tr><td style="white-space:nowrap">${D(t.date)}</td><td>${H(t.desc||'')}<div style="font-size:11px;color:var(--gray-500)">${H(tipo)} · ${st}${x.ctl!==A.controleAtivo?` · ${H(nomeCtl(x.ctl))}`:''}</div></td><td style="text-align:right;white-space:nowrap">${R(t.val)}</td></tr>`; }).join('');
+  const outras=_allAccounts().filter(x=>x.id!=id);
+  const opts=outras.map(x=>`<option value="mv:${x.id}">Mover para “${H(x.name)}”</option>`).join('');
+  const dicas=[];
+  if(pend) dicas.push(`<b>${pend}</b> estão como <b>pendentes/previstos</b> — o Extrato só mostra lançamentos realizados, por isso não aparecem lá.`);
+  if(antes) dicas.push(`<b>${antes}</b> são anteriores à data do saldo inicial da conta (${D(ini)}), por isso não entram no saldo.`);
+  if(outrosCtl) dicas.push(`<b>${outrosCtl}</b> estão gravados em outro controle.`);
+  if(anos.length) dicas.push(`Datas entre <b>${D(lst[lst.length-1].t.date)}</b> e <b>${D(lst[0].t.date)}</b> — no Extrato, use “Período” para vê-los.`);
+  _showConfirm(`${lst.length} lançamento${lst.length!==1?'s':''} em “${a.name}”`,
+    `<div style="text-align:left">${dicas.length?`<ul class="vinc-lista">${dicas.map(d=>`<li>${d}</li>`).join('')}</ul>`:''}
+     <div style="max-height:260px;overflow:auto;border:1px solid var(--gray-200);border-radius:8px;margin:8px 0"><table style="width:100%;font-size:12.5px;border-collapse:collapse">${linhas}</table></div>
+     <label style="font-size:12.5px;font-weight:600">O que fazer com eles?</label>
+     <select id="resolv-acc-acao" style="width:100%;margin-top:4px"><option value="">— escolher —</option>${opts}<option value="del">Apagar os ${lst.length} lançamentos</option></select>
+     <div style="font-size:11.5px;color:var(--gray-500);margin-top:6px">Depois disso a conta fica livre para excluir. Apagar não pode ser desfeito.</div></div>`,
+    ()=>{
+      const v=(document.getElementById('resolv-acc-acao')||{}).value||'';
+      if(!v){ toast('Escolha o que fazer com os lançamentos.','var(--expense)'); setTimeout(()=>_resolverLancsConta(id),50); return; }
+      if(v==='del'){
+        const ids=new Set(lst.map(x=>String(x.t.id)));
+        const limpar=d=>{ if(!d) return; (d.fixas||[]).forEach(fx=>{ if(fx.pagamentos) Object.keys(fx.pagamentos).forEach(m=>{ if(ids.has(String(fx.pagamentos[m]))) delete fx.pagamentos[m]; }); }); if(Array.isArray(d.txs)) d.txs=d.txs.filter(t=>!ids.has(String(t.id))); };
+        limpar(A); if(A.controlesCache) Object.keys(A.controlesCache).forEach(k=>{ if(Number(k)!==A.controleAtivo) limpar(A.controlesCache[k]); });
+        toast(`${lst.length} lançamento(s) apagado(s).`,'#888780');
+      } else {
+        const dest=_allAccounts().find(x=>String(x.id)===v.slice(3)); if(!dest) return;
+        lst.forEach(x=>{ const t=x.t; if(t.accId==id) t.accId=dest.id; if(t.accDest==id) t.accDest=dest.id; });
+        toast(`${lst.length} lançamento(s) movido(s) para ${dest.name}.`,'var(--income)');
+      }
+      render();
+      setTimeout(()=>askDelAcc(id),300); // oferece excluir a conta agora que está livre
+    },{okLabel:'Aplicar',okColor:'var(--blue)'});
+  return true;
+}
 function askDelAcc(id){
   const a=_allAccounts().find(x=>x.id===id);
+  { const _v=_vinculosConta(id); const _fx=_v[2].n; if(!_fx&&(_v[0].n||_v[1].n)){ _resolverLancsConta(id); return; } }
   if(_bloquearExclusao('a conta',a?.name,_vinculosConta(id),'Para parar de usar a conta e manter o histórico, renomeie-a (ex.: “'+H(a?.name||'')+' (encerrada)”). Para excluir, apague ou mova antes os lançamentos dela.')) return;
   const shared=_isSharedAcc(id);
   const n=shared?_allTxsAcrossControles().filter(t=>t.accId===id||t.accDest===id).length:A.txs.filter(t=>t.accId===id||t.accDest===id).length;
@@ -10192,6 +10261,219 @@ function _setThemeBtn(btn,isDark){
     });
   }catch(e){}
 })();
+
+/* ═══ Cadastro de Família e Conta no mesmo layout do seletor de categorias ═══
+   Lista/árvore à esquerda, botões Adicionar/Editar/Apagar/Subir/Descer à direita,
+   busca no topo, rodapé com a escolha + Cancelar/OK. Janela arrastável (desktop). */
+let _xp=null;
+function _xpOpen(kind,stateObj,stateKey,inicio){
+  _ctpCloseAll(); _xpClose(true);
+  let selId=null;
+  if(kind==='fam'){
+    const nome=stateObj==='csv'?((_csvState&&_csvState.rows&&_csvState.rows[stateKey])||{}).fam||''
+      :stateObj==='rg'?(_rgForm().familia||''):(((stateObj==='A.tf'||stateObj==='tf')?A.tf:A.ff)||{})[stateKey]||'';
+    const it=A.familia.find(f=>f.name===nome); selId=it?it.id:null;
+  } else {
+    const o=(stateObj==='A.tf'||stateObj==='tf')?A.tf:A.ff; selId=o&&o[stateKey]!=null&&o[stateKey]!==''?o[stateKey]:null;
+  }
+  const exp=new Set(); if(kind==='fam'){ const s=famById(selId); if(s&&s.parentId) exp.add(s.parentId); }
+  _xp={kind,stateObj,stateKey,selId,hl:selId,exp,busca:'',edit:null};
+  const titulo=kind==='fam'?'Família — selecione o membro':'Selecione a conta';
+  const root=document.createElement('div');
+  root.id='xp-root'; root.className='qam-overlay'; root.style.background='rgba(15,23,42,.35)';
+  root.innerHTML=`<div class="ctp-wrap" style="position:static;width:auto"><div class="ctp-dropdown open" id="ctpd-xp" role="dialog" aria-label="${H(titulo)}" onkeydown="_xpTeclaJanela(event)">
+    <div class="ctp-titulo" onpointerdown="_ctpArrastar(event,'xp')" ondblclick="if(!event.target.closest('button'))_ctpCentralizar('xp')" title="Arraste para mover · duplo clique para centralizar"><svg class="ic sm ctp-grip" aria-hidden="true"><use href="#i-grip"/></svg><span>${H(titulo)}</span><button type="button" class="ctp-fechar" onclick="_xpClose()" aria-label="Fechar"><svg class="ic sm" aria-hidden="true"><use href="#i-x"/></svg></button></div>
+    <div class="ctp-topo"><svg class="ic sm" aria-hidden="true"><use href="#i-search"/></svg><input type="text" id="ctps-xp" placeholder="${kind==='fam'?'Buscar membro…':'Buscar conta…'}" autocomplete="off" oninput="_xpFiltrar()" onkeydown="_xpTecla(event)" aria-label="Buscar"></div>
+    <div class="ctp-corpo"><div class="ctp-arvore" id="ctpa-xp" role="tree" tabindex="-1" onkeydown="_xpTecla(event)"></div><div class="ctp-botoes" id="ctpb-xp"></div></div>
+    <div class="ctp-rodape" id="ctpf-xp"></div></div></div>`;
+  root.addEventListener('mousedown',_overlayMousedown);
+  root.addEventListener('click',e=>_overlayClick(e,()=>_xpClose()));
+  document.body.appendChild(root);
+  _ctpPosicionar('xp'); _xpDesenhar();
+  const s=document.querySelector('#ctpa-xp .ctp-row.hl'); if(s) _ctpRolarPara(s,true);
+  if(inicio==='novo') _xpAdicionar(false);
+  else if(inicio==='editar'&&_xp.hl!=null) _xpEditar();
+  else if(!window.matchMedia('(hover:none)').matches) setTimeout(()=>{const i=document.getElementById('ctps-xp'); if(i) i.focus({preventScroll:true});},20);
+}
+function _xpClose(silencioso){ const el=document.getElementById('xp-root'); if(el) el.remove(); _xp=null; }
+function _xpItem(id){ if(id==null) return null; return _xp.kind==='fam'?(A.familia.find(f=>f.id==id)||null):(_allAccounts().find(a=>a.id==id)||null); }
+function _xpLinhas(){
+  const q=_normTxt((_xp.busca||'').trim()); const bate=x=>!q||_normTxt(x.name).includes(q);
+  const out=[]; const e=_xp.edit;
+  if(_xp.kind==='fam'){
+    famRoots().forEach(r=>{
+      const filhos=famChildren(r.id); const fb=filhos.filter(bate);
+      if(q&&!bate(r)&&!fb.length) return;
+      const aberto=q?fb.length>0:_xp.exp.has(r.id);
+      out.push({x:r,nivel:0,temFilhos:filhos.length>0,aberto});
+      if(aberto) (q?fb:filhos).forEach(f=>out.push({x:f,nivel:1}));
+      if(e&&e.novo&&e.parentId==r.id) out.push({novo:true,nivel:1});
+    });
+    if(e&&e.novo&&!e.parentId) out.push({novo:true,nivel:0});
+  } else {
+    const todas=_allAccounts();
+    [['Contas',a=>!isCC(a)],['Cartões de crédito',a=>isCC(a)]].forEach(([nome,f])=>{
+      const l=todas.filter(f).filter(bate);
+      const novoAqui=e&&e.novo&&(nome==='Cartões de crédito')===(e.type==='Cartão de crédito');
+      if(!l.length&&!novoAqui) return;
+      out.push({sec:nome}); l.forEach(a=>out.push({x:a,nivel:0}));
+      if(novoAqui) out.push({novo:true,nivel:0});
+    });
+  }
+  return out;
+}
+function _xpEditorHtml(nivel){
+  const e=_xp.edit;
+  const ph=_xp.kind==='fam'?(e.parentId?'Nome do membro':'Nome do grupo/membro'):'Nome da conta';
+  const ic=_xp.kind==='acc'?accIcon(e.type,'sm'):`<svg class="ic sm" aria-hidden="true"><use href="#i-user"/></svg>`;
+  let h=`<div class="ctp-row ctp-editando ${nivel?'nsub':'n0'}" style="--nv:${nivel}" data-edit="1"><span class="ctp-chev"></span>${ic}
+    <input id="ctpe-xp" class="ctp-ed-in" value="${H(e.name||'')}" placeholder="${ph}" maxlength="40" onkeydown="_xpEdTecla(event)" oninput="_xp.edit.name=this.value">
+    <button type="button" class="ctp-ed-ok" onclick="_xpEdSalvar()" title="Salvar (Enter)" aria-label="Salvar"><svg class="ic sm" aria-hidden="true"><use href="#i-check"/></svg></button>
+    <button type="button" class="ctp-ed-x" onclick="_xpEdCancelar()" title="Cancelar (Esc)" aria-label="Cancelar"><svg class="ic sm" aria-hidden="true"><use href="#i-x"/></svg></button></div>`;
+  if(_xp.kind==='acc'){
+    h+=`<div class="xp-extra"><select class="xp-sel" aria-label="Tipo da conta" onchange="_xp.edit.type=this.value;_xpRedesenharMantendo()">${ATYPES.map(t=>`<option ${e.type===t.t?'selected':''}>${t.t}</option>`).join('')}</select>
+      <div class="xp-ini"><span>Saldo inicial</span>${moneyInput('xp-ini',e.ini||'','_xp.edit.ini=$v',{neg:true,label:'Saldo inicial'})}</div></div>`;
+  }
+  return h;
+}
+function _xpRedesenharMantendo(){ const i=document.getElementById('ctpe-xp'); if(i&&_xp.edit) _xp.edit.name=i.value; _xpDesenhar(true); }
+function _xpArvoreHtml(){
+  let h='';
+  _xpLinhas().forEach(l=>{
+    if(l.sec){ h+=`<div class="ctp-sec">${l.sec}</div>`; return; }
+    if(l.novo){ h+=_xpEditorHtml(l.nivel); return; }
+    const x=l.x;
+    if(_xp.edit&&!_xp.edit.novo&&_xp.edit.id==x.id){ h+=_xpEditorHtml(l.nivel); return; }
+    const sel=x.id==_xp.selId, hl=x.id==_xp.hl;
+    const chev=l.temFilhos?`<span class="ctp-chev" onclick="event.stopPropagation();_xpExpandir(${x.id})" role="button" aria-label="${l.aberto?'Recolher':'Expandir'}"><svg class="ic sm" aria-hidden="true"><use href="#i-chevron-${l.aberto?'down':'right'}"/></svg></span>`:`<span class="ctp-chev"></span>`;
+    const ic=_xp.kind==='acc'?accIcon(x.type,'sm'):`<svg class="ic sm" aria-hidden="true" style="flex-shrink:0;opacity:.75"><use href="#i-${l.temFilhos?'users':'user'}"/></svg>`;
+    const extra=_xp.kind==='acc'?`${_isSharedAcc(x.id)?'<span class="ctp-nsub" title="Conta compartilhada">🔗</span>':''}<span class="xp-tipo">${H(x.type||'')}</span>`
+      :(l.temFilhos&&!l.aberto?`<span class="ctp-nsub">${famChildren(x.id).length}</span>`:'');
+    h+=`<div class="ctp-row ${l.nivel?'nsub':'n0'} ${hl?'hl':''} ${sel?'sel':''}" style="--nv:${l.nivel}" data-id="${x.id}" role="treeitem" aria-selected="${hl}" onclick="_xpRealcar(${x.id})" ondblclick="_xpConfirmar(${x.id})">${chev}${ic}<span class="ctp-iname">${_ctpMarca(x.name,_xp.busca)}</span>${extra}${sel?'<span class="ctp-atual">atual</span>':''}</div>`;
+  });
+  const q=(_xp.busca||'').trim();
+  if(!h) h=q?`<div class="ctp-vazio">Nada encontrado com “${H(q)}”.<br><button type="button" class="ctp-link" onclick="_xpAdicionar(false,true)">Criar “${H(q)}”</button></div>`
+           :`<div class="ctp-vazio">${_xp.kind==='fam'?'Nenhum membro cadastrado.':'Nenhuma conta cadastrada.'}<br><button type="button" class="ctp-link" onclick="_xpAdicionar(false)">Adicionar</button></div>`;
+  return h;
+}
+function _xpIrmaos(x){
+  if(_xp.kind==='fam') return A.familia.filter(f=>(f.parentId||null)==(x.parentId||null));
+  const arr=_isSharedAcc(x.id)?(A.sharedAccounts||[]):A.accounts; return arr.filter(a=>isCC(a)===isCC(x));
+}
+function _xpBotoesHtml(){
+  const x=_xpItem(_xp.hl);
+  const irm=x?_xpIrmaos(x):[]; const pos=x?irm.findIndex(i=>i.id===x.id):-1;
+  const b=(ic,txt,fn,dis,cls)=>`<button type="button" class="ctp-acao ${cls||''}" onclick="${fn}" ${dis?'disabled':''} title="${txt}"><svg class="ic sm" aria-hidden="true"><use href="#i-${ic}"/></svg><span>${txt}</span></button>`;
+  return b('plus','Adicionar','_xpAdicionar(false)',false)
+    +(_xp.kind==='fam'?b('corner-down-right','Adicionar sub','_xpAdicionar(true)',!x||!!x.parentId):'')
+    +b('pencil','Editar','_xpEditar()',!x)
+    +b('trash-2','Apagar','_xpApagar()',!x,'perigo')
+    +`<div class="ctp-mover">${b('arrow-up','Subir','_xpMover(-1)',!x||pos<=0,'so-ic')}${b('arrow-down','Descer','_xpMover(1)',!x||pos<0||pos>=irm.length-1,'so-ic')}</div>`;
+}
+function _xpRodapeHtml(){
+  const x=_xpItem(_xp.hl);
+  const nome=x?(_xp.kind==='fam'&&x.parentId?((famById(x.parentId)||{}).name+' › '):'')+x.name:'';
+  return `<div class="ctp-escolha">${x?`${_xp.kind==='acc'?accIcon(x.type,'sm'):'<svg class="ic sm" aria-hidden="true"><use href="#i-user"/></svg>'}<span>${H(nome)}</span>`:'<span class="ctp-ph">Nenhum selecionado</span>'}</div>
+    <button type="button" class="ctp-cancel" onclick="_xpClose()">Cancelar</button>
+    <button type="button" class="ctp-okbtn" onclick="_xpConfirmar()" ${x||_xp.edit?'':'disabled'}><svg class="ic sm" aria-hidden="true"><use href="#i-check"/></svg> OK</button>`;
+}
+function _xpDesenhar(focarEditor){
+  if(!_xp) return; const arv=document.getElementById('ctpa-xp'); if(!arv) return;
+  if(_xp.hl!=null&&!_xpItem(_xp.hl)) _xp.hl=null;
+  const st=arv.scrollTop; arv.innerHTML=_xpArvoreHtml(); arv.scrollTop=st;
+  document.getElementById('ctpb-xp').innerHTML=_xpBotoesHtml();
+  document.getElementById('ctpf-xp').innerHTML=_xpRodapeHtml();
+  if(focarEditor){ const i=document.getElementById('ctpe-xp'); if(i){ i.focus({preventScroll:true}); const v=i.value.length; try{i.setSelectionRange(v,v);}catch(e){} _ctpRolarPara(i.closest('.ctp-row'),false);} }
+}
+function _xpFiltrar(){ const i=document.getElementById('ctps-xp'); _xp.busca=i?i.value:''; _xp.edit=null; const q=_normTxt(_xp.busca.trim()); if(q){ const l=_xpLinhas().find(l=>l.x&&_normTxt(l.x.name).includes(q)); _xp.hl=l?l.x.id:null; } _xpDesenhar(); }
+function _xpRealcar(id){ _xp.edit=null; _xp.hl=id; _xpDesenhar(); }
+function _xpExpandir(id,forca){ if(forca===true)_xp.exp.add(id); else if(forca===false)_xp.exp.delete(id); else if(_xp.exp.has(id))_xp.exp.delete(id); else _xp.exp.add(id); _xpDesenhar(); }
+function _xpTeclaJanela(e){ if(e.key==='Escape'&&!_xp.edit){ e.preventDefault(); e.stopPropagation(); _xpClose(); } }
+function _xpTecla(e){
+  if(!_xp||_xp.edit) return;
+  if(['ArrowDown','ArrowUp','Enter','Escape','F2'].includes(e.key)) e.stopPropagation();
+  const vis=_xpLinhas().filter(l=>l.x); const at=vis.findIndex(l=>l.x.id==_xp.hl); const c=at>=0?vis[at]:null;
+  const ir=i=>{ if(!vis.length) return; i=Math.max(0,Math.min(i,vis.length-1)); _xp.hl=vis[i].x.id; _xpDesenhar(); const el=document.querySelector(`#ctpa-xp .ctp-row[data-id="${_xp.hl}"]`); if(el) _ctpRolarPara(el,false); };
+  if(e.key==='ArrowDown'){ e.preventDefault(); ir(at+1); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); ir(at<=0?0:at-1); }
+  else if(e.key==='ArrowRight'&&c&&c.temFilhos&&!c.aberto&&!_xp.busca){ e.preventDefault(); _xpExpandir(c.x.id,true); }
+  else if(e.key==='ArrowLeft'&&c&&!_xp.busca&&e.target.id!=='ctps-xp'){ e.preventDefault(); if(c.aberto) _xpExpandir(c.x.id,false); else if(c.x.parentId){ _xp.hl=c.x.parentId; _xpDesenhar(); } }
+  else if(e.key==='Enter'){ e.preventDefault(); if(_xp.hl!=null) _xpConfirmar(); else if((_xp.busca||'').trim()) _xpAdicionar(false,true); }
+  else if(e.key==='F2'){ e.preventDefault(); _xpEditar(); }
+  else if(e.key==='Escape'){ e.preventDefault(); _xpClose(); }
+}
+function _xpLimparBusca(){ _xp.busca=''; const i=document.getElementById('ctps-xp'); if(i) i.value=''; }
+function _xpAdicionar(sub,daBusca){
+  const x=_xpItem(_xp.hl); const nome=daBusca?(_xp.busca||'').trim():'';
+  _xpLimparBusca();
+  if(_xp.kind==='fam'){
+    let parentId=null; if(sub){ if(!x||x.parentId) return; parentId=x.id; _xp.exp.add(x.id); }
+    _xp.edit={novo:true,parentId,name:nome};
+  } else {
+    _xp.edit={novo:true,name:nome,type:x&&isCC(x)?'Cartão de crédito':'Conta corrente',ini:''};
+  }
+  _xpDesenhar(true);
+}
+function _xpEditar(){
+  const x=_xpItem(_xp.hl); if(!x) return; _xpLimparBusca();
+  if(_xp.kind==='fam'){ if(x.parentId) _xp.exp.add(x.parentId); _xp.edit={novo:false,id:x.id,parentId:x.parentId||null,name:x.name}; }
+  else _xp.edit={novo:false,id:x.id,name:x.name,type:x.type,ini:x.ini||''};
+  _xpDesenhar(true);
+}
+function _xpEdTecla(e){ e.stopPropagation(); if(e.key==='Enter'){ e.preventDefault(); _xpEdSalvar(); } else if(e.key==='Escape'){ e.preventDefault(); _xpEdCancelar(); } }
+function _xpEdCancelar(){ _xp.edit=null; _xpDesenhar(); const a=document.getElementById('ctpa-xp'); if(a) a.focus({preventScroll:true}); }
+function _xpEdSalvar(){
+  const e=_xp.edit; if(!e) return;
+  const i=document.getElementById('ctpe-xp'); if(i) e.name=i.value;
+  let n=(e.name||'').trim(); if(!n){ toast('Informe o nome.','var(--expense)'); return; }
+  n=n.charAt(0).toUpperCase()+n.slice(1);
+  if(_xp.kind==='fam'){
+    const dup=A.familia.find(f=>_normTxt(f.name)===_normTxt(n)&&f.id!==e.id);
+    if(dup){ toast(`Já existe “${dup.name}” na família.`,'var(--amber)'); return; }
+    if(e.novo){ const nf={id:A.nid++,name:n,parentId:e.parentId||null}; A.familia.push(nf); _xp.hl=nf.id; toast(e.parentId?'Membro adicionado!':'Adicionado!','var(--income)'); }
+    else { const it=famById(e.id); if(it){ const old=it.name; it.name=n; _famRenomear(old,n); if(_xp.stateObj!=='csv'&&_xp.stateObj!=='rg'){ const o=(_xp.stateObj==='A.tf'||_xp.stateObj==='tf')?A.tf:A.ff; if(o&&o[_xp.stateKey]===old) o[_xp.stateKey]=n; } } toast('Atualizado!'); }
+  } else {
+    const dup=_allAccounts().find(a=>_normTxt(a.name)===_normTxt(n)&&a.type===e.type&&a.id!==e.id);
+    if(dup){ toast(`Já existe “${dup.name}” (${dup.type}).`,'var(--amber)'); return; }
+    const ini=parseFloat(e.ini)||0;
+    if(e.novo){ const nc={id:A.nid++,name:n,type:e.type,ini,iniDate:'',iniDateActive:false,obs:''}; A.accounts.push(nc); _xp.hl=nc.id; toast('Conta criada!','var(--income)'); }
+    else { const a=_allAccounts().find(x=>x.id===e.id); if(a){ a.name=n; a.type=e.type; a.ini=ini; } toast('Conta atualizada!'); }
+  }
+  _xp.edit=null; scheduleSave(); render(); _xpDesenhar();
+  const a=document.getElementById('ctpa-xp'); if(a) a.focus({preventScroll:true});
+  const el=document.querySelector(`#ctpa-xp .ctp-row[data-id="${_xp.hl}"]`); if(el) _ctpRolarPara(el,false);
+}
+function _xpApagar(){
+  const x=_xpItem(_xp.hl); if(!x) return; _xp.edit=null;
+  if(_xp.kind==='fam') askDelFamItem(x.id); else askDelAcc(x.id);
+}
+function _xpMover(dir){
+  const x=_xpItem(_xp.hl); if(!x) return; _xp.edit=null;
+  const irm=_xpIrmaos(x); const k=irm.findIndex(i=>i.id===x.id), alvo=irm[k+dir]; if(!alvo) return;
+  const arr=_xp.kind==='fam'?A.familia:(_isSharedAcc(x.id)?A.sharedAccounts:A.accounts);
+  const i1=arr.indexOf(x), i2=arr.indexOf(alvo); arr[i1]=alvo; arr[i2]=x;
+  scheduleSave(); render(); _xpDesenhar();
+}
+function _xpConfirmar(id){
+  if(!_xp) return;
+  if(_xp.edit){ _xpEdSalvar(); if(_xp.edit) return; }
+  if(id!=null) _xp.hl=id; const x=_xpItem(_xp.hl); if(!x) return;
+  const {kind,stateObj,stateKey}=_xp; _xpClose();
+  if(kind==='fam'){
+    const nome=x.name;
+    if(stateObj==='csv'){ if(stateKey==='todos') _csvFamTodos(nome); else if(_csvState&&_csvState.rows&&_csvState.rows[stateKey]) _csvSetFam(stateKey,nome); _renderCsvModal(); scheduleSave(); return; }
+    if(stateObj==='rg'){ _rgForm().familia=nome; render(); return; }
+    if(stateObj==='A.tf'||stateObj==='tf'){ A.tf[stateKey]=nome; A.tf._famSug=false; }
+    else if(A.ff) A.ff[stateKey]=nome;
+  } else {
+    if(stateObj==='A.tf'||stateObj==='tf') A.tf[stateKey]=x.id; else if(A.ff) A.ff[stateKey]=x.id;
+  }
+  render();
+}
+// Mantém a janela atualizada quando algo de fora muda os dados (ex.: excluir conta/membro)
+(function(){ const _r=window.render; window.render=function(){ const out=_r.apply(this,arguments); try{ if(_xp&&!_xp.edit) _xpDesenhar(); }catch(e){} return out; }; })();
+window.addEventListener('resize',()=>{ if(_xp) _ctpPosicionar('xp'); });
+
 </script>
 </body>
 </html>
