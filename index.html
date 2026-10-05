@@ -7471,6 +7471,116 @@ function _aplicarAutoCat(rows){
 // ── Parsers de formatos conhecidos ──
 // Texto salvo em UTF-8 e relido como Latin-1 ("DISPONÃVEL") → volta ao normal
 function _fixMojibake(t){ t=String(t||''); if(!/Ã[\u0080-¿]|Â[\u0080-¿]/.test(t)) return t; try{ return decodeURIComponent(escape(t)); }catch(e){ return t; } }
+// ── OFX / QFX (Open Financial Exchange) ──
+// Aceita OFX 1.x (SGML, tags sem fechamento — o que quase todo banco brasileiro exporta) e 2.x (XML).
+// Usa o FITID de cada transação para não importar duas vezes o mesmo lançamento, mesmo que você
+// edite a descrição ou o valor depois.
+function _ehOfx(u8, ext){
+  if (ext === 'ofx' || ext === 'qfx') return true;
+  const ini = new TextDecoder('latin1').decode(u8.subarray(0, 4000)).toUpperCase();
+  return /OFXHEADER\s*[:=]/.test(ini) || /<OFX>/.test(ini);
+}
+function _ofxTexto(u8){
+  const ini = new TextDecoder('latin1').decode(u8.subarray(0, 600)).toUpperCase();
+  // OFX 1.x declara o charset no cabeçalho; bancos BR usam quase sempre 1252
+  if (/CHARSET\s*:\s*(1252|ISO-?8859-?1|LATIN)/.test(ini) && !/ENCODING\s*:\s*UTF-?8/.test(ini)) {
+    const t = new TextDecoder('utf-8', { fatal: false }).decode(u8);
+    // alguns bancos dizem 1252 mas mandam UTF-8 — se decodifica limpo, é UTF-8
+    try { new TextDecoder('utf-8', { fatal: true }).decode(u8); return t; } catch(e) { return new TextDecoder('windows-1252').decode(u8); }
+  }
+  return _textoDeBytes(u8);
+}
+function _ofxEnt(v){
+  return String(v || '').replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&apos;/gi, "'")
+    .replace(/&#(\d+);/g, (m, n) => String.fromCharCode(+n)).replace(/&amp;/gi, '&').trim();
+}
+// valor de uma tag "folha" dentro de um bloco (funciona com ou sem </TAG>)
+function _ofxTag(bloco, tag){
+  const m = bloco.match(new RegExp('<' + tag + '>([^<\\r\\n]*)', 'i'));
+  return m ? _ofxEnt(m[1]) : '';
+}
+function _ofxBlocos(txt, tag){
+  // com fechamento explícito (XML e a maioria dos SGML para agregados)
+  const out = []; const re = new RegExp('<' + tag + '>([\\s\\S]*?)</' + tag + '>', 'gi'); let m;
+  while ((m = re.exec(txt))) out.push(m[1]);
+  if (out.length) return out;
+  // SGML sem </TAG>: corta do <TAG> até o próximo <TAG> ou fim do agregado pai
+  const partes = txt.split(new RegExp('<' + tag + '>', 'i')).slice(1);
+  return partes.map(p => p.split(/<\/(BANKTRANLIST|STMTRS|CCSTMTRS)>/i)[0]);
+}
+function _ofxData(v){
+  const m = String(v || '').match(/^(\d{4})(\d{2})(\d{2})/);
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+}
+function _ofxValor(v){
+  let t = String(v || '').trim().replace(/\s/g, ''); if (!t) return null;
+  // aceita 1234.56, -1234.56, 1234,56 e 1.234,56 (alguns bancos BR usam vírgula)
+  if (/,\d{1,2}$/.test(t)) t = t.replace(/\./g, '').replace(',', '.');
+  else t = t.replace(/,/g, '');
+  const n = parseFloat(t); return isFinite(n) ? Math.round(n * 100) / 100 : null;
+}
+function _ofxDesc(name, memo){
+  const n = (name || '').replace(/\s+/g, ' ').trim(), m = (memo || '').replace(/\s+/g, ' ').trim();
+  if (!n) return m; if (!m) return n;
+  const nn = _normTxt(n), mm = _normTxt(m);
+  if (mm.includes(nn)) return m; if (nn.includes(mm)) return n;
+  return n + ' · ' + m;
+}
+const _OFX_DEBITO = /^(DEBIT|PAYMENT|CHECK|FEE|SRVCHG|ATM|POS|CASH|DIRECTDEBIT|REPEATPMT)$/;
+function parseOfx(text){
+  const txt = text.replace(/^﻿/, '');
+  if (!/<OFX>/i.test(txt)) return { rows: [], format: 'OFX inválido' };
+  const ehCartao = /<CCSTMTRS>/i.test(txt);
+  const org = _ofxTag(txt, 'ORG') || _ofxTag(txt, 'FID');
+  const bankId = _ofxTag(txt, 'BANKID');
+  const acctId = _ofxTag(txt, 'ACCTID');
+  const branch = _ofxTag(txt, 'BRANCHID');
+  const dtIni = _ofxData(_ofxTag(txt, 'DTSTART')), dtFim = _ofxData(_ofxTag(txt, 'DTEND'));
+  const balBloco = _ofxBlocos(txt, 'LEDGERBAL')[0] || '';
+  const saldo = balBloco ? _ofxValor(_ofxTag(balBloco, 'BALAMT')) : null;
+  const saldoData = balBloco ? _ofxData(_ofxTag(balBloco, 'DTASOF')) : null;
+  const chaveConta = [bankId || org, branch, acctId].filter(Boolean).join('/');
+  const rows = [], vistos = new Set(); let repetidos = 0, ignorados = 0;
+  _ofxBlocos(txt, 'STMTTRN').forEach(b => {
+    const date = _ofxData(_ofxTag(b, 'DTPOSTED')) || _ofxData(_ofxTag(b, 'DTUSER'));
+    let val = _ofxValor(_ofxTag(b, 'TRNAMT'));
+    const tipo = _ofxTag(b, 'TRNTYPE').toUpperCase();
+    let desc = _ofxDesc(_ofxTag(b, 'NAME') || _ofxTag(b, 'PAYEEID'), _ofxTag(b, 'MEMO'));
+    const chk = _ofxTag(b, 'CHECKNUM');
+    if (!desc) desc = (tipo ? tipo.charAt(0) + tipo.slice(1).toLowerCase() : 'Lançamento') + (chk ? ' ' + chk : '');
+    if (!date || val === null || val === 0) { ignorados++; return; }
+    // banco que manda valor positivo com TRNTYPE de débito
+    if (val > 0 && _OFX_DEBITO.test(tipo) && !ehCartao) val = -val;
+    const fitid = _ofxTag(b, 'FITID');
+    // alguns bancos reaproveitam o FITID (ex.: sequencial do dia) — data e valor entram na chave para não confundir lançamentos diferentes
+    const ofxId = fitid ? [(chaveConta || 'ofx'), fitid, date, val.toFixed(2)].join('|') : null;
+    if (ofxId) { if (vistos.has(ofxId)) { repetidos++; return; } vistos.add(ofxId); }
+    rows.push({ date, desc, val, ...(ofxId ? { ofxId } : {}) });
+  });
+  rows.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const fmtD = d => d ? d.split('-').reverse().join('/') : '';
+  const banco = org || (bankId ? 'banco ' + bankId : '');
+  return {
+    rows,
+    format: 'OFX' + (ehCartao ? ' · cartão' : ' · extrato') + (banco ? ' · ' + banco : ''),
+    ofx: { cartao: ehCartao, banco, bankId, branch, acctId, ini: dtIni, fim: dtFim, saldo, saldoData, repetidos, ignorados,
+           periodo: dtIni && dtFim ? fmtD(dtIni) + ' a ' + fmtD(dtFim) : '' },
+  };
+}
+// conta do app cujo nome/observação traz o final do número da conta do arquivo
+function _ofxContaSugerida(info){
+  const dig = String(info.acctId || '').replace(/\D/g, '');
+  if (dig.length < 4) return null;
+  const fim = dig.slice(-4).replace(/^0+/, '') || dig.slice(-4);
+  const achou = _allAccounts().filter(a => {
+    const t = ((a.name || '') + ' ' + (a.obs || '')).replace(/[.\-\s]/g, '');
+    return t.includes(dig) || new RegExp('(^|\\D)0*' + fim + '(\\D|$)').test(t);
+  });
+  return achou.length === 1 ? achou[0].id : null;
+}
+function _ofxIdsExistentes(){ return new Set(A.txs.map(t => t.ofxId).filter(Boolean)); }
+
 function csvDetectAndParse(text) {
   const res = _csvDetectAndParse(text);
   res.rows.forEach(r => { r.desc = _fixMojibake(r.desc).replace(/\s+/g, ' ').trim(); if (r.familia) r.familia = _fixMojibake(r.familia); });
@@ -7822,7 +7932,7 @@ function _renderCsvModal() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div>
           <div style="font-size:17px;font-weight:700;color:${textPrimary}">Importar fatura ou extrato</div>
-          <div style="font-size:12px;color:${textSec};margin-top:2px">Nubank, Inter, BB, Bradesco, Itaú e outros</div>
+          <div style="font-size:12px;color:${textSec};margin-top:2px">OFX, PDF, CSV ou Excel · Nubank, Inter, BB, Bradesco, Itaú e outros</div>
         </div>
         <button onclick="closeCsvImport()" aria-label="Fechar" style="background:none;border:none;font-size:20px;cursor:pointer;color:${textSec};padding:0;line-height:1">✕</button>
       </div>
@@ -7842,13 +7952,14 @@ function _renderCsvModal() {
         ondrop="event.preventDefault();this.style.borderColor='${isDark?'#2e3d55':'#CBD5E1'}';this.style.background='';_csvHandleFile(event.dataTransfer.files[0])">
         <div style="font-size:36px;margin-bottom:8px">📂</div>
         <div style="font-size:14px;font-weight:600;color:${textPrimary}">Arraste o arquivo aqui ou clique para selecionar</div>
-        <div style="font-size:12px;color:${textSec};margin-top:4px">Fatura do cartão em <strong>PDF</strong> ou extrato .csv, .xls, .xlsx</div>
+        <div style="font-size:12px;color:${textSec};margin-top:4px">Extrato <strong>OFX</strong>, fatura do cartão em <strong>PDF</strong> ou planilha .csv, .xls, .xlsx</div>
       </div>
-      <input type="file" id="csv-file-inp" accept=".pdf,application/pdf,.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="_csvHandleFile(this.files[0])">
+      <input type="file" id="csv-file-inp" accept=".pdf,application/pdf,.ofx,.qfx,application/x-ofx,application/vnd.intu.qfx,.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="_csvHandleFile(this.files[0])">
 
       <div style="margin-top:14px;padding:10px 12px;background:${isDark?'#0a0f1a':'#F8FAFC'};border-radius:10px;font-size:11px;color:${textSec};line-height:1.7">
         <strong style="color:${textPrimary}">Formatos suportados:</strong><br>
         <strong style="color:${textPrimary}">PDF da fatura do cartão:</strong> ${iaCfg().motor==='claude'?'lido pelo Claude (IA) — funciona até com PDF escaneado':'lido no próprio aparelho, sem enviar nada para fora'} · <a href="#" onclick="closeCsvImport();A.tab='armazenamento';render();return false" style="color:var(--blue)">configurar IA</a><br>
+        <strong style="color:${textPrimary}">OFX (recomendado):</strong> extrato de conta ou de cartão baixado no internet banking (“Exportar › OFX/Money”) — valores com sinal certo e um código único por lançamento, então reimportar o mesmo período não duplica<br>
         <strong style="color:${textPrimary}">Extrato ou planilha:</strong> Nubank, Inter, Bradesco, BB, Itaú (até o .xls do Itaú salvo como .csv) · qualquer CSV, XLS ou XLSX com data, descrição e valor (ou débito/crédito; colunas de tipo, categoria e membro são aproveitadas)<br>
         <strong style="color:${textPrimary}">Categorias:</strong> ⚡ suas regras › 📄 categoria da planilha › ✨ IA${iaCfg().motor==='claude'&&iaCfg().chave?'':' (desligada)'} › 🕘 histórico › 🔤 palavra-chave — a mesma lógica da fatura em PDF
       </div>
@@ -7879,8 +7990,11 @@ function _renderCsvModal() {
     .concat(A.txs.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
   );
 
+  const _ofxIds = s.recat ? new Set() : _ofxIdsExistentes();
+  const _ehDup = r => existingHashes.has(rowHash(r)) || !!(r.ofxId && _ofxIds.has(r.ofxId));
+
   const allCount = rows.length;
-  const dupCount = rows.filter(r => existingHashes.has(rowHash(r))).length;
+  const dupCount = rows.filter(_ehDup).length;
   const selCount = selected.size;
 
   rows.forEach(r => { if (r.fam === undefined) _csvFamInicial(r); });
@@ -7910,7 +8024,7 @@ function _renderCsvModal() {
   const _nSel = selected.size, _nNao = rows.length - selected.size;
   const _visSel = _vis.filter(i => selected.has(i)).length;
   const rowsHtml = (_ordemVis.length ? '' : `<tr><td colspan="6" style="padding:22px;text-align:center;font-size:13px;color:${textSec}">${_csvFiltroTermos().length?`Nenhuma linha com “${H(s.filtro||'')}” na descrição`:'Nenhuma linha aqui'}${_ver==='sim'?' entre as marcadas':_ver==='nao'?' entre as não marcadas':''}.</td></tr>`) + _ordemVis.map(i => { const r = rows[i];
-    const isDup = existingHashes.has(rowHash(r));
+    const isDup = _ehDup(r);
     const isSel = selected.has(i);
     const type = r.val >= 0 ? 'receita' : 'despesa';
     const guess = csvGuessCategory(r.desc, r.val);
@@ -8339,6 +8453,7 @@ function _textoDeBytes(u8){
 function _csvHandleFile(file) {
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
+  if (_csvState) _csvState.ofx = null;
   if (ext === 'pdf') { _pdfHandleFile(file); return; }
 
   async function processar(res) {
@@ -8364,12 +8479,15 @@ function _csvHandleFile(file) {
       ])
     );
     function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
+    const ofxIds = _ofxIdsExistentes();
     const selected = new Set();
     rows.forEach((r, i) => {
       _csvFamInicial(r);
-      if (!existingHashes.has(rowHash(r))) selected.add(i);
+      if (!existingHashes.has(rowHash(r)) && !(r.ofxId && ofxIds.has(r.ofxId))) selected.add(i);
     });
-    Object.assign(_csvState, { rows, format, selected, fileName: file.name, step: 'preview', filtro: '', verSel: 'todos', catCont: cont, futuros: res.futuros || 0, semSinal: !!res.semSinal, pdf: null });
+    // OFX: se o número da conta do arquivo bate com uma única conta sua, já deixa ela como destino
+    if (res.ofx) { const sug = _ofxContaSugerida(res.ofx); if (sug != null) { _csvState.accId = sug; res.ofx.contaAuto = true; } }
+    Object.assign(_csvState, { rows, format, selected, fileName: file.name, step: 'preview', filtro: '', verSel: 'todos', catCont: cont, futuros: res.futuros || 0, semSinal: !!res.semSinal, pdf: null, ofx: res.ofx || null });
     _renderCsvModal();
   }
 
@@ -8377,7 +8495,12 @@ function _csvHandleFile(file) {
   reader.onload = e => {
     const u8 = new Uint8Array(e.target.result);
     try {
-      if (_arqTipo(u8) === 'excel' || ext === 'xls' || ext === 'xlsx') {
+      if (_ehOfx(u8, ext)) {
+        const res = parseOfx(_ofxTexto(u8));
+        res.rows.forEach(r => { r.desc = _fixMojibake(r.desc).replace(/\s+/g, ' ').trim(); });
+        if (!res.rows.length) { toast('Não encontrei lançamentos neste OFX. Confira se o período exportado tem movimentação.', 'var(--expense)', 6000); return; }
+        processar(res);
+      } else if (_arqTipo(u8) === 'excel' || ext === 'xls' || ext === 'xlsx') {
         if (typeof XLSX === 'undefined') { toast('Biblioteca de leitura de Excel ainda carregando. Aguarde um instante e tente novamente.', '#D97706', 4000); return; }
         // datas como número de série + formato BR (cellDates:true desloca um dia em alguns fusos)
         const _protoAntes = new Set(Object.getOwnPropertyNames(Object.prototype));
@@ -8546,6 +8669,14 @@ function _csvCatResumoHtml(){
   const notas=[];
   if(s.recat&&s.recatSem) notas.push(`${s.recatSem} lançamento(s) sem pista (nenhuma regra, histórico${s.recatIA?', IA':''} ou palavra-chave): estão na lista desmarcados. Escolha a categoria na linha — ou filtre e use “Categoria p/ filtrados” — e a linha é marcada sozinha.`);
   if(s.futuros) notas.push(`${s.futuros} lançamento(s) futuro(s) do extrato (agendados) ficaram de fora.`);
+  if(s.ofx){ const o=s.ofx, fm=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const conta=[o.branch?'ag. '+o.branch:'',o.acctId?(o.cartao?'cartão ':'conta ')+o.acctId:''].filter(Boolean).join(' · ');
+    notas.push(`Arquivo OFX${conta?' de '+conta:''}${o.periodo?', período '+o.periodo:''}${o.saldo!=null?`, saldo informado pelo banco ${fm(o.saldo)}${o.saldoData?' em '+o.saldoData.split('-').reverse().join('/'):''}`:''}.`);
+    if(o.contaAuto) notas.push('A conta de destino foi escolhida pelo número da conta no arquivo — confira acima.');
+    if(o.repetidos) notas.push(`${o.repetidos} transação(ões) repetida(s) dentro do próprio arquivo (mesmo código FITID) foram ignoradas.`);
+    if(o.ignorados) notas.push(`${o.ignorados} linha(s) sem data ou com valor zero ficaram de fora.`);
+    if(o.cartao) notas.push('OFX de cartão: as compras entram na data da compra; a fatura é calculada pelo fechamento do cartão.');
+  }
   if(s.semSinal) notas.push('A planilha não tem sinal nem coluna de tipo: tratei como despesa, menos o que a categoria ou a descrição indicam ser receita.');
   if(iaOff) notas.push('Dica: ligue o Claude em Configurações › Armazenamento para sugerir categorias das linhas que ficaram em “Outros”.');
   return `<div class="csv-cat-resumo"><strong>Categorização automática:</strong> ${ped.join('')}</div>${notas.length?`<div class="csv-cat-nota">${notas.map(H).join(' ')}</div>`:''}`;
@@ -8628,6 +8759,8 @@ function _csvConfirmImport() {
       obs: [_aj.obs, r.finalCartao ? `Cartão final ${r.finalCartao}${r.titular ? ' · ' + r.titular : ''}` : ''].filter(Boolean).join(' · '),
       ...(r.parcelas ? { parcela: r.parcela, parcelas: r.parcelas } : {}),
       ...(_csvState.pdf ? { origem: 'pdf' } : {}),
+      ...(_csvState.ofx ? { origem: 'ofx' } : {}),
+      ...(r.ofxId ? { ofxId: r.ofxId } : {}),
       planned: false,
       done: true,
       familia,
