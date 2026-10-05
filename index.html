@@ -8478,7 +8478,7 @@ function _arqTipo(u8){
 }
 function _textoDeBytes(u8){
   const t=new TextDecoder('utf-8').decode(u8);
-  return t.includes(' ')?new TextDecoder('windows-1252').decode(u8):t;   // CSV de banco costuma vir em Latin-1
+  return t.includes('�')?new TextDecoder('windows-1252').decode(u8):t;   // CSV de banco costuma vir em Latin-1
 }
 
 function _csvHandleFile(file) {
