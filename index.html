@@ -3,7 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://api.anthropic.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; worker-src 'self' blob: https://cdn.jsdelivr.net; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <!-- App instalável (PWA) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#ffffff" id="pwa-theme">
+  <meta name="application-name" content="Finanças">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Finanças">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://cdn.jsdelivr.net https://api.anthropic.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com; worker-src 'self' blob: https://cdn.jsdelivr.net; manifest-src 'self'; frame-src https://*.firebaseapp.com; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>Minhas Finanças</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +65,25 @@
   --font-sans:'DM Sans',system-ui,sans-serif;
   --font-mono:'DM Mono',monospace;
 }
+
+/* ─── App instalável (PWA) ─── */
+#pwa-install-btn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;border:none;border-radius:var(--radius-lg);padding:7px 11px;font-size:12px;font-weight:600;font-family:var(--font-sans);cursor:pointer;flex-shrink:0;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+#pwa-install-btn[hidden]{display:none}
+#pwa-install-btn:hover{filter:brightness(1.08)}
+#pwa-install-btn:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+.sidebar-footer:has(#session-chip[style*="flex"]) #pwa-install-btn span{display:none}
+.pwa-bar{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:100001;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 12px 10px 16px;border-radius:14px;background:#0F172A;color:#e2e8f0;font:500 13px/1.4 var(--font-sans);box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.pwa-bar button{border:none;border-radius:9px;padding:7px 12px;font:600 12.5px var(--font-sans);cursor:pointer}
+.pwa-bar .pwa-ok{background:#2563EB;color:#fff}
+.pwa-bar .pwa-x{background:none;color:#94a3b8;padding:7px 8px}
+.pwa-ios{position:fixed;inset:0;z-index:100002;background:rgba(15,23,42,.5);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.pwa-ios>div{background:var(--color-background-primary,#fff);color:var(--color-text-primary,#0F172A);border-radius:18px;padding:20px;max-width:380px;width:100%;font:400 14px/1.55 var(--font-sans);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.pwa-ios h3{margin:0 0 8px;font-size:16px}
+.pwa-ios ol{margin:0 0 14px;padding-left:20px}
+.pwa-ios button{width:100%;border:none;border-radius:10px;padding:10px;background:#2563EB;color:#fff;font:600 14px var(--font-sans);cursor:pointer}
+html.dark .pwa-ios>div{background:#0f1e35;color:#e0eeff}
+/* rodando como app: respeita o entalhe/barra de gestos */
+@media (display-mode: standalone){ body{padding-bottom:env(safe-area-inset-bottom)} }
 
 /* ─── DARK TOKENS ─── */
 html.dark{
@@ -1607,6 +1637,7 @@ html.dark .cp-ic{background:#162035}
     </div>
   </nav>
   <div class="sidebar-footer">
+    <button id="pwa-install-btn" type="button" onclick="pwaInstalar()" title="Instalar o Minhas Finanças como aplicativo" aria-label="Instalar aplicativo" hidden><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg><span>Instalar app</span></button>
     <button id="dk-btn" onclick="toggleDark()" title="Alternar modo escuro/claro" aria-label="Alternar modo escuro/claro"><svg class="ic" aria-hidden="true"><use href="#i-moon"/></svg></button>
     <div id="session-chip" style="display:none;align-items:center;gap:6px;padding:4px 10px 4px 6px;border-radius:99px;border:1.5px solid var(--gray-200);background:var(--color-background-secondary);cursor:pointer" onclick="appLogout()" title="Clique para sair">
       <span id="session-avatar" style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#2563EB,var(--transfer));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0"></span>
@@ -10607,6 +10638,95 @@ function _xpConfirmar(id){
 (function(){ const _r=window.render; window.render=function(){ const out=_r.apply(this,arguments); try{ if(_xp&&!_xp.edit) _xpDesenhar(); }catch(e){} return out; }; })();
 window.addEventListener('resize',()=>{ if(_xp) _ctpPosicionar('xp'); });
 
+</script>
+<script>
+/* ─── App instalável (PWA): service worker, botão "Instalar app", aviso de versão nova e atalhos ─── */
+(function(){
+  var podeSW = 'serviceWorker' in navigator && /^https?:$/.test(location.protocol);
+  var ehApp = function(){ return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches || navigator.standalone === true; };
+  var ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var convite = null;
+
+  function botao(){ return document.getElementById('pwa-install-btn'); }
+  function mostrarBotao(on){ var b = botao(); if (b) b.hidden = !on; }
+
+  // Cor da barra do sistema acompanha o tema claro/escuro do app
+  window.pwaTema = function(){
+    var m = document.getElementById('pwa-theme'), t = document.querySelector('.topbar');
+    if (m) m.setAttribute('content', t ? getComputedStyle(t).backgroundColor : (document.documentElement.classList.contains('dark') ? '#0f1e35' : '#ffffff'));
+  };
+  new MutationObserver(function(){ window.pwaTema(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); convite = e; mostrarBotao(true); });
+  window.addEventListener('appinstalled', function(){
+    convite = null; mostrarBotao(false);
+    try { toast('✅ Aplicativo instalado! Procure “Finanças” na tela inicial ou no menu Iniciar.', 'var(--income)', 5000); } catch(e){}
+  });
+
+  window.pwaInstalar = function(){
+    if (convite) {
+      convite.prompt();
+      convite.userChoice.finally(function(){ convite = null; mostrarBotao(false); });
+      return;
+    }
+    if (ehIOS) {
+      var d = document.createElement('div'); d.className = 'pwa-ios'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Instalar no iPhone/iPad');
+      d.innerHTML = '<div><h3>Instalar no iPhone / iPad</h3><ol><li>Abra este endereço no <strong>Safari</strong>.</li><li>Toque em <strong>Compartilhar</strong> (quadrado com seta para cima).</li><li>Escolha <strong>Adicionar à Tela de Início</strong> e confirme.</li></ol><button type="button">Entendi</button></div>';
+      d.addEventListener('click', function(ev){ if (ev.target === d || ev.target.tagName === 'BUTTON') d.remove(); });
+      document.body.appendChild(d);
+    }
+  };
+
+  function avisoAtualizar(sw){
+    if (document.getElementById('pwa-update')) return;
+    var bar = document.createElement('div'); bar.id = 'pwa-update'; bar.className = 'pwa-bar'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span>Nova versão do app disponível.</span><button type="button" class="pwa-ok">Atualizar</button><button type="button" class="pwa-x" aria-label="Agora não">✕</button>';
+    bar.querySelector('.pwa-ok').onclick = function(){
+      // salva antes de recarregar, se houver algo pendente
+      try { if (typeof flushSave === 'function') flushSave(); } catch(e){}
+      this.disabled = true; this.textContent = 'Atualizando…';
+      setTimeout(function(){ sw.postMessage('SKIP_WAITING'); }, 900);
+    };
+    bar.querySelector('.pwa-x').onclick = function(){ bar.remove(); };
+    document.body.appendChild(bar);
+  }
+
+  // Atalhos do ícone (?acao=novo / ?acao=importar): roda quando o app terminar de abrir
+  function atalho(){
+    var p = new URLSearchParams(location.search), acao = p.get('acao');
+    if (p.has('acao') || p.has('origem')) history.replaceState(null, '', location.pathname);
+    if (!acao) return;
+    var t0 = Date.now();
+    (function tentar(){
+      var login = document.getElementById('app-login-screen'), main = document.getElementById('main');
+      var pronto = window._bootDone && Date.now() - t0 > 600 && main && main.children.length && (!login || getComputedStyle(login).display === 'none');
+      if (pronto) {
+        try { if (acao === 'novo' && typeof quickNew === 'function') quickNew('lanc'); else if (acao === 'importar' && typeof openCsvImport === 'function') openCsvImport(); } catch(e){}
+        return;
+      }
+      if (Date.now() - t0 < 90000) setTimeout(tentar, 400);
+    })();
+  }
+
+  window.addEventListener('load', function(){
+    window.pwaTema();
+    atalho();
+    if (!ehApp() && ehIOS) mostrarBotao(true);   // iOS não tem convite automático: o botão mostra o passo a passo
+    if (!podeSW) return;
+    var recarregando = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){ if (recarregando) return; recarregando = true; location.reload(); });
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      if (reg.waiting && navigator.serviceWorker.controller) avisoAtualizar(reg.waiting);
+      reg.addEventListener('updatefound', function(){
+        var nv = reg.installing; if (!nv) return;
+        nv.addEventListener('statechange', function(){ if (nv.state === 'installed' && navigator.serviceWorker.controller) avisoAtualizar(nv); });
+      });
+      // app aberto o dia todo: procura versão nova a cada hora e ao voltar para ele
+      setInterval(function(){ reg.update().catch(function(){}); }, 3600000);
+      document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') reg.update().catch(function(){}); });
+    }).catch(function(err){ console.warn('[PWA] service worker não registrado:', err); });
+  });
+})();
 </script>
 </body>
 </html>
