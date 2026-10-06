@@ -583,6 +583,8 @@ html.dark .rg-auto{color:#fcd34d;background:#2a1f06;border-color:#b45309}
 html.dark .rg-chip{border-color:#1e2d45}
 .rg-opcao{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-secondary);text-transform:none;letter-spacing:0;font-weight:500;margin:0;cursor:pointer}
 .rg-opcao input{width:16px!important;height:16px!important;min-height:0!important;padding:0!important;accent-color:var(--amber)}
+.csv-conc{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;font-size:10.5px;font-weight:700;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;cursor:help;vertical-align:1px}
+html.dark .csv-conc{background:#3a2a06;color:#fbbf24;border-color:#b45309}
 .csv-cat-cel{display:flex;align-items:center;gap:6px;justify-content:flex-start}
 html.dark .rg-form{background:#0b1729;border-color:#1e2d45}
 html.dark .rg-lista,html.dark .rg-busca{border-color:#1e2d45}
@@ -3504,6 +3506,7 @@ function rFixas(m){
           <span id="fixa-parc-preview" style="font-size:12px;font-weight:600;white-space:nowrap">${fixaParcEndLabel(A.ff)}</span>
         </div>
       </div>
+      <div class="fr"><label>Membro da família</label><select onchange="A.ff.familia=this.value" aria-label="Membro da família"><option value="" ${!A.ff.familia?'selected':''}>— Nenhum —</option>${famNames().map(fm=>`<option value="${H(fm)}" ${fm===(A.ff.familia||'')?'selected':''}>${H(fm)}</option>`).join('')}${A.ff.familia&&!famNames().includes(A.ff.familia)?`<option value="${H(A.ff.familia)}" selected>${H(A.ff.familia)} (não está mais na família)</option>`:''}</select></div>
       <div class="fr full"><label>Observação</label><textarea oninput="A.ff.obs=this.value">${H(A.ff.obs)}</textarea></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
@@ -3517,24 +3520,61 @@ function rFixas(m){
 }
 
 
-function marcarPago(id,mes){
+function marcarPago(id,mes,forcarNovo){
   const f=A.fixas.find(x=>x.id===id);if(!f)return;
   if(!f.pagamentos)f.pagamentos={};
   const[y,mo]=mes.split('-');const d=String(f.diaVenc).padStart(2,'0');
+  // O pagamento já veio do extrato importado? Liga a fixa a ele em vez de criar outro lançamento.
+  if(!forcarNovo){
+    const venc=`${y}-${mo}-${d}`, fixas=_fixaTxMapa();
+    const cand=A.txs.filter(t=>t.type===f.type&&t.date&&t.accId==f.accId&&!fixas.has(t.id)&&!t.planned)
+      .map(t=>({t,av:_concAvaliar(t,f.desc,venc,f.val,{f})})).filter(x=>x.av).sort((a,b)=>a.av.score-b.av.score)[0];
+    if(cand){
+      const t=cand.t;
+      f.pagamentos[mes]=t.id; f.pagVinc={...(f.pagVinc||{}),[mes]:true};
+      if(f.familia) t.familia=f.familia;
+      render();
+      _showUndoToast(`🔗 Já estava no extrato: “${t.desc}” em ${D(t.date)} (${R(t.val)}). Liguei a conta fixa a ele — nenhum lançamento novo.`,
+        ()=>{ delete f.pagamentos[mes]; if(f.pagVinc) delete f.pagVinc[mes]; marcarPago(id,mes,true); });
+      return;
+    }
+  }
+  // Data e valor do pagamento: o lançamento entra no extrato no dia em que você pagou, não no vencimento
+  const venc=`${y}-${mo}-${d}`, hj=today();
+  const sug=_concDias(hj,venc)<=20?hj:venc;   // marcando perto do vencimento → hoje; mês distante → o próprio vencimento
+  const rec=f.type==='receita';
+  _showConfirm(rec?'Confirmar recebimento':'Confirmar pagamento',
+    `<div style="text-align:left">“<strong>${H(f.desc)}</strong>” · vence ${D(venc)}</div>
+     <div style="display:flex;gap:10px;margin-top:12px;text-align:left">
+       <label style="flex:1;font-size:12px;font-weight:600">Data em que ${rec?'recebeu':'pagou'}<input type="date" id="fx-pg-data" value="${sug}" style="display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:inherit;font:inherit"></label>
+       <label style="flex:1;font-size:12px;font-weight:600">Valor ${rec?'recebido':'pago'}<input id="fx-pg-val" inputmode="decimal" value="${f.val.toFixed(2).replace('.',',')}" style="display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:inherit;font:inherit;text-align:right"></label>
+     </div>`,
+    ()=>{
+      const dt=(document.getElementById('fx-pg-data')||{}).value||venc;
+      const vt=String((document.getElementById('fx-pg-val')||{}).value||'').replace(/R\$|\s/g,''); const v=parseFloat(vt.includes(',')?vt.replace(/\./g,'').replace(',','.'):vt);
+      _fixaCriarPagamento(f,mes,dt,v&&v>0?v:f.val);
+    },
+    {okLabel:rec?'✓ Recebido':'✓ Pago',okColor:'var(--income)',icon:rec?'💰':'🧾'});
+  setTimeout(()=>{const el=document.getElementById('fx-pg-data');if(el)el.focus();},60);
+}
+function _fixaCriarPagamento(f,mes,data,val){
+  if(!f.pagamentos)f.pagamentos={};
   const txId=A.nid++;
-  A.txs.push({id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,mes),val:f.val,date:`${y}-${mo}-${d}`,catId:f.catId,accId:f.accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true});
+  A.txs.push({id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,mes),val,date:data,catId:f.catId,accId:f.accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true,familia:f.familia||''});
   f.pagamentos[mes]=txId;
-  toast(f.type==='receita'?'Recebido! Lançamento criado.':'Lançamento criado.','var(--income)');render();
+  toast((f.type==='receita'?'Recebido em ':'Pago em ')+D(data)+' — lançamento criado.','var(--income)');render();
 }
 function desmarcarPago(id,mes){
   const f=A.fixas.find(x=>x.id===id);if(!f||!f.pagamentos)return;
   const txId=f.pagamentos[mes];
-  if(typeof txId==='number')A.txs=A.txs.filter(t=>t.id!==txId);
-  delete f.pagamentos[mes];
-  toast('Desmarcado e lançamento removido.','#888780');render();
+  const vinc=!!(f.pagVinc&&f.pagVinc[mes]);
+  // ligado a um lançamento do extrato: só desfaz a ligação (o lançamento do banco continua)
+  if(typeof txId==='number'&&!vinc)A.txs=A.txs.filter(t=>t.id!==txId);
+  delete f.pagamentos[mes]; if(f.pagVinc) delete f.pagVinc[mes];
+  toast(vinc?'Desmarcado. O lançamento do extrato continua.':'Desmarcado e lançamento removido.','#888780');render();
 }
 function toggleAtiva(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;f.ativa=!f.ativa;toast(f.ativa?'Ativada!':'Pausada.','#888780');render();}
-function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:_allAccounts()[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',inicioEm:A.fixaMes,parcelas:null,open:true};render();}
+function openFixaForm(){A.feId=null;A.delFixa=null;A.ctpExp={};A.ff={type:'despesa',desc:'',val:'',diaVenc:5,catId:null,accId:_allAccounts()[0]?.id||1,recur:'mensal',ativa:true,icon:'💧',obs:'',familia:'',inicioEm:A.fixaMes,parcelas:null,open:true};render();}
 function editFixa(id){const f=A.fixas.find(x=>x.id===id);if(!f)return;A.feId=id;A.delFixa=null;A.ctpExp={};A.ff={...f,parcelas:f.parcelas||null,open:true};render();}
 function closeFixaForm(){A.feId=null;A.ff={...A.ff,open:false};render();}
 function saveFixa(){const f=A.ff;if(!f.desc.trim()||!f.val||parseFloat(f.val)<=0){toast('Preencha descrição e valor.','var(--expense)');return;}const parc=f.parcelas?parseInt(f.parcelas)||null:null;const obj={...f,val:parseFloat(f.val),diaVenc:parseInt(f.diaVenc)||5,inicioEm:f.inicioEm||A.fixaMes,parcelas:parc&&parc>1?parc:null};delete obj.open;if(A.feId!==null){const i=A.fixas.findIndex(x=>x.id===A.feId);if(i!==-1)A.fixas[i]={...A.fixas[i],...obj};toast('Atualizada!');}else{A.fixas.push({id:A.nid++,...obj,pagamentos:{}});toast(parc&&parc>1?`Criada! Parcelamento em ${parc}x.`:'Criada!');}closeFixaForm();}
@@ -5639,6 +5679,7 @@ function _showConfirm(title,msg,onOk,opts){
   titleEl.textContent=title;
   msgEl.innerHTML=msg;
   okBtn.textContent=opts.okLabel||'Excluir';
+  const icEl=overlay.querySelector('.cd-icon'); if(icEl) icEl.textContent=opts.icon||'🗑️';
   okBtn.style.background=opts.okColor||'var(--expense)';
   // Se não há callback de confirmação real (ex: apenas info), esconde botão excluir
   if(!onOk){
@@ -7610,6 +7651,58 @@ function _ofxContaSugerida(info){
   });
   return achou.length === 1 ? achou[0].id : null;
 }
+// ── Conciliação: o mesmo pagamento já existe no app com outra descrição ──
+// Ex.: a conta fixa "AGUA SABESP (AL)" foi marcada como paga (lançamento criado no dia do vencimento)
+// e o extrato traz "PAG BOLETO SABESP" dois dias depois. O texto e a data não batem, então o
+// controle por "data|descrição|valor" não pega — aqui o critério é conta + tipo + valor + data próxima.
+const _CONC_IGN = new Set(['pagamento','pagto','pgto','boleto','debito','credito','conta','fixa','transf','transferencia','compra','cartao','parcela','automatico','autom','banco','titulo','cobranca','fatura','sispag','ltda']);
+function _concPalavras(txt){ return _normTxt(txt).replace(/\(fixa[^)]*\)/g, ' ').split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !/^\d+$/.test(w) && !_CONC_IGN.has(w)); }
+function _concDias(a, b){ return Math.abs((Date.parse(a + 'T12:00:00') - Date.parse(b + 'T12:00:00')) / 86400000); }
+function _fixaTxMapa(){
+  const m = new Map();
+  (A.fixas || []).forEach(f => Object.entries(f.pagamentos || {}).forEach(([mes, id]) => { if (typeof id === 'number') m.set(id, { f, mes }); }));
+  return m;
+}
+// Mesmo pagamento? exato no valor (até 3 dias; 10 se for de conta fixa) — ou, para conta fixa,
+// valor até 20% diferente (água, luz…) quando alguma palavra bate ou a diferença é pequena (até 3%).
+function _concAvaliar(t, desc, date, valAbs, fx){
+  const dias = _concDias(t.date, date);
+  if (dias > (fx ? 10 : 3)) return null;
+  const dif = Math.abs(t.val - valAbs);
+  const palavra = (() => { const a = _concPalavras(desc), b = _concPalavras(t.desc); return a.some(w => b.includes(w)); })();
+  let ok = dif < 0.005;
+  if (!ok && fx) { const rel = dif / Math.max(t.val, 0.01); ok = rel <= 0.2 && (palavra || rel <= 0.03); }
+  if (!ok) return null;
+  return { score: (dif < 0.005 ? 0 : 10 + dif / Math.max(t.val, 0.01) * 100) + dias - (palavra ? 5 : 0) - (fx ? 1 : 0), dif };
+}
+// rows do extrato × lançamentos da conta de destino → Map(índice da linha → lançamento existente)
+function _csvConciliar(rows, accId, jaDup){
+  const fixas = _fixaTxMapa(), cands = [];
+  rows.forEach((r, i) => {
+    if (jaDup(r)) return;
+    const tipo = r.val >= 0 ? 'receita' : 'despesa', v = Math.abs(r.val);
+    A.txs.forEach(t => {
+      if (t.type !== tipo || !t.date || t.accId != accId || t.concBanco) return;   // já ligado a outra linha de extrato
+      if (t.ofxId && r.ofxId) return;                                               // dois OFX: o código FITID é quem decide
+      const fx = fixas.get(t.id), av = _concAvaliar(t, r.desc, r.date, v, fx);
+      if (av) cands.push({ i, t, fx, ...av });
+    });
+  });
+  cands.sort((a, b) => a.score - b.score);
+  const usados = new Set(), res = new Map();
+  cands.forEach(c => {
+    if (res.has(c.i) || usados.has(c.t.id)) return;
+    usados.add(c.t.id);
+    res.set(c.i, { txId: c.t.id, desc: c.t.desc, date: c.t.date, val: c.t.val, fixa: c.fx ? c.fx.f.desc : null, ajustaValor: c.dif >= 0.005 });
+  });
+  return res;
+}
+function _concTitulo(c, r){
+  return `Já está no app: “${c.desc}” em ${D(c.date)} (${R(c.val)})` + (c.fixa ? ' — pagamento de conta fixa' : '')
+    + (c.ajustaValor ? `. O banco mostra ${R(Math.abs(r.val))}: deixando desmarcado, corrijo o valor do lançamento.` : '. Deixando desmarcado, ligo esta linha a ele e não duplico.')
+    + (c.date !== r.date ? ` A data passa a ser ${D(r.date)}, a do banco.` : '')
+    + ' Marque só se for outro lançamento.';
+}
 function _ofxIdsExistentes(){ return new Set(A.txs.map(t => t.ofxId).filter(Boolean)); }
 
 function csvDetectAndParse(text) {
@@ -8019,6 +8112,7 @@ function _renderCsvModal() {
   const existingHashes = s.recat ? new Set() : new Set(
     A.txs.map(t => t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val))
     .concat(A.txs.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
+    .concat(A.txs.flatMap(t => t.importHashes || []))
   );
 
   const _ofxIds = s.recat ? new Set() : _ofxIdsExistentes();
@@ -8065,7 +8159,8 @@ function _renderCsvModal() {
     const catName = cat ? _catNomeCompleto(cat) : 'Sem categoria';
     const famName = A.familia[0]?.name || 'Eu';
 
-    const rowBg = isDup
+    const conc = !isDup && !s.recat ? r._conc : null;
+    const rowBg = isDup || (conc && !isSel)
       ? (isDark ? 'background:#1a1008' : 'background:#FFFBEB')
       : isSel
         ? (isDark ? 'background:#0c2040' : 'background:#EFF6FF')
@@ -8079,7 +8174,7 @@ function _renderCsvModal() {
         }
       </td>
       <td style="padding:8px 6px;font-size:12px;color:${isDark?'#8aafd4':'#64748B'};white-space:nowrap">${D(r.date)}</td>
-      <td style="padding:8px 6px;font-size:13px;color:${isDark?'#c8daf0':'#0F172A'};max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(r.desc)}">${H(r.desc)}</td>
+      <td style="padding:8px 6px;font-size:13px;color:${isDark?'#c8daf0':'#0F172A'};max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(r.desc)}">${conc?`<span class="csv-conc" title="${H(_concTitulo(conc, r))}">🔗 ${conc.fixa?'fixa':'já lançado'}${conc.ajustaValor?' · valor ≠':''}</span>`:''}${H(r.desc)}</td>
       <td style="padding:4px 6px">${_csvFamSelHtml(i, r)}</td>
       <td style="padding:4px 6px;text-align:center;overflow:visible;position:relative">
         <div class="csv-cat-cel">${buildCsvCatPicker(i, catId, type)}${_csvOrigemBadge(r)}<button type="button" class="csv-regra ${r.regraTxt?'on':''}" onclick="_csvCriarRegra(${i})" title="${r.regraTxt?`Categoria pela regra “${H(r.regraTxt)}” — clique para atualizar a regra com a categoria atual`:'Lembrar: sempre usar esta categoria para esta descrição'}" aria-label="Criar regra para ${H(r.desc)}">⚡</button></div>
@@ -8147,7 +8242,7 @@ function _renderCsvModal() {
         <option value="" selected>🏷 Categoria p/ ${_filtroOn?`filtrados (${_vis.length})`:'todos'}…</option>${_csvCatOptsHtml()}</select>
       <select id="csv-fam-todos" class="csv-fam" aria-label="Membro para todos os selecionados" onchange="_csvFamTodos(this.value)" style="width:auto;max-width:230px">
         <option value="__x__" selected>👤 Membro p/ selecionados…</option><option value="">— Nenhum —</option>${_famOptsHtml(null)}<option value="__novo__">＋ Novo membro…</option></select>
-      ${s.recat?'':`<span style="font-size:11px;color:${textSec}">⚠️ = possível duplicata (desmarcado por padrão)</span>`}
+      ${s.recat?'':`<span style="font-size:11px;color:${textSec}">⚠️ = já importado antes · 🔗 = já está no app com outra descrição (desmarcados por padrão)</span>`}
     </div>
 
     <div class="csv-tbl-wrap" style="overflow-y:auto;overflow-x:visible;flex:1;border:1px solid ${inputBorder};border-radius:12px">
@@ -8478,7 +8573,7 @@ function _arqTipo(u8){
 }
 function _textoDeBytes(u8){
   const t=new TextDecoder('utf-8').decode(u8);
-  return t.includes('�')?new TextDecoder('windows-1252').decode(u8):t;   // CSV de banco costuma vir em Latin-1
+  return t.includes(' ')?new TextDecoder('windows-1252').decode(u8):t;   // CSV de banco costuma vir em Latin-1
 }
 
 function _csvHandleFile(file) {
@@ -8507,6 +8602,7 @@ function _csvHandleFile(file) {
       A.txs.flatMap(t => [
         t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
         t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
+        ...(t.importHashes || []),
       ])
     );
     function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
@@ -8518,6 +8614,9 @@ function _csvHandleFile(file) {
     });
     // OFX: se o número da conta do arquivo bate com uma única conta sua, já deixa ela como destino
     if (res.ofx) { const sug = _ofxContaSugerida(res.ofx); if (sug != null) { _csvState.accId = sug; res.ofx.contaAuto = true; } }
+    // pagamento que já está no app com outra descrição (ex.: conta fixa marcada como paga) → desmarcado
+    const conc = _csvConciliar(rows, _csvState.accId, r => existingHashes.has(rowHash(r)) || !!(r.ofxId && ofxIds.has(r.ofxId)));
+    conc.forEach((c, i) => { rows[i]._conc = c; selected.delete(i); });
     Object.assign(_csvState, { rows, format, selected, fileName: file.name, step: 'preview', filtro: '', verSel: 'todos', catCont: cont, futuros: res.futuros || 0, semSinal: !!res.semSinal, pdf: null, ofx: res.ofx || null });
     _renderCsvModal();
   }
@@ -8700,6 +8799,8 @@ function _csvCatResumoHtml(){
   const notas=[];
   if(s.recat&&s.recatSem) notas.push(`${s.recatSem} lançamento(s) sem pista (nenhuma regra, histórico${s.recatIA?', IA':''} ou palavra-chave): estão na lista desmarcados. Escolha a categoria na linha — ou filtre e use “Categoria p/ filtrados” — e a linha é marcada sozinha.`);
   if(s.futuros) notas.push(`${s.futuros} lançamento(s) futuro(s) do extrato (agendados) ficaram de fora.`);
+  if(!s.recat){ const cc=s.rows.filter(r=>r._conc); if(cc.length){ const aj=cc.filter(r=>r._conc.ajustaValor).length;
+    notas.push(`🔗 ${cc.length} lançamento(s) do extrato já existem no app com outra descrição (ex.: conta fixa marcada como paga) e ficaram desmarcados. Deixando assim, cada um é ligado ao lançamento que já existe${aj?` (${aj} com o valor corrigido para o do banco)`:''} e não volta a aparecer em importações futuras. Passe o mouse no 🔗 para ver qual é; marque só se for outro lançamento.`); } }
   if(s.ofx){ const o=s.ofx, fm=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     const conta=[o.branch?'ag. '+o.branch:'',o.acctId?(o.cartao?'cartão ':'conta ')+o.acctId:''].filter(Boolean).join(' · ');
     notas.push(`Arquivo OFX${conta?' de '+conta:''}${o.periodo?', período '+o.periodo:''}${o.saldo!=null?`, saldo informado pelo banco ${fm(o.saldo)}${o.saldoData?' em '+o.saldoData.split('-').reverse().join('/'):''}`:''}.`);
@@ -8799,6 +8900,19 @@ function _csvConfirmImport() {
     count++;
   });
 
+  // Linhas conciliadas que ficaram desmarcadas: liga ao lançamento existente (e corrige o valor, se o banco mostrar outro)
+  let _concN = 0, _concAj = 0;
+  rows.forEach((r, i) => {
+    if (!r._conc || selected.has(i)) return;
+    const t = A.txs.find(x => x.id === r._conc.txId); if (!t) return;
+    t.importHashes = [...new Set([...(t.importHashes || []), r.date + '|' + r.desc + '|' + r.val])];
+    if (r.ofxId && !t.ofxId) t.ofxId = r.ofxId;
+    t.concBanco = { desc: r.desc, date: r.date, val: Math.abs(r.val) };
+    if (t.date !== r.date) { t.dataPrevista = t.dataPrevista || t.date; t.date = r.date; }   // data real do pagamento
+    if (r._conc.ajustaValor) { t.val = Math.abs(r.val); _concAj++; }
+    _concN++;
+  });
+
   let _rgRes=null;
   if (_csvState.criarRegras !== false && _rgAutoLigado()) {
     _rgRes = _rgAutoCriar(_rgAutoPlano(), _csvState.fileName || 'importação');
@@ -8806,7 +8920,8 @@ function _csvConfirmImport() {
   closeCsvImport();
   render();
   const _rgMsg = _rgRes && (_rgRes.novas || _rgRes.atualizadas) ? ` ⚡ ${_rgRes.novas} regra(s) nova(s)${_rgRes.atualizadas?`, ${_rgRes.atualizadas} atualizada(s)`:''} — veja em Categorias › Regras.` : '';
-  toast(`✅ ${count} lançamento${count!==1?'s':''} importado${count!==1?'s':''}!${_rgMsg}`, 'var(--income)', _rgMsg?6500:4000);
+  const _concMsg = _concN ? ` 🔗 ${_concN} já existente(s) ligado(s) ao extrato${_concAj?`, ${_concAj} com valor corrigido`:''}.` : '';
+  toast(`✅ ${count} lançamento${count!==1?'s':''} importado${count!==1?'s':''}!${_concMsg}${_rgMsg}`, 'var(--income)', (_rgMsg||_concMsg)?6500:4000);
 }
 
 
