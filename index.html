@@ -1583,6 +1583,7 @@ html.dark .senha-toggle:hover{color:#c8daf0}
 }
 
 .csv-fam{width:100%;min-width:118px;max-width:170px;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--gray-200,#CBD5E1);background:var(--color-background-primary,#fff);color:inherit;font-family:var(--font-sans);cursor:pointer}
+.csv-ctl.outro{border-color:#7C3AED;box-shadow:inset 3px 0 0 #7C3AED}
 .csv-fam.regra{border-color:#f59e0b;box-shadow:inset 3px 0 0 #f59e0b}
 html.dark .csv-fam{background:#162035;border-color:#2e3d55;color:#c8daf0}
 .rg-fam{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:#EDE9FE;color:#5B21B6;white-space:nowrap}
@@ -8156,13 +8157,14 @@ function _renderCsvModal() {
   function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
 
   // Detecta duplicatas com lançamentos já existentes
+  const _txsDupR = _isSharedAcc(s.accId) ? _allTxsAcrossControles() : A.txs;
   const existingHashes = s.recat ? new Set() : new Set(
-    A.txs.map(t => t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val))
-    .concat(A.txs.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
-    .concat(A.txs.flatMap(t => t.importHashes || []))
+    _txsDupR.map(t => t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val))
+    .concat(_txsDupR.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
+    .concat(_txsDupR.flatMap(t => t.importHashes || []))
   );
 
-  const _ofxIds = s.recat ? new Set() : _ofxIdsExistentes();
+  const _ofxIds = s.recat ? new Set() : new Set(_txsDupR.map(t => t.ofxId).filter(Boolean));
   const _ehDup = r => existingHashes.has(rowHash(r)) || !!(r.ofxId && _ofxIds.has(r.ofxId));
 
   const allCount = rows.length;
@@ -8195,7 +8197,8 @@ function _renderCsvModal() {
   const _ver = s.verSel || 'todos';
   const _nSel = selected.size, _nNao = rows.length - selected.size;
   const _visSel = _vis.filter(i => selected.has(i)).length;
-  const rowsHtml = (_ordemVis.length ? '' : `<tr><td colspan="6" style="padding:22px;text-align:center;font-size:13px;color:${textSec}">${_csvFiltroTermos().length?`Nenhuma linha com “${H(s.filtro||'')}” na descrição`:'Nenhuma linha aqui'}${_ver==='sim'?' entre as marcadas':_ver==='nao'?' entre as não marcadas':''}.</td></tr>`) + _ordemVis.map(i => { const r = rows[i];
+  const _ctlCol = _csvCtlAtivo();
+  const rowsHtml = (_ordemVis.length ? '' : `<tr><td colspan="${_ctlCol?7:6}" style="padding:22px;text-align:center;font-size:13px;color:${textSec}">${_csvFiltroTermos().length?`Nenhuma linha com “${H(s.filtro||'')}” na descrição`:'Nenhuma linha aqui'}${_ver==='sim'?' entre as marcadas':_ver==='nao'?' entre as não marcadas':''}.</td></tr>`) + _ordemVis.map(i => { const r = rows[i];
     const isDup = _ehDup(r);
     const isSel = selected.has(i);
     const type = r.val >= 0 ? 'receita' : 'despesa';
@@ -8222,7 +8225,7 @@ function _renderCsvModal() {
       </td>
       <td style="padding:8px 6px;font-size:12px;color:${isDark?'#8aafd4':'#64748B'};white-space:nowrap">${D(r.date)}</td>
       <td style="padding:8px 6px;font-size:13px;color:${isDark?'#c8daf0':'#0F172A'};max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${H(r.desc)}">${conc?`<span class="csv-conc" title="${H(_concTitulo(conc, r))}">🔗 ${conc.fixa?'fixa':'já lançado'}${conc.ajustaValor?' · valor ≠':''}</span>`:''}${H(r.desc)}</td>
-      <td style="padding:4px 6px">${_csvFamSelHtml(i, r)}</td>
+      <td style="padding:4px 6px">${_csvFamSelHtml(i, r)}</td>${_ctlCol?`<td style="padding:4px 6px">${_csvCtlSelHtml(i, r)}</td>`:''}
       <td style="padding:4px 6px;text-align:center;overflow:visible;position:relative">
         <div class="csv-cat-cel">${buildCsvCatPicker(i, catId, type)}${_csvOrigemBadge(r)}<button type="button" class="csv-regra ${r.regraTxt?'on':''}" onclick="_csvCriarRegra(${i})" title="${r.regraTxt?`Categoria pela regra “${H(r.regraTxt)}” — clique para atualizar a regra com a categoria atual`:'Lembrar: sempre usar esta categoria para esta descrição'}" aria-label="Criar regra para ${H(r.desc)}">⚡</button></div>
       </td>
@@ -8289,6 +8292,7 @@ function _renderCsvModal() {
         <option value="" selected>🏷 Categoria p/ ${_filtroOn?`filtrados (${_vis.length})`:'todos'}…</option>${_csvCatOptsHtml()}</select>
       <select id="csv-fam-todos" class="csv-fam" aria-label="Membro para todos os selecionados" onchange="_csvFamTodos(this.value)" style="width:auto;max-width:230px">
         <option value="__x__" selected>👤 Membro p/ selecionados…</option><option value="">— Nenhum —</option>${_famOptsHtml(null)}<option value="__novo__">＋ Novo membro…</option></select>
+      ${_ctlCol?`<select id="csv-ctl-todos" class="csv-fam" aria-label="Controle para os selecionados" onchange="_csvCtlTodos(this.value)" style="width:auto;max-width:230px"><option value="__x__" selected>💼 Controle p/ selecionados…</option>${(A.controles||[]).map(c=>`<option value="${c.id}">${H((c.icone||'💼')+' '+c.nome)}</option>`).join('')}</select><span id="csv-ctl-resumo" style="font-size:11.5px;font-weight:600;color:${isDark?'#c4b5fd':'#6D28D9'}">${H(_csvCtlResumo())}</span>`:''}
       ${s.recat?'':`<span style="font-size:11px;color:${textSec}">⚠️ = já importado antes · 🔗 = já está no app com outra descrição (desmarcados por padrão)</span>`}
     </div>
 
@@ -8300,6 +8304,7 @@ function _renderCsvModal() {
             ${_th('data','Data','left')}
             ${_th('desc','Descrição','left')}
             ${_th('membro','Membro','left')}
+            ${_ctlCol?`<th style="padding:8px 6px;font-size:11px;color:${textSec};font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid ${inputBorder};text-align:left">Controle</th>`:''}
             ${_th('cat','Categoria','center')}
             ${_th('valor','Valor','right')}
           </tr>
@@ -8645,15 +8650,16 @@ function _csvHandleFile(file) {
       if (ia.erro) toast('IA indisponível (' + ia.erro.message + '). Segui com regras, histórico e palavras-chave.', 'var(--amber)', 6500);
     }
     const cont = _aplicarAutoCat(rows);
+    const _txsDup = _isSharedAcc(_csvState.accId) ? _allTxsAcrossControles() : A.txs;
     const existingHashes = new Set(
-      A.txs.flatMap(t => [
+      _txsDup.flatMap(t => [
         t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
         t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
         ...(t.importHashes || []),
       ])
     );
     function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
-    const ofxIds = _ofxIdsExistentes();
+    const ofxIds = new Set(_txsDup.map(t => t.ofxId).filter(Boolean));
     const selected = new Set();
     rows.forEach((r, i) => {
       _csvFamInicial(r);
@@ -8897,6 +8903,42 @@ function buildCsvCatPicker(rowIdx, selId, tipo) {
   return buildCatTreePicker(selId, tipo, 'csvcat'+rowIdx, null, {onPick:id=>_csvPickCat(rowIdx,id), compact:true, placeholder:'Sem categoria'});
 }
 
+// ── Importar para outro controle ──
+// Só com conta compartilhada (🔗): é a única que existe em todos os controles.
+function _csvCtlAtivo(){
+  const s=_csvState;
+  return !!(s && !s.recat && !s.pdf && (A.controles||[]).length>1 && _isSharedAcc(s.accId) && !(typeof _multiActive==='function'&&_multiActive()));
+}
+function _csvCtlNome(id){ const c=(A.controles||[]).find(x=>x.id===id); return c?((c.icone||'💼')+' '+c.nome):'?'; }
+function _csvCtlSelHtml(i,r){
+  const atual=r.ctl!=null?r.ctl:A.controleAtivo;
+  return `<select class="csv-fam csv-ctl ${atual!==A.controleAtivo?'outro':''}" aria-label="Controle de destino" title="Em qual controle este lançamento vai entrar" onchange="_csvSetCtl(${i},+this.value);this.classList.toggle('outro',+this.value!==A.controleAtivo)">
+    ${(A.controles||[]).map(c=>`<option value="${c.id}" ${c.id===atual?'selected':''}>${H((c.icone||'💼')+' '+c.nome)}</option>`).join('')}</select>`;
+}
+function _csvSetCtl(i,id){ const r=_csvState.rows[i]; if(!r) return; r.ctl=id; _csvCtlResumoAtualizar(); }
+function _csvCtlTodos(v){
+  if(v==='__x__') return; const id=+v, s=_csvState; let n=0;
+  s.selected.forEach(i=>{ s.rows[i].ctl=id; n++; const el=document.querySelector(`.csv-row[data-idx="${i}"] select.csv-ctl`); if(el){ el.value=id; el.classList.toggle('outro',id!==A.controleAtivo); } });
+  const b=document.getElementById('csv-ctl-todos'); if(b) b.value='__x__';
+  _csvCtlResumoAtualizar();
+  toast(`${n} lançamento(s) vão para ${_csvCtlNome(id)}.`);
+}
+function _csvCtlResumo(){
+  const s=_csvState; if(!_csvCtlAtivo()) return '';
+  const cont={}; s.selected.forEach(i=>{ const c=s.rows[i].ctl!=null?s.rows[i].ctl:A.controleAtivo; cont[c]=(cont[c]||0)+1; });
+  const ks=Object.keys(cont).map(Number); if(ks.length<2&&ks[0]===A.controleAtivo) return '';
+  return ks.map(k=>`${_csvCtlNome(k)}: ${cont[k]}`).join(' · ');
+}
+function _csvCtlResumoAtualizar(){ const el=document.getElementById('csv-ctl-resumo'); if(el) el.textContent=_csvCtlResumo(); }
+// categoria do lançamento no controle de destino (mesmo id se existir lá; senão "Outros")
+function _ctlCatDestino(d,catId,tipo){
+  const cats=(d&&d.cats)||[];
+  if(catId!=null&&cats.some(c=>String(c.id)===String(catId)&&c.tipo===tipo)) return catId;
+  const nome=(A.cats.find(c=>String(c.id)===String(catId))||{}).name;
+  const mesmoNome=nome&&cats.find(c=>c.tipo===tipo&&_normTxt(c.name)===_normTxt(nome));
+  if(mesmoNome) return mesmoNome.id;
+  return (cats.find(c=>c.tipo===tipo&&c.name==='Outros')||cats.find(c=>c.tipo===tipo)||{}).id??null;
+}
 function _csvConfirmImport() {
   if (!_accExiste(_csvState.accId)) { toast('Escolha a conta de destino antes de importar.', 'var(--expense)', 4500); return; }
   const { rows, selected, accId } = _csvState;
@@ -8905,6 +8947,7 @@ function _csvConfirmImport() {
 
   const _acc = accBy(accId);
   const _alvo = _csvState.pdf ? _csvState.pdf.faturaAlvo : null;
+  const _paraOutros = {};
   selected.forEach(i => {
     const r = rows[i];
     const type = r.val >= 0 ? 'receita' : 'despesa';
@@ -8925,7 +8968,10 @@ function _csvConfirmImport() {
       familia = famMatch || r.familia;
     }
     }
-    A.txs.push({
+    const _ctlDest = (_csvCtlAtivo() && r.ctl != null && r.ctl !== A.controleAtivo) ? r.ctl : null;
+    const _txDest = _ctlDest != null ? (_outrosControles(), A.controlesCache[_ctlDest]) : null;
+    if (_txDest && !Array.isArray(_txDest.txs)) _txDest.txs = [];
+    (_txDest ? _txDest.txs : A.txs).push({
       id: A.nid++,
       type,
       desc: r.desc,
@@ -8943,8 +8989,9 @@ function _csvConfirmImport() {
       planned: false,
       done: true,
       familia,
+      ...(_txDest ? { catId: _ctlCatDestino(_txDest, catId, type) } : {}),
     });
-    count++;
+    if (_ctlDest != null) _paraOutros[_ctlDest] = (_paraOutros[_ctlDest] || 0) + 1; else count++;
   });
 
   // Linhas conciliadas que ficaram desmarcadas: liga ao lançamento existente (e corrige o valor, se o banco mostrar outro)
@@ -8968,7 +9015,9 @@ function _csvConfirmImport() {
   render();
   const _rgMsg = _rgRes && (_rgRes.novas || _rgRes.atualizadas) ? ` ⚡ ${_rgRes.novas} regra(s) nova(s)${_rgRes.atualizadas?`, ${_rgRes.atualizadas} atualizada(s)`:''} — veja em Categorias › Regras.` : '';
   const _concMsg = _concN ? ` 🔗 ${_concN} já existente(s) ligado(s) ao extrato${_concAj?`, ${_concAj} com valor corrigido`:''}.` : '';
-  toast(`✅ ${count} lançamento${count!==1?'s':''} importado${count!==1?'s':''}!${_concMsg}${_rgMsg}`, 'var(--income)', (_rgMsg||_concMsg)?6500:4000);
+  const _outrosMsg = Object.keys(_paraOutros).map(k => ` ${_paraOutros[k]} para ${_csvCtlNome(+k)}.`).join('');
+  toast(`✅ ${count} lançamento${count!==1?'s':''} importado${count!==1?'s':''}${_outrosMsg?' neste controle,':'!'}${_outrosMsg}${_concMsg}${_rgMsg}`, 'var(--income)', (_rgMsg||_concMsg||_outrosMsg)?6500:4000);
+  if (_outrosMsg) scheduleSave();
 }
 
 
