@@ -3,18 +3,18 @@
    - Bibliotecas (Chart.js, XLSX, Firebase, fontes): cache primeiro, atualizando em segundo plano.
    - Firebase (dados/login) e Claude (IA): nunca passam pelo cache.
    Ao publicar uma versão nova, troque VERSAO para o app oferecer "Atualizar". */
-const VERSAO = 'pfp-047';
+const VERSAO = 'pfp-047b';
 const CACHE_APP = VERSAO + '-app';
 const CACHE_LIB = 'pfp-libs';            // bibliotecas versionadas na URL: pode sobreviver entre versões
 const ARQUIVOS_APP = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-32.png',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
+  './favicon-32.png',
 ];
 const HOSTS_LIB = ['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

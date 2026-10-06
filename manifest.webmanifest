@@ -14,14 +14,14 @@
   "theme_color": "#2563EB",
   "categories": ["finance", "productivity"],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "shortcuts": [
-    { "name": "Novo lançamento", "short_name": "Lançar", "url": "./?acao=novo", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Importar extrato", "short_name": "Importar", "url": "./?acao=importar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Novo lançamento", "short_name": "Lançar", "url": "./?acao=novo", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Importar extrato", "short_name": "Importar", "url": "./?acao=importar", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }
