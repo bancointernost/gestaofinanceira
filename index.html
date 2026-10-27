@@ -3951,7 +3951,7 @@ function iRow(t,click,rowIdx){
       :`<div class="tx-cell tx-cell-icon" style="${cellBg}"><span class="tx-icon ${tipoCls}" title="${isT?'Transferência':t.type==='receita'?'Receita':'Despesa'}"><svg class="ic" aria-hidden="true"><use href="#i-${isT?'arrow-left-right':t.type==='receita'?'arrow-up':'arrow-down'}"/></svg></span></div>`
     }
     <div class="tx-cell tx-cell-main" style="${cellBg}">
-      <div class="tx-main-in"><span class="tx-desc">${H(t.desc)}</span><span class="tx-chips">${t.recon?'<span class="tx-rec" title="Conciliado com o extrato do banco"><svg class="ic sm" aria-hidden="true"><use href="#i-check-check"/></svg></span>':''}${famHtml}${refHtml}${_ctlBadgeHtml(t)}${(()=>{const ac=accBy(t.accId);if(!isCC(ac)||t.type==='transferencia'||!_ccOk(ac))return'';const fm=faturaMesDe(ac,t.date);return `<span class="tx-fat" title="Fatura com vencimento em ${MNLONG[fm.slice(5,7)].toLowerCase()}/${fm.slice(0,4)}">fatura ${MNSHORT[fm.slice(5,7)].toLowerCase()}</span>`;})()}</span></div>
+      <div class="tx-main-in"><span class="tx-desc">${H(t.desc)}</span><span class="tx-chips">${t.recon?'<span class="tx-rec" title="Conciliado com o extrato do banco"><svg class="ic sm" aria-hidden="true"><use href="#i-check-check"/></svg></span>':''}${famHtml}${refHtml}${_ctlBadgeHtml(t)}${(()=>{const ac=accBy(t.accId);if(!isCC(ac)||t.type==='transferencia'||!_ccOk(ac))return'';const fm=_txFatura(ac,t);return `<span class="tx-fat" title="Fatura com vencimento em ${MNLONG[fm.slice(5,7)].toLowerCase()}/${fm.slice(0,4)}">fatura ${MNSHORT[fm.slice(5,7)].toLowerCase()}</span>`;})()}</span></div>
     </div>
     <div class="tx-cell tx-cell-acc" style="${cellBg}" title="${H(acc)}">${_accExiste(t.accId)?H(acc):`<button type="button" class="tx-semconta" onclick="event.stopPropagation();corrigirContas()" title="A conta deste lançamento não existe mais — clique para gravar uma conta">⚠ sem conta</button>`}</div>
     <div class="tx-cell tx-cell-cat" style="${cellBg}"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${isT?'Transferência':H(cat.name)}</span></span></div>
@@ -5313,6 +5313,8 @@ function _pad2b(n){return String(n).padStart(2,'0');}
 function _addMes(mes,n){let [y,m]=mes.split('-').map(Number);m+=n;while(m>12){m-=12;y++;}while(m<1){m+=12;y--;}return y+'-'+_pad2b(m);}
 function _diaEf(mes,dia){const [y,m]=mes.split('-').map(Number);return Math.min(dia,new Date(y,m,0).getDate());}
 function _ccOk(acc){return !!(acc&&+acc.fechamento&&+acc.vencimento);}
+// Fatura de um lançamento do cartão: a gravada na importação da fatura (o banco é quem diz), senão pela data
+function _txFatura(acc,t){ return (t&&t.fatura&&/^\d{4}-\d{2}$/.test(t.fatura))?t.fatura:faturaMesDe(acc,t&&t.date); }
 function faturaMesDe(acc,data){
   if(!data) return '';
   if(!_ccOk(acc)) return data.slice(0,7);
@@ -5329,7 +5331,7 @@ function _faturaDatas(acc,mes){
 function _ccTxs(acc){return (_isSharedAcc(acc.id)?_txsSaldoCompartilhada():A.txs).filter(t=>t.done);}
 function faturaInfo(acc,mes){
   const todas=_ccTxs(acc);
-  const itens=todas.filter(t=>t.type!=='transferencia'&&String(t.accId)===String(acc.id)&&faturaMesDe(acc,t.date)===mes).sort((a,b)=>a.date.localeCompare(b.date));
+  const itens=todas.filter(t=>t.type!=='transferencia'&&String(t.accId)===String(acc.id)&&_txFatura(acc,t)===mes).sort((a,b)=>a.date.localeCompare(b.date));
   const total=itens.reduce((s,t)=>s+(t.type==='despesa'?t.val:-t.val),0);
   const pags=todas.filter(t=>t.type==='transferencia'&&String(t.accDest)===String(acc.id)&&t.faturaPag===mes);
   const pago=pags.reduce((s,t)=>s+t.val,0);
@@ -5720,7 +5722,7 @@ function updateTrbox(){
   if(!el)return;
   el.innerHTML=`<div class="trs"><div class="tl">Origem</div><div class="tn">${H(orig.name||'—')}</div><div class="tb2">${R(oB)}→${R(oB-amt)}</div></div><div class="trm"><div class="ti">↔</div><div class="tv">${amt>0?R(amt):'—'}</div></div><div class="trs"><div class="tl">Destino</div><div class="tn">${H(dest.name||'—')}</div><div class="tb2">${R(dB)}→${R(dB+amt)}</div></div>`;
 }
-function _saveTxBase(){const f=A.tf;const isT=A.mode==='transferencia';if(!f.val||parseFloat(f.val)<=0||!f.date){toast('Preencha valor e data.','var(--expense)');return;}if(!f.catId){toast('Selecione uma categoria.','var(--expense)');return;}if(!isT&&!_accExiste(f.accId)){toast('Selecione uma conta.','var(--expense)');return;}if(isT&&(!f.accId||!f.accDest)){toast('Selecione origem e destino.','var(--expense)');return;}if(isT&&f.accId==f.accDest){toast('Selecione contas diferentes.','var(--expense)');return;}if(!f.desc.trim())f.desc=isT?`${accBy(f.accId).name}→${accBy(f.accDest).name}`:'Sem descrição';const obj={...f,type:isT?'transferencia':f.type,val:parseFloat(f.val),planned:false,done:true};const _nParc=parseInt(obj.parcelas)||1;delete obj.parcelas;if(A.txId==='new'&&!isT&&obj.type==='despesa'&&_nParc>1&&isCC(accBy(obj.accId))){_lancarParcelado(obj,_nParc);closeForm();return;}if(A.txId==='new'){const _c=A.cats.find(x=>String(x.id)===String(obj.catId));const _alvo=_c&&[_c,_c.parentId?A.cats.find(x=>String(x.id)===String(_c.parentId)):null].find(x=>x&&parseFloat(x.orcamento)>0);const _antes=_alvo?_gastoCat(_alvo.id,(obj.date||today()).slice(0,7)):0;A.txs.push({id:A.nid++,...obj});_rememberLastTx(obj);setTimeout(()=>_checkOrcamento(obj,_antes),2300);toast(isT?'Transferência registrada!':(A.tab==='lanc'&&_extratoSemCartao()&&isCC(accBy(obj.accId))?`Compra lançada no ${accBy(obj.accId).name}. Ela fica na tela Cartões.`:'Adicionado!'),isT?'var(--transfer)':'var(--income)');}else{const i=A.txs.findIndex(t=>t.id===A.txId);if(i!==-1)A.txs[i]={...A.txs[i],...obj};toast('Atualizado!');}closeForm();}
+function _saveTxBase(){const f=A.tf;const isT=A.mode==='transferencia';if(!f.val||parseFloat(f.val)<=0||!f.date){toast('Preencha valor e data.','var(--expense)');return;}if(!f.catId){toast('Selecione uma categoria.','var(--expense)');return;}if(!isT&&!_accExiste(f.accId)){toast('Selecione uma conta.','var(--expense)');return;}if(isT&&(!f.accId||!f.accDest)){toast('Selecione origem e destino.','var(--expense)');return;}if(isT&&f.accId==f.accDest){toast('Selecione contas diferentes.','var(--expense)');return;}if(!f.desc.trim())f.desc=isT?`${accBy(f.accId).name}→${accBy(f.accDest).name}`:'Sem descrição';const obj={...f,type:isT?'transferencia':f.type,val:parseFloat(f.val),planned:false,done:true};const _nParc=parseInt(obj.parcelas)||1;delete obj.parcelas;if(A.txId==='new'&&!isT&&obj.type==='despesa'&&_nParc>1&&isCC(accBy(obj.accId))){_lancarParcelado(obj,_nParc);closeForm();return;}if(A.txId==='new'){const _c=A.cats.find(x=>String(x.id)===String(obj.catId));const _alvo=_c&&[_c,_c.parentId?A.cats.find(x=>String(x.id)===String(_c.parentId)):null].find(x=>x&&parseFloat(x.orcamento)>0);const _antes=_alvo?_gastoCat(_alvo.id,(obj.date||today()).slice(0,7)):0;A.txs.push({id:A.nid++,...obj});_rememberLastTx(obj);setTimeout(()=>_checkOrcamento(obj,_antes),2300);toast(isT?'Transferência registrada!':(A.tab==='lanc'&&_extratoSemCartao()&&isCC(accBy(obj.accId))?`Compra lançada no ${accBy(obj.accId).name}. Ela fica na tela Cartões.`:'Adicionado!'),isT?'var(--transfer)':'var(--income)');}else{const i=A.txs.findIndex(t=>t.id===A.txId);if(i!==-1){const _mud=A.txs[i].date!==obj.date||String(A.txs[i].accId)!==String(obj.accId);A.txs[i]={...A.txs[i],...obj};if(_mud)delete A.txs[i].fatura;}toast('Atualizado!');}closeForm();}
 function cBox(){return '';}  // legado — não usado mais
 function askDel(id){
   const t=A.txs.find(x=>x.id===id);
@@ -6711,13 +6713,14 @@ function rParametros(m){
     <div class="prm-padroes"><div class="stg-title">Regras disponíveis</div>${PARAMS.map(p=>`<div class="prm-pd"><span>${H(p.titulo)} <span class="prm-onde">${H(p.onde)}</span></span><span>${A.params&&A.params[p.k]?`<strong>${H(p.opcoes.find(o=>o.v===_param(p.k)).t)}</strong>`:`<span class="stg-hint">padrão: ${H(p.opcoes.find(o=>o.v===p.padrao).t)}</span>`}</span></div>`).join('')}</div>
   </div>`;
 }
+const APP_VERSAO='093';
 function rArmazenamento(m){
   const fb=window._fbUser;
   const lastBk=(()=>{try{return localStorage.getItem(_lastTxKey().replace('pfp_last_tx_','pfp_last_backup_'));}catch(e){return null;}})();
   const sec=(icon,title,body)=>`<div class="stg-sec"><div class="stg-title"><svg class="ic" aria-hidden="true"><use href="#i-${icon}"/></svg> ${title}</div>${body}</div>`;
   m.innerHTML=`<div class="card">
     <div class="ph"><h3><svg class="ic lg" aria-hidden="true"><use href="#i-hard-drive"/></svg> Armazenamento e backup</h3></div>
-    ${sec('activity','Status',`<div id="db-status-detail" class="stg-text"></div>
+    ${sec('activity','Status',`<div class="stg-hint">Versão do app: <strong>${APP_VERSAO}</strong></div><div id="db-status-detail" class="stg-text"></div>
       <div class="stg-hint">Os dados ficam neste navegador (${_storageMode==='opfs'?'armazenamento interno OPFS, sem limite prático':'localStorage, limite de ~5 MB'}) e são salvos automaticamente.</div>`)}
     ${sec('cloud','Nuvem',`<div class="stg-text">${fb?`Conectado como <strong>${H(fb.email||'')}</strong>${window._fbLastSync?` · último sync ${H(window._fbLastSync)}`:''}`:'Não conectado. Conecte para acessar os dados em outros aparelhos.'}</div>
       <button class="btn-g" onclick="openFbModal()">${fb?'Gerenciar nuvem':'Conectar à nuvem'}</button>`)}
@@ -8675,14 +8678,28 @@ function _concAvaliar(t, desc, date, valAbs, fx, amplo){
   return { score: 10 + rel * 100 + dias - (palavra ? 5 : 0) - 1, dif, longe: false };
 }
 // rows do extrato × lançamentos da conta de destino → Map(índice da linha → lançamento existente)
-// Conta trocada na revisão: refaz a busca de lançamentos que já existem com outra descrição
+// ── Duplicatas exatas (mesma data, descrição e valor) — só na MESMA conta de destino ──
+// Uma compra igual lançada em outro cartão/conta (ex.: outro controle) não é duplicata desta.
+function _csvDupIdx(){
+  const m=new Map();
+  _allTxsAcrossControles().forEach(t=>{
+    const v=t.type==='despesa'?-t.val:t.val, accs=[t.accId,t.accDest].filter(x=>x!=null&&x!=='').map(String);
+    [t.date+'|'+(t.obs||t.desc||'')+'|'+v, t.date+'|'+(t.desc||'')+'|'+v, ...(t.importHashes||[])].forEach(h=>{ let st=m.get(h); if(!st){ st=new Set(); m.set(h,st); } accs.forEach(a=>st.add(a)); });
+  });
+  return m;
+}
+function _csvDupDe(idx,r,accId){
+  const st=idx.get(r.date+'|'+r.desc+'|'+r.val); if(!st) return false;
+  return accId==null||accId===''||st.has(String(accId));   // conta ainda não escolhida: qualquer conta
+}
+// Conta trocada na revisão: refaz as duplicatas e a busca de lançamentos que já existem com outra descrição
 function _csvRefazerConc(){
   const s=_csvState; if(!s||!Array.isArray(s.rows)||s.recat||s.step!=='preview') return;
-  const txs=_allTxsAcrossControles();
-  const hashes=new Set(txs.flatMap(t=>[t.date+'|'+(t.obs||t.desc||'')+'|'+(t.type==='despesa'?-t.val:t.val),t.date+'|'+(t.desc||'')+'|'+(t.type==='despesa'?-t.val:t.val),...(t.importHashes||[])]));
+  const txs=_allTxsAcrossControles(), idx=_csvDupIdx();
   const ofx=new Set(txs.map(t=>t.ofxId).filter(Boolean));
-  s.rows.forEach((r,i)=>{ if(r._conc){ delete r._conc; s.selected.add(i); } });
-  const conc=_csvConciliar(s.rows,s.accId,r=>hashes.has(r.date+'|'+r.desc+'|'+r.val)||!!(r.ofxId&&ofx.has(r.ofxId)));
+  const dup=r=>_csvDupDe(idx,r,s.accId)||!!(r.ofxId&&ofx.has(r.ofxId));
+  s.rows.forEach((r,i)=>{ if(r._conc){ delete r._conc; s.selected.add(i); } const d=dup(r); if(d&&!r._dup){ r._dup=true; s.selected.delete(i); } else if(!d&&r._dup){ delete r._dup; s.selected.add(i); } });
+  const conc=_csvConciliar(s.rows,s.accId,dup);
   conc.forEach((c,i)=>{ s.rows[i]._conc=c; s.selected.delete(i); });
   _renderCsvModal();
 }
@@ -9155,14 +9172,9 @@ function _renderCsvModal() {
   // Detecta duplicatas com lançamentos já existentes
   // Compara com todos os controles: cada linha pode ser gravada em outro controle (coluna Controle)
   const _txsDupR = _allTxsAcrossControles();
-  const existingHashes = s.recat ? new Set() : new Set(
-    _txsDupR.map(t => t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val))
-    .concat(_txsDupR.map(t => t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val)))
-    .concat(_txsDupR.flatMap(t => t.importHashes || []))
-  );
-
+  const _dupIdx = s.recat ? new Map() : _csvDupIdx();
   const _ofxIds = s.recat ? new Set() : new Set(_txsDupR.map(t => t.ofxId).filter(Boolean));
-  const _ehDup = r => existingHashes.has(rowHash(r)) || !!(r.ofxId && _ofxIds.has(r.ofxId));
+  const _ehDup = r => _csvDupDe(_dupIdx, r, accId) || !!(r.ofxId && _ofxIds.has(r.ofxId));
 
   const allCount = rows.length;
   const dupCount = rows.filter(_ehDup).length;
@@ -9236,7 +9248,7 @@ function _renderCsvModal() {
       <div>
         <div style="font-size:17px;font-weight:700;color:${textPrimary}">${s.recat?_ic('sparkles')+' Recategorizar lançamentos em “Outros”':_ic('file-input')+' Revisar importação'}</div>
         <div style="font-size:12px;color:${textSec};margin-top:3px">
-          ${s.recat?`Lançamentos que você já tem · só a categoria (e o membro, se você mudar) é alterada · ${format}`:`<strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_csvState.accMotivo=null;_csvState.accEscolhida=true;_renderCsvModal()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:H(accName)}`}
+          ${s.recat?`Lançamentos que você já tem · só a categoria (e o membro, se você mudar) é alterada · ${format}`:`<strong style="color:${textPrimary}">${H(s.fileName)}</strong> &nbsp;·&nbsp; ${format} &nbsp;·&nbsp; Conta: ${s.pdf?`<select aria-label="Conta de destino" onchange="_csvState.accId=+this.value;_csvState.accMotivo=null;_csvState.accEscolhida=true;_csvRefazerConc()" style="font-size:12px;padding:2px 6px;border-radius:6px;border:1px solid ${inputBorder};background:${inputBg};color:${textPrimary}">${_allAccounts().map(a=>`<option value="${a.id}" ${a.id==accId?'selected':''}>${H(a.name)}${isCC(a)?' (cartão)':''}</option>`).join('')}</select>`:H(accName)}`}
         </div>
       </div>
       <button onclick="closeCsvImport()" aria-label="Fechar" style="background:none;border:none;font-size:20px;cursor:pointer;color:${textSec};padding:0;line-height:1;flex-shrink:0">✕</button>
@@ -9335,9 +9347,9 @@ function _renderCsvModal() {
     <div style="display:flex;gap:10px;margin-top:16px;flex-shrink:0;justify-content:flex-end;align-items:center;flex-wrap:wrap">
       ${_csvTotaisHtml(_vis)}
       <button onclick="${s.recat?'closeCsvImport()':"_csvState.step='upload';_renderCsvModal()"}" style="padding:10px 18px;border-radius:10px;border:1.5px solid ${inputBorder};background:${inputBg};color:${textPrimary};font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-sans)">${s.recat?'Cancelar':'← Voltar'}</button>
-      ${(()=>{ const movN=s.recat?0:_csvFatMoverLista().length; const parcN=s.recat||s.parcFuturas===false?0:_csvParcPlano().length; const remN=s.recat?0:_csvPrevSobrando().length; const off=selCount===0&&movN===0&&parcN===0&&remN===0;
+      ${(()=>{ const movN=s.recat?0:_csvFatMoverLista().length; const parcN=s.recat||s.parcFuturas===false?0:_csvParcPlano().length; const remN=s.recat?0:_csvPrevSobrando().length; const pinN=s.recat?0:_csvFatMoverLista(true).length-movN; const off=selCount===0&&movN===0&&parcN===0&&remN===0&&pinN<=0;
         const txt=s.recat?`Recategorizar ${selCount} lançamento${selCount!==1?'s':''}`
-          :(()=>{ const p=[]; if(selCount||(!movN&&!parcN&&!remN)) p.push(`Importar ${selCount}${movN||parcN?'':` lançamento${selCount!==1?'s':''}`}`); if(movN) p.push(`${p.length?'ajustar':'Ajustar'} ${movN}`); if(parcN) p.push(`${p.length?'lançar':'Lançar'} ${parcN} parcela${parcN!==1?'s':''} futura${parcN!==1?'s':''}`); if(!p.length&&remN) p.push('Atualizar a fatura');
+          :(()=>{ const p=[]; if(selCount||(!movN&&!parcN&&!remN&&!(pinN>0))) p.push(`Importar ${selCount}${movN||parcN?'':` lançamento${selCount!==1?'s':''}`}`); if(movN) p.push(`${p.length?'ajustar':'Ajustar'} ${movN}`); if(parcN) p.push(`${p.length?'lançar':'Lançar'} ${parcN} parcela${parcN!==1?'s':''} futura${parcN!==1?'s':''}`); if(!p.length&&(remN||pinN>0)) p.push('Atualizar a fatura');
             if(p.length===1&&movN&&!selCount) return `Ajustar ${movN} lançamento${movN!==1?'s':''} da fatura`; return p.length>1?p.slice(0,-1).join(', ')+' e '+p[p.length-1]:p[0]; })();
         return `<button onclick="${s.recat?'_recatConfirmar()':'_csvConfirmImport()'}" ${off?'disabled':''} ${movN?`title="${movN} lançamento(s) que já estão no app passam para a fatura escolhida"`:''} style="padding:10px 22px;border-radius:10px;border:none;background:${off?'#94A3B8':'#2563EB'};color:#fff;font-size:14px;font-weight:700;cursor:${off?'not-allowed':'pointer'};font-family:var(--font-sans)">${txt}</button>`; })()}
     </div>
@@ -9606,13 +9618,9 @@ async function _pdfHandleFile(file){
     _csvState.step='upload'; _renderCsvModal();
     toast(res.semTexto?'Este PDF parece ser uma imagem (escaneado). Ative a leitura com Claude em Configurações → Armazenamento.':'Não encontrei lançamentos neste PDF.','var(--amber)',7000); return;
   }
-  const existing=new Set(_allTxsAcrossControles().flatMap(t=>[t.date+'|'+(t.desc||'')+'|'+(t.type==='despesa'?-t.val:t.val),...(t.importHashes||[])]));
   const selected=new Set();
   const _cont=_aplicarAutoCat(res.itens);
-  res.itens.forEach((r,i)=>{
-    _csvFamInicial(r);
-    if(!existing.has(r.date+'|'+r.desc+'|'+r.val)) selected.add(i);
-  });
+  res.itens.forEach((r,i)=>{ _csvFamInicial(r); selected.add(i); });   // duplicatas: conferidas abaixo, já com o cartão de destino
   // fatura de destino: a do vencimento lido no PDF
   if(!_csvState.accEscolhida&&!isCC(accBy(_csvState.accId))||(!_csvState.accEscolhida&&_cartaoSugerido(file.name)?.motivo==='nome do arquivo')){
     const sug=_cartaoSugerido(file.name);
@@ -9621,6 +9629,7 @@ async function _pdfHandleFile(file){
   const acc=accBy(_csvState.accId);
   Object.assign(_csvState,{rows:res.itens,selected,step:'preview',filtro:'',verSel:'todos',format:motor==='claude'?'Fatura PDF · lida pelo Claude':'Fatura PDF · leitura no aparelho',
     catCont:_cont, futuros:0, semSinal:false, pdf:{vencimento:res.vencimento,total:res.total,ignorados:res.ignorados,faturaAlvo:res.vencimento?res.vencimento.slice(0,7):(isCC(acc)?faturaMesDe(acc,today()):null)}});
+  _csvRefazerConc();
   _renderCsvModal();
 }
 // Ao importar para um cartão: cada compra entra na fatura do PDF (a data vai para o ciclo certo; a data original fica na observação)
@@ -9699,11 +9708,11 @@ function _csvPrevSobrando(){
   const acc=accBy(s.accId), alvo=_csvAlvo();
   if(!alvo||!isCC(acc)||!_ccOk(acc)) return [];
   const ligadas=new Set(s.rows.filter((r,i)=>r._conc&&!s.selected.has(i)).map(r=>r._conc.txId));
-  return _allTxsAcrossControles().filter(t=>t.parcPrevista&&String(t.accId)===String(acc.id)&&!ligadas.has(t.id)&&faturaMesDe(acc,t.date)===alvo);
+  return _allTxsAcrossControles().filter(t=>t.parcPrevista&&String(t.accId)===String(acc.id)&&!ligadas.has(t.id)&&_txFatura(acc,t)===alvo);
 }
 // Lançamentos que já estão no app (linhas desmarcadas por já existirem) e estão em outra fatura
 // que não a do arquivo → [{t, aj}] com a data nova. Não altera nada.
-function _csvFatMoverLista(){
+function _csvFatMoverLista(todos){
   const s=_csvState; if(!s||s.recat||!Array.isArray(s.rows)) return [];
   const acc=accBy(s.accId), alvo=_csvAlvo();
   if(!alvo||!isCC(acc)||!_ccOk(acc)) return [];
@@ -9716,9 +9725,8 @@ function _csvFatMoverLista(){
       ((x.date+'|'+(x.desc||'')+'|'+(tipo==='despesa'?-x.val:x.val))===h||(x.importHashes||[]).includes(h)||(_dataOriginal(x)===r.date&&x.desc===r.desc)));
     if(!t||usados.has(t.id)||String(t.accId)!==String(acc.id)) return;
     usados.add(t.id);
-    if(faturaMesDe(acc,t.date)===alvo) return;
-    const aj=_ajustarParaFatura({date:_dataOriginal(t)||r.date},acc,alvo);
-    if(faturaMesDe(acc,aj.date)===alvo) out.push({t,aj});
+    if(_txFatura(acc,t)===alvo){ if(todos&&t.fatura!==alvo) out.push({t,aj:null}); return; }   // só fixa a fatura
+    out.push({t,aj:_ajustarParaFatura({date:_dataOriginal(t)||r.date},acc,alvo)});
   });
   return out;
 }
@@ -9849,24 +9857,18 @@ function _csvHandleFile(file) {
     const cont = _aplicarAutoCat(rows);
     // Sempre todos os controles: a conta pode ser trocada depois e cada linha pode ir para outro controle
     const _txsDup = _allTxsAcrossControles();
-    const existingHashes = new Set(
-      _txsDup.flatMap(t => [
-        t.date + '|' + (t.obs||t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
-        t.date + '|' + (t.desc||'') + '|' + (t.type==='despesa'?-t.val:t.val),
-        ...(t.importHashes || []),
-      ])
-    );
-    function rowHash(r) { return r.date + '|' + r.desc + '|' + r.val; }
+    const _dupIdx = _csvDupIdx();
     const ofxIds = new Set(_txsDup.map(t => t.ofxId).filter(Boolean));
+    // OFX: se o número da conta do arquivo bate com uma única conta sua, já deixa ela como destino
+    if (res.ofx) { const sug = _ofxContaSugerida(res.ofx); if (sug != null) { _csvState.accId = sug; res.ofx.contaAuto = true; } }
+    const _ehDupL = r => _csvDupDe(_dupIdx, r, _csvState.accId) || !!(r.ofxId && ofxIds.has(r.ofxId));
     const selected = new Set();
     rows.forEach((r, i) => {
       _csvFamInicial(r);
-      if (!existingHashes.has(rowHash(r)) && !(r.ofxId && ofxIds.has(r.ofxId))) selected.add(i);
+      if (_ehDupL(r)) r._dup = true; else selected.add(i);
     });
-    // OFX: se o número da conta do arquivo bate com uma única conta sua, já deixa ela como destino
-    if (res.ofx) { const sug = _ofxContaSugerida(res.ofx); if (sug != null) { _csvState.accId = sug; res.ofx.contaAuto = true; } }
     // pagamento que já está no app com outra descrição (ex.: conta fixa marcada como paga) → desmarcado
-    const conc = _csvConciliar(rows, _csvState.accId, r => existingHashes.has(rowHash(r)) || !!(r.ofxId && ofxIds.has(r.ofxId)));
+    const conc = _csvConciliar(rows, _csvState.accId, _ehDupL);
     conc.forEach((c, i) => { rows[i]._conc = c; selected.delete(i); });
     Object.assign(_csvState, { rows, format, selected, fileName: file.name, step: 'preview', filtro: '', verSel: 'todos', catCont: cont, futuros: res.futuros || 0, semSinal: !!res.semSinal, pdf: null, ofx: res.ofx || null,
       fatCsv: rows.some(r => r.fatCartao) ? { nome: _fatMesDoNome(file.name), alvo: null } : null });
@@ -10186,6 +10188,7 @@ function _csvConfirmImport() {
       ...(_csvState.ofx ? { origem: 'ofx' } : {}),
       ...(r.ofxId ? { ofxId: r.ofxId } : {}),
       impArq: true, importHashes: [r.date + '|' + r.desc + '|' + r.val],
+      ...(_alvo && isCC(_acc) ? { fatura: _alvo } : {}),
       planned: false,
       done: true,
       familia,
@@ -10216,8 +10219,10 @@ function _csvConfirmImport() {
     else _concN++;
   });
   // Fatura de cartão: linhas que já estavam no app e caíram em outra fatura passam para a fatura do arquivo
-  _csvFatMoverLista().forEach(({ t, aj }) => {
-    t.date = aj.date;
+  _csvFatMoverLista(true).forEach(({ t, aj }) => {
+    t.fatura = _alvo;                      // a fatura do banco fica gravada no lançamento
+    if (!aj) return;
+    if (faturaMesDe(_acc, aj.date) === _alvo) t.date = aj.date;
     if (aj.obs && !/Compra original em/.test(t.obs || '')) t.obs = [aj.obs, t.obs].filter(Boolean).join(' · ');
     _fatMov++;
   });
@@ -10238,7 +10243,7 @@ function _csvConfirmImport() {
       if (!Array.isArray(dono.txs)) dono.txs = [];
       dono.txs.push({ id: A.nid++, type: 'despesa', desc: `${_parcDescBase(r.desc)} (${k} de ${info.m})`, val: v, date: aj.date,
         catId: ref ? ref.catId : (r.catId || null), accId, accDest: null, recur: 'none', familia: ref ? (ref.familia || '') : (r.fam || famDefault),
-        obs: `Parcela prevista · Compra original em ${D(r.date)}`, parcela: k, parcelas: info.m, parcOrig: r.date, parcPrevista: true, planned: false, done: true });
+        obs: `Parcela prevista · Compra original em ${D(r.date)}`, parcela: k, parcelas: info.m, parcOrig: r.date, parcPrevista: true, fatura: mes, planned: false, done: true });
       _parcNovas++;
     });
   }
