@@ -4175,21 +4175,27 @@ function marcarPago(id,mes,forcarNovo){
      <div style="display:flex;gap:10px;margin-top:12px;text-align:left">
        <label style="flex:1;font-size:12px;font-weight:600">Data em que ${rec?'recebeu':'pagou'}<input type="date" id="fx-pg-data" value="${sug}" style="display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:inherit;font:inherit"></label>
        <label style="flex:1;font-size:12px;font-weight:600">Valor ${rec?'recebido':'pago'}<input id="fx-pg-val" inputmode="decimal" value="${f.val.toFixed(2).replace('.',',')}" style="display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:inherit;font:inherit;text-align:right"></label>
-     </div>`,
+     </div>
+     ${(()=>{ const contas=_allAccounts(), bancos=contas.filter(a=>!isCC(a)), cartoes=rec?[]:contas.filter(a=>isCC(a));
+       const atual=contas.some(a=>String(a.id)===String(f.accId))?f.accId:(bancos[0]||cartoes[0]||{}).id;
+       const op=a=>`<option value="${a.id}" ${String(a.id)===String(atual)?'selected':''}>${H(a.name)}${_isSharedAcc(a.id)?' 🔗':''}</option>`;
+       return `<label style="display:block;margin-top:10px;text-align:left;font-size:12px;font-weight:600">${rec?'Conta em que recebeu':'Banco / conta de onde saiu'}<select id="fx-pg-acc" style="display:block;width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1px solid var(--gray-200);background:var(--color-background-primary,#fff);color:inherit;font:inherit">${cartoes.length?`<optgroup label="Contas">${bancos.map(op).join('')}</optgroup><optgroup label="Cartão de crédito">${cartoes.map(op).join('')}</optgroup>`:bancos.map(op).join('')}</select></label>`; })()}`,
     ()=>{
       const dt=(document.getElementById('fx-pg-data')||{}).value||venc;
       const vt=String((document.getElementById('fx-pg-val')||{}).value||'').replace(/R\$|\s/g,''); const v=parseFloat(vt.includes(',')?vt.replace(/\./g,'').replace(',','.'):vt);
-      _fixaCriarPagamento(f,mes,dt,v&&v>0?v:f.val);
+      const acc=(document.getElementById('fx-pg-acc')||{}).value;
+      _fixaCriarPagamento(f,mes,dt,v&&v>0?v:f.val,acc?+acc:f.accId);
     },
     {okLabel:rec?'✓ Recebido':'✓ Pago',okColor:'var(--income)',icon:rec?'💰':'🧾'});
   setTimeout(()=>{const el=document.getElementById('fx-pg-data');if(el)el.focus();},60);
 }
-function _fixaCriarPagamento(f,mes,data,val){
+function _fixaCriarPagamento(f,mes,data,val,accId){
+  if(accId==null||!_allAccounts().some(a=>String(a.id)===String(accId))) accId=f.accId;
   if(!f.pagamentos)f.pagamentos={};
   const txId=A.nid++;
-  A.txs.push({id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,mes),val,date:data,catId:f.catId,accId:f.accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true,familia:f.familia||''});
+  A.txs.push({id:txId,type:f.type,desc:f.desc+fixaTxDescSuffix(f,mes),val,date:data,catId:f.catId,accId,accDest:null,recur:f.recur,obs:f.obs,planned:false,done:true,familia:f.familia||''});
   f.pagamentos[mes]=txId;
-  toast((f.type==='receita'?'Recebido em ':'Pago em ')+D(data)+' — lançamento criado.','var(--income)');render();
+  toast((f.type==='receita'?'Recebido em ':'Pago em ')+D(data)+(String(accId)!==String(f.accId)?` (${accBy(accId).name})`:'')+' — lançamento criado.','var(--income)');render();
 }
 function desmarcarPago(id,mes){
   const f=A.fixas.find(x=>x.id===id);if(!f||!f.pagamentos)return;
@@ -6713,7 +6719,7 @@ function rParametros(m){
     <div class="prm-padroes"><div class="stg-title">Regras disponíveis</div>${PARAMS.map(p=>`<div class="prm-pd"><span>${H(p.titulo)} <span class="prm-onde">${H(p.onde)}</span></span><span>${A.params&&A.params[p.k]?`<strong>${H(p.opcoes.find(o=>o.v===_param(p.k)).t)}</strong>`:`<span class="stg-hint">padrão: ${H(p.opcoes.find(o=>o.v===p.padrao).t)}</span>`}</span></div>`).join('')}</div>
   </div>`;
 }
-const APP_VERSAO='093';
+const APP_VERSAO='094';
 function rArmazenamento(m){
   const fb=window._fbUser;
   const lastBk=(()=>{try{return localStorage.getItem(_lastTxKey().replace('pfp_last_tx_','pfp_last_backup_'));}catch(e){return null;}})();
