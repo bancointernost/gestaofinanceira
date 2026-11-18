@@ -2099,6 +2099,24 @@ html.dark .tb.tr-type,html.dark .tbtns-3 .tb.tr-type{background:#1e1050;color:va
 html.dark #ctlMultiWrap>button{background:var(--gray-100)!important;color:#a8bdd8!important}
 html.dark #ctlMultiWrap>button:hover{background:var(--gray-200)!important}
 .topbar select,.mes-nav,#ano-filt{min-height:40px;box-sizing:border-box}
+
+/* ── Senhas › Minha conta ── */
+.mc-head{display:flex;align-items:center;gap:14px;padding:16px 0 18px;border-bottom:1px solid var(--sheet-line);margin-bottom:18px}
+.mc-av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;font-size:19px;font-weight:700;color:var(--blue);background:var(--blue-light);border:1px solid var(--blue-mid);flex-shrink:0}
+.mc-nome{font-size:16px;font-weight:700;color:var(--gray-900);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mc-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--blue-light);color:var(--blue);border:1px solid var(--blue-mid)}
+.mc-login{font-size:13px;color:var(--gray-500);margin-top:2px}
+.mc-box{max-width:560px}
+.mc-tit{font-size:15px;font-weight:700;color:var(--gray-900);display:flex;align-items:center;gap:8px}
+.mc-sub{font-size:13px;color:var(--gray-500);margin:4px 0 14px}
+.mc-olho{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray-400);padding:2px;display:flex}
+.mc-erro{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--expense-bg);border:1px solid var(--expense-border);color:var(--expense);font-size:13px}
+.mc-aviso{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--warn-bg);border:1px solid var(--warn-line);color:var(--warn-text);font-size:13px;margin-bottom:12px}
+.mc-rodape{font-size:12px;color:var(--gray-400);margin-top:18px}
+/* ícone do papel nos cartões de usuário: legível no escuro */
+html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:var(--blue)}
+
+.btn-r:disabled{opacity:.5;cursor:not-allowed;filter:none}
 </style>
 <body>
 <!-- Ícones: Lucide (https://lucide.dev) — licença ISC -->
@@ -2288,7 +2306,7 @@ html.dark #pfp-loading{background:var(--color-background-primary)}
 <script type="module">
 // Carregado sob demanda: sem internet a tela abre do mesmo jeito e o Firebase
 // é carregado de novo quando a conexão voltar (window._fbGarantirSdk).
-let initializeApp, getApps, deleteApp, getFirestore, doc, setDoc, getDoc, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged;
+let initializeApp, getApps, deleteApp, getFirestore, doc, setDoc, getDoc, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider;
 const _FB_SDK='https://www.gstatic.com/firebasejs/10.12.0/';
 
 // ── Configs dos ambientes ──
@@ -2402,6 +2420,12 @@ function _makeFbApi(instance) {
     signIn:  (e,p) => signInWithEmailAndPassword(auth, e, p),
     signUp:  (e,p) => createUserWithEmailAndPassword(auth, e, p),
     signOut: ()    => signOut(auth),
+    // troca a senha da conta: confirma a atual (o Firebase exige login recente) e grava a nova
+    trocarSenha: async (atual, nova) => {
+      const u = auth.currentUser; if (!u || !u.email) throw { code: 'auth/no-current-user' };
+      await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, atual));
+      await updatePassword(u, nova);
+    },
     save:    async (uid, data) => {
       const clone = JSON.parse(JSON.stringify(data));
       await setDoc(doc(db, 'users', uid, 'data', 'main'), clone);
@@ -2452,7 +2476,7 @@ async function _fbBoot(){
   try{
     const [mApp,mFs,mAuth]=await Promise.all([import(_FB_SDK+'firebase-app.js'),import(_FB_SDK+'firebase-firestore.js'),import(_FB_SDK+'firebase-auth.js')]);
     ({initializeApp,getApps,deleteApp}=mApp); ({getFirestore,doc,setDoc,getDoc}=mFs);
-    ({getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}=mAuth);
+    ({getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged,updatePassword,reauthenticateWithCredential,EmailAuthProvider}=mAuth);
   }catch(e){ console.info('Firebase: a conexão caiu durante o carregamento; recarregue a página quando a internet estiver estável.',e&&e.message); window._fbSdkErro=true; window._fbSdkPrecisaRecarregar=true; return false; }
   window._fbSdkErro=false;
   _fbInstance=_buildFb(_fbEnv);
@@ -6932,6 +6956,9 @@ const OPFS_FILE     = 'pfp_data.json';   // arquivo OPFS
 
 // Campos do estado A que devem ser persistidos
 const DB_FIELDS = ['nid','familia','cats','catRegras','accounts','fixas','txs','senhas','usuarios','controles','controleAtivo','controlesCache','sharedAccounts','compart','params'];
+// Na nuvem (conta por e-mail) NÃO vão os usuários de login deste aparelho: eles são do aparelho,
+// e levá-los fazia aparecer usuários de outras pessoas/testes dentro de outra conta.
+const FB_FIELDS = DB_FIELDS.filter(k=>k!=='usuarios');
 
 // ── Separação de dados por usuário ──────────────────────────────────
 // GLOBAL_FIELDS: compartilhado entre todos (lista de contas de login + contador de IDs)
@@ -7277,7 +7304,7 @@ function dbSave() {
     clearTimeout(window._fbSyncTimer);
     window._fbSyncTimer = setTimeout(() => {
       const fbPayload = {};
-      DB_FIELDS.forEach(k => { fbPayload[k] = A[k]; });
+      FB_FIELDS.forEach(k => { fbPayload[k] = A[k]; });
       fbPayload._savedAt = new Date().toISOString();
       _updateFbChip('syncing');
       window._fb.save(window._fbUser.uid, fbPayload)
@@ -8317,7 +8344,7 @@ async function _fbSwitchLogin(mode) {
     try {
       const data = await window._fb.load(uid);
       if (data) {
-        DB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
+        FB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
         _fbSyncSet(uid, { pend: false, cloudTs: data._savedAt || '' });
       }
       _runContentSchemaMigrations();
@@ -8424,7 +8451,7 @@ async function fbPull() {
     if (!data) { toast('Nenhum dado encontrado na nuvem.', '#D97706', 4000); if(btn){btn.textContent='⬇️ Carregar nuvem';btn.disabled=false;btn.dataset.confirming='';} return; }
 
     // Aplica os dados na memória
-    DB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
+    FB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
     _runContentSchemaMigrations();
 
     // Tenta abrir seletor de local de salvamento (File System Access API)
@@ -10649,6 +10676,89 @@ function _csvConfirmImport() {
 }
 
 
+// ═══ Permissões de usuários ═══
+// Conta por e-mail (nuvem): cada pessoa só vê e gerencia a própria conta.
+// Login local: só o Administrador vê a lista, cria, edita e exclui usuários; os demais só trocam a própria senha.
+function _ehContaNuvem(){ const s=window._appSession; return !!(s&&String(s.id).startsWith('fb:')); }
+function _podeGerirUsuarios(){
+  const s=window._appSession;
+  if(!s) return !_loginRequired(); // modo livre (sem nenhum usuário): pode criar o primeiro
+  if(_ehContaNuvem()) return false;
+  return s.papel==='admin';
+}
+function _minhaContaHtml(subTabsHtml){
+  const s=window._appSession||{}, nuvem=_ehContaNuvem();
+  const u=nuvem?null:(A.usuarios||[]).find(x=>x.id===s.id);
+  const papelLabel={admin:'Administrador',usuario:'Usuário',visitante:'Visitante'};
+  const nome=nuvem?(s.nome||s.login):(u&&(u.nome||u.login))||s.nome||'';
+  const login=nuvem?s.login:(u&&u.login)||s.login||'';
+  const tag=nuvem?'Conta na nuvem':(papelLabel[(u&&u.papel)||s.papel]||'Usuário');
+  const semNet=nuvem&&(window._fbOffline||!window._fb||!window._fb.trocarSenha);
+  const campo=(id,lbl,ph,ac)=>`<div class="fr"><label for="${id}">${lbl}</label><div style="position:relative"><input type="password" id="${id}" placeholder="${ph}" autocomplete="${ac}" style="padding-right:44px;width:100%"><button type="button" class="mc-olho" onclick="const i=document.getElementById('${id}');i.type=i.type==='password'?'text':'password'" aria-label="Mostrar ou esconder a senha"><svg class="ic sm" aria-hidden="true"><use href="#i-eye"/></svg></button></div></div>`;
+  return `<div class="card">
+    <div style="margin-bottom:8px"><h2 style="font-size:18px;font-weight:700;color:var(--gray-900);letter-spacing:-.4px"><svg class="ic lg" aria-hidden="true"><use href="#i-key-round"/></svg> Senhas &amp; Acessos</h2></div>
+    ${subTabsHtml}
+    <div class="mc-head">
+      <div class="mc-av">${H(String(nome||'?')[0].toUpperCase())}</div>
+      <div class="mc-id"><div class="mc-nome">${H(nome)} <span class="mc-tag">${H(tag)}</span></div><div class="mc-login">${H(login)}</div></div>
+    </div>
+    <div class="mc-box">
+      <h3 class="mc-tit"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> Trocar minha senha</h3>
+      <p class="mc-sub">${nuvem?'É a senha que você usa para entrar com este e-mail, em qualquer aparelho.':'É a senha que você usa para entrar com este login neste aparelho.'} Mínimo de 6 caracteres.</p>
+      ${semNet?`<div class="mc-aviso"><svg class="ic sm" aria-hidden="true"><use href="#i-wifi"/></svg> Para trocar a senha da conta na nuvem é preciso estar conectado à internet.</div>`:''}
+      <div class="fg">
+        <div class="fr full">${campo('mc-atual','Senha atual','Sua senha de hoje','current-password').replace('<div class="fr">','').replace(/<\/div>$/,'')}</div>
+        ${campo('mc-nova','Nova senha','Mínimo 6 caracteres','new-password')}
+        ${campo('mc-conf','Repita a nova senha','Digite de novo','new-password')}
+      </div>
+      <div id="mc-erro" class="mc-erro" style="display:none"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn-r" id="mc-btn" onclick="trocarMinhaSenha()" ${semNet?'disabled':''}><svg class="ic sm" aria-hidden="true"><use href="#i-check"/></svg> Trocar senha</button></div>
+    </div>
+    <p class="mc-rodape">${nuvem?'Cada conta por e-mail é separada: aqui você só gerencia a sua.':'Criar, editar e excluir usuários é só para o Administrador.'}</p>
+  </div>`;
+}
+async function trocarMinhaSenha(){
+  const v=id=>(document.getElementById(id)||{}).value||'';
+  const atual=v('mc-atual'), nova=v('mc-nova'), conf=v('mc-conf');
+  const err=document.getElementById('mc-erro'), btn=document.getElementById('mc-btn');
+  const erro=t=>{ if(err){err.textContent=t;err.style.display='block';} };
+  if(err) err.style.display='none';
+  if(!atual) return erro('Digite a sua senha atual.');
+  if(nova.length<6) return erro('A nova senha precisa ter pelo menos 6 caracteres.');
+  if(nova!==conf) return erro('As duas novas senhas não são iguais.');
+  if(nova===atual) return erro('A nova senha é igual à atual.');
+  const s=window._appSession; if(!s) return erro('Entre de novo e tente outra vez.');
+  if(btn){btn.disabled=true;btn.textContent='Trocando…';}
+  const fim=()=>{ if(btn){btn.disabled=false;btn.innerHTML='<svg class="ic sm" aria-hidden="true"><use href="#i-check"/></svg> Trocar senha';} };
+  try{
+    if(_ehContaNuvem()){
+      if(window._fbOffline||!window._fb||!window._fb.trocarSenha){ fim(); return erro('Sem conexão com a nuvem agora. Tente de novo com internet.'); }
+      const uid=String(s.id).slice(3);
+      await window._fb.trocarSenha(atual,nova);
+      await _encTrocarSenha(s.id,nova);          // a cópia deste aparelho passa a abrir com a nova senha
+      await _fbOffGuardar(s.login,uid,nova);     // e o acesso sem internet também
+      _sessionPassMem=nova;
+    } else {
+      const u=(A.usuarios||[]).find(x=>x.id===s.id);
+      if(!u){ fim(); return erro('Usuário não encontrado neste aparelho.'); }
+      if(!(await _verifyPassword(u,atual))){ fim(); return erro('Senha atual incorreta.'); }
+      u.senhaHash=await _hashPassword(nova); delete u.senha; delete u._senhaDefault;
+      await _encTrocarSenha(u.id,nova);
+      if(u.papel==='admin'){ _vaultRemoveAdminKey(u.id); if(_vaultMasterMem) await _vaultSetAdminKey(_vaultMasterMem,u.id,nova); }
+      _sessionPassMem=nova;
+    }
+    toast('Senha trocada! Use a nova no próximo acesso.','var(--income)',4000);
+    render();
+  }catch(e){
+    fim(); const c=e&&e.code||'';
+    erro(c==='auth/wrong-password'||c==='auth/invalid-credential'||c==='auth/invalid-login-credentials'?'Senha atual incorreta.'
+      :c==='auth/weak-password'?'Essa senha é fraca demais. Use pelo menos 6 caracteres.'
+      :c==='auth/too-many-requests'?'Muitas tentativas. Espere alguns minutos e tente de novo.'
+      :c==='auth/network-request-failed'?'Sem conexão. Tente de novo com internet.'
+      :'Não consegui trocar a senha agora. Tente de novo.');
+  }
+}
+
 /* ─── ABA SENHAS ─── */
 function rSenhas(m){
   const subTab=A.senhaTab||'cofre';
@@ -10656,7 +10766,7 @@ function rSenhas(m){
   // Sub-tabs
   const subTabsHtml=`<div class="cat-tabs" style="margin-bottom:16px">
     <button class="cat-tab-btn ${subTab==='cofre'?'on':''}" onclick="A.senhaTab='cofre';A.senhaForm={open:false,id:null,site:'',url:'',usuario:'',senha:'',obs:''};A.senhaSearch='';render()"><svg class="ic" aria-hidden="true"><use href="#i-key-round"/></svg> Cofre de Senhas</button>
-    <button class="cat-tab-btn ${subTab==='usuarios'?'on':''}" onclick="A.senhaTab='usuarios';A.usuarioForm={open:false,id:null,nome:'',login:'',senha:'',papel:'usuario',obs:''};A.senhaSearch='';render()"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg> Usuários do Sistema</button>
+    <button class="cat-tab-btn ${subTab==='usuarios'?'on':''}" onclick="A.senhaTab='usuarios';A.usuarioForm={open:false,id:null,nome:'',login:'',senha:'',papel:'usuario',obs:''};A.senhaSearch='';render()"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg> ${_podeGerirUsuarios()?'Usuários do Sistema':'Minha conta'}</button>
   </div>`;
 
   if(subTab==='cofre'){
@@ -10788,7 +10898,8 @@ function rSenhas(m){
     return;
   }
 
-  // ── Sub-tab: Usuários do Sistema ──
+  // ── Sub-tab: Usuários do Sistema (admin) ou Minha conta (demais) ──
+  if(!_podeGerirUsuarios()){ m.innerHTML=_minhaContaHtml(subTabsHtml); return; }
   const uf=A.usuarioForm||{open:false,id:null,nome:'',login:'',senha:'',papel:'usuario',obs:''};
   const usuarios=A.usuarios||[];
 
@@ -10816,7 +10927,7 @@ function rSenhas(m){
       <div class="fr">
         <label>Senha</label>
         <div style="position:relative">
-          <input type="password" id="uf-senha" placeholder="Mínimo 4 caracteres" value="${H(uf.senha)}" oninput="A.usuarioForm.senha=this.value" autocomplete="new-password" style="padding-right:44px;width:100%">
+          <input type="password" id="uf-senha" placeholder="${uf.id?'Deixe em branco para manter a atual':'Mínimo 6 caracteres'}" value="${H(uf.senha)}" oninput="A.usuarioForm.senha=this.value" autocomplete="new-password" style="padding-right:44px;width:100%">
           <button type="button" onclick="const i=document.getElementById('uf-senha');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;color:var(--gray-400)" aria-label="Mostrar ou ocultar senha"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></button>
         </div>
       </div>
@@ -10907,6 +11018,7 @@ function saveUsuario(){
 }
 
 function editUsuario(id){
+  if(!_podeGerirUsuarios()){ toast('Só o administrador pode gerenciar usuários.','var(--expense)'); return; }
   const u=(A.usuarios||[]).find(x=>x.id===id);
   if(!u)return;
   A.usuarioForm={open:true,id:u.id,nome:u.nome||'',login:u.login||'',senha:'',papel:u.papel||'usuario',obs:u.obs||''};
@@ -10914,6 +11026,7 @@ function editUsuario(id){
 }
 
 function delUsuario(id){
+  if(!_podeGerirUsuarios()){ toast('Só o administrador pode excluir usuários.','var(--expense)'); return; }
   const _u=(A.usuarios||[]).find(x=>x.id==id);
   if(_bloquearExclusao('o usuário',_u?(_u.nome||_u.login):'',_vinculosUsuario(id),'Os dados deste usuário ainda estão guardados neste aparelho. Entre com ele e apague os lançamentos e contas, ou mantenha o usuário.')) return;
   _showConfirm('Excluir usuário?','Esta ação não pode ser desfeita.',()=>{
@@ -12053,8 +12166,8 @@ function _fbOffGet(){ try{ return JSON.parse(localStorage.getItem('pfp_fb_offlin
 async function _fbOffGuardar(email,uid,pass){ try{ localStorage.setItem('pfp_fb_offline',JSON.stringify({email:String(email).toLowerCase(),uid,h:await _hashPassword(pass),em:new Date().toISOString()})); }catch(e){} }
 function _comTempo(p,ms){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]); }
 function _fbErroDeRede(e){ return !navigator.onLine||!e||e.code==='auth/network-request-failed'||e.code==='timeout'||e.code==='unavailable'||/network|offline|Failed to fetch/i.test(String(e.message||e)); }
-function _fbPayload(){ const p={}; DB_FIELDS.forEach(k=>{ p[k]=A[k]; }); p._savedAt=new Date().toISOString(); return p; }
-function _fbAplicar(data){ DB_FIELDS.forEach(k=>{ if(data[k]!==undefined) A[k]=data[k]; }); _runContentSchemaMigrations(); }
+function _fbPayload(){ const p={}; FB_FIELDS.forEach(k=>{ p[k]=A[k]; }); p._savedAt=new Date().toISOString(); return p; }
+function _fbAplicar(data){ FB_FIELDS.forEach(k=>{ if(data[k]!==undefined) A[k]=data[k]; }); _runContentSchemaMigrations(); }
 async function _fbEnviar(uid){ const p=_fbPayload(); _updateFbChip('syncing'); await _comTempo(window._fb.save(uid,p),20000); _fbSyncSet(uid,{pend:false,cloudTs:p._savedAt}); window._fbLastSync=`🚀 ☁️ ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`; _updateFbChip('synced'); }
 function _fbEscolher(localTs,cloudTs){
   return new Promise(res=>{
@@ -12352,6 +12465,7 @@ async function _migrateUserPasswords(){
 
 // ── saveUsuario atualizado para usar hash ──
 async function saveUsuarioSecure(){
+  if(!_podeGerirUsuarios()){ toast('Só o administrador pode gerenciar usuários.','var(--expense)'); return; }
   const uf=A.usuarioForm;
   if(!uf.nome.trim()){toast('Informe o nome completo.','var(--expense)');return;}
   if(!uf.login.trim()){toast('Informe o login/usuário.','var(--expense)');return;}
