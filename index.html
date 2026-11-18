@@ -7150,7 +7150,7 @@ function exportBackup(){
   }
   const payload={_app:'pfp',_tipo:'backup',_versao:1,_exportadoEm:new Date().toISOString()};
   USER_FIELDS.forEach(k=>{payload[k]=A[k];});
-  try{ const vm=localStorage.getItem(VAULT_META_KEY); if(vm) payload._vaultMeta=vm; }catch(e){}
+  try{ const vm=_vaultMetaRaw(); if(vm) payload._vaultMeta=vm; }catch(e){}
   const blob=new Blob([JSON.stringify(payload,null,1)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='pfp_backup_'+localDate()+'.json';
@@ -7171,7 +7171,7 @@ function importBackupFile(input){
       `Os dados atuais (contas, lançamentos, fixas, categorias, controles e senhas) serão substituídos pelos do arquivo <strong>${H(f.name)}</strong>${quando}: ${d.txs.length} lançamentos e ${d.accounts.length} contas. Usuários e logins não mudam.<br><br>Dica: exporte um backup dos dados atuais antes, se quiser guardá-los.`,
       ()=>{
         USER_FIELDS.forEach(k=>{ if(d[k]!==undefined) A[k]=d[k]; });
-        if(d._vaultMeta){ try{localStorage.setItem(VAULT_META_KEY,d._vaultMeta);}catch(e){} }
+        if(d._vaultMeta){ try{localStorage.setItem(_vaultMetaKey(),d._vaultMeta);}catch(e){} }
         A.cofre={locked:true,masterSet:vaultHasMaster(),key:null,senhasDecrypt:null};
         _vaultMasterMem=null;
         _runContentSchemaMigrations();
@@ -7305,6 +7305,7 @@ function dbSave() {
     window._fbSyncTimer = setTimeout(() => {
       const fbPayload = {};
       FB_FIELDS.forEach(k => { fbPayload[k] = A[k]; });
+      try { const vm = _vaultMetaRaw('fb:' + window._fbUser.uid); if (vm) fbPayload._vaultMeta = vm; } catch(e) {}
       fbPayload._savedAt = new Date().toISOString();
       _updateFbChip('syncing');
       window._fb.save(window._fbUser.uid, fbPayload)
@@ -8345,6 +8346,7 @@ async function _fbSwitchLogin(mode) {
       const data = await window._fb.load(uid);
       if (data) {
         FB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
+        _vaultMetaDaNuvem(data, 'fb:' + uid);
         _fbSyncSet(uid, { pend: false, cloudTs: data._savedAt || '' });
       }
       _runContentSchemaMigrations();
@@ -8452,6 +8454,7 @@ async function fbPull() {
 
     // Aplica os dados na memória
     FB_FIELDS.forEach(k => { if (data[k] !== undefined) A[k] = data[k]; });
+    _vaultMetaDaNuvem(data, 'fb:' + window._fbUser.uid);
     _runContentSchemaMigrations();
 
     // Tenta abrir seletor de local de salvamento (File System Access API)
@@ -11085,7 +11088,31 @@ function clearSenhaSearch(){
    • Suporte a migração de dados antigos (texto puro → criptografado ao definir master)
    ═══════════════════════════════════════════════════════════ */
 
-const VAULT_META_KEY = 'pfp_vault_meta'; // localStorage: {salt, verifier}
+const VAULT_META_KEY = 'pfp_vault_meta'; // localStorage: {salt, verifier} — legado: um cofre por navegador
+// Cada usuário tem o próprio cofre (antes era um só por navegador: quem entrasse
+// depois caía no cofre criado por outra pessoa). Sem login (modo livre) continua a chave antiga.
+function _vaultMetaKey(id){
+  if(id==null){ const s=window._appSession; id=s&&s.id!=null?s.id:null; }
+  return id!=null?VAULT_META_KEY+'_'+id:VAULT_META_KEY;
+}
+// Migração: o cofre antigo do navegador só passa para quem tem senhas cifradas com ele
+function _vaultMetaRaw(id){
+  const k=_vaultMetaKey(id);
+  try{
+    let v=localStorage.getItem(k);
+    if(!v&&k!==VAULT_META_KEY){
+      const g=localStorage.getItem(VAULT_META_KEY);
+      if(g&&(A.senhas||[]).some(x=>x&&(x.enc||x._crypt))){ localStorage.setItem(k,g); v=g; }
+    }
+    return v;
+  }catch(e){ return null; }
+}
+// Cofre vindo da nuvem: usado quando este aparelho ainda não tem o cofre desta conta
+function _vaultMetaDaNuvem(data,id){
+  const k=_vaultMetaKey(id);
+  try{ if(data&&typeof data._vaultMeta==='string'&&!localStorage.getItem(k)) localStorage.setItem(k,data._vaultMeta); }catch(e){}
+}
+function _vaultMetaSet(meta){ try{ localStorage.setItem(_vaultMetaKey(), JSON.stringify(meta)); }catch(e){} }
 
 // Segredos só em memória (somem ao recarregar, travar o cofre ou sair).
 // Versões anteriores guardavam a senha master em texto no sessionStorage ('_vmp').
@@ -11180,12 +11207,12 @@ async function _decrypt(key, enc, iv){
 
 // ── Verifica se senha master está definida ──
 function vaultHasMaster(){
-  return !!localStorage.getItem(VAULT_META_KEY);
+  return !!_vaultMetaRaw();
 }
 
 // ── Carrega metadados (salt + verifier) ──
 function _vaultLoadMeta(){
-  try{ return JSON.parse(localStorage.getItem(VAULT_META_KEY)||'null'); }catch(e){ return null; }
+  try{ return JSON.parse(_vaultMetaRaw()||'null'); }catch(e){ return null; }
 }
 
 // ── Verifica senha master (tenta decifrar o verifier) ──
@@ -11212,13 +11239,13 @@ async function _vaultSetAdminKey(masterPass, adminId, adminPass){
   const k = await _deriveKey(adminPass, salt);
   const {enc, iv} = await _encrypt(k, masterPass);
   meta.adminKeys[adminId] = {v:2, salt:_b64e(salt.buffer), enc, iv};
-  localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta));
+  _vaultMetaSet(meta);
 }
 function _vaultRemoveAdminKey(adminId){
   const meta = _vaultLoadMeta();
   if(!meta || !meta.adminKeys || !meta.adminKeys[adminId]) return;
   delete meta.adminKeys[adminId];
-  localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta));
+  _vaultMetaSet(meta);
 }
 async function _vaultMasterFromAdmin(adminId, adminPass){
   const meta = _vaultLoadMeta();
@@ -11245,7 +11272,7 @@ async function vaultSetMaster(password){
   const key = await _deriveKey(password, salt);
   const {enc, iv} = await _encrypt(key, 'pfp-vault-ok');
   const meta = {salt: _b64e(salt.buffer), verifierEnc: enc, verifierIv: iv, adminKeys:{}};
-  localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta));
+  _vaultMetaSet(meta);
   A.cofre.key = key;
   A.cofre.locked = false;
   A.cofre.masterSet = true;
@@ -11473,7 +11500,7 @@ function vaultResetConfirm(){
     '⚠️ Redefinir senha master?',
     'ATENÇÃO: Todas as senhas criptografadas serão APAGADAS permanentemente. Esta ação não pode ser desfeita.',
     ()=>{
-      localStorage.removeItem(VAULT_META_KEY);
+      try{ localStorage.removeItem(_vaultMetaKey()); }catch(e){}
       _vaultMasterMem = null;
       A.senhas = [];
       A.cofre = {locked:true, masterSet:false, key:null, senhasDecrypt:null};
@@ -12166,9 +12193,9 @@ function _fbOffGet(){ try{ return JSON.parse(localStorage.getItem('pfp_fb_offlin
 async function _fbOffGuardar(email,uid,pass){ try{ localStorage.setItem('pfp_fb_offline',JSON.stringify({email:String(email).toLowerCase(),uid,h:await _hashPassword(pass),em:new Date().toISOString()})); }catch(e){} }
 function _comTempo(p,ms){ return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout'}),ms))]); }
 function _fbErroDeRede(e){ return !navigator.onLine||!e||e.code==='auth/network-request-failed'||e.code==='timeout'||e.code==='unavailable'||/network|offline|Failed to fetch/i.test(String(e.message||e)); }
-function _fbPayload(){ const p={}; FB_FIELDS.forEach(k=>{ p[k]=A[k]; }); p._savedAt=new Date().toISOString(); return p; }
-function _fbAplicar(data){ FB_FIELDS.forEach(k=>{ if(data[k]!==undefined) A[k]=data[k]; }); _runContentSchemaMigrations(); }
-async function _fbEnviar(uid){ const p=_fbPayload(); _updateFbChip('syncing'); await _comTempo(window._fb.save(uid,p),20000); _fbSyncSet(uid,{pend:false,cloudTs:p._savedAt}); window._fbLastSync=`🚀 ☁️ ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`; _updateFbChip('synced'); }
+function _fbPayload(uid){ const p={}; FB_FIELDS.forEach(k=>{ p[k]=A[k]; }); try{ const vm=_vaultMetaRaw(uid!=null?'fb:'+uid:null); if(vm) p._vaultMeta=vm; }catch(e){} p._savedAt=new Date().toISOString(); return p; }
+function _fbAplicar(data,uid){ FB_FIELDS.forEach(k=>{ if(data[k]!==undefined) A[k]=data[k]; }); _vaultMetaDaNuvem(data,uid!=null?'fb:'+uid:null); _runContentSchemaMigrations(); }
+async function _fbEnviar(uid){ const p=_fbPayload(uid); _updateFbChip('syncing'); await _comTempo(window._fb.save(uid,p),20000); _fbSyncSet(uid,{pend:false,cloudTs:p._savedAt}); window._fbLastSync=`🚀 ☁️ ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`; _updateFbChip('synced'); }
 function _fbEscolher(localTs,cloudTs){
   return new Promise(res=>{
     const f=ts=>ts?new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'?';
@@ -12193,12 +12220,12 @@ async function _fbSincronizar(uid){
   if(st.pend){
     if(!st.cloudTs||cloudTs===st.cloudTs||(st.localTs&&cloudTs<=st.cloudTs)){ await _fbEnviar(uid); toast('☁️ Alterações feitas sem internet enviadas para a nuvem.','var(--income)',4500); return true; }
     const esc=await _fbEscolher(st.localTs,cloudTs);
-    try{ const bk=esc==='local'?data:_fbPayload(); localStorage.setItem('pfp_fb_backup_'+uid,_encKey?await _encEmpacotar(bk):JSON.stringify(bk)); }catch(e){}
+    try{ const bk=esc==='local'?data:_fbPayload(uid); localStorage.setItem('pfp_fb_backup_'+uid,_encKey?await _encEmpacotar(bk):JSON.stringify(bk)); }catch(e){}
     if(esc==='local'){ await _fbEnviar(uid); toast('☁️ A versão deste aparelho foi enviada para a nuvem.','var(--income)',4500); }
-    else { _fbAplicar(data); _fbSyncSet(uid,{pend:false,cloudTs}); window._fbOffline=false; dbSave(); _fbSyncSet(uid,{pend:false,cloudTs}); _updateFbChip('synced'); render(); toast('☁️ Dados da nuvem carregados.','#2563EB',4000); }
+    else { _fbAplicar(data,uid); _fbSyncSet(uid,{pend:false,cloudTs}); window._fbOffline=false; dbSave(); _fbSyncSet(uid,{pend:false,cloudTs}); _updateFbChip('synced'); render(); toast('☁️ Dados da nuvem carregados.','#2563EB',4000); }
     return true;
   }
-  if(cloudTs!==st.cloudTs||!st.cloudTs){ _fbAplicar(data); }
+  if(cloudTs!==st.cloudTs||!st.cloudTs){ _fbAplicar(data,uid); }
   _fbSyncSet(uid,{pend:false,cloudTs});
   window._fbLastSync=`🚀 ☁️ ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
   _updateFbChip('synced');
