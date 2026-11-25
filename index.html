@@ -2117,6 +2117,19 @@ html.dark #ctlMultiWrap>button:hover{background:var(--gray-200)!important}
 html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:var(--blue)}
 
 .btn-r:disabled{opacity:.5;cursor:not-allowed;filter:none}
+
+/* ── Contas Fixas: vencimento numa linha só ("dia 5 · vencida há 20d") ── */
+.fx-list .tx-ch-date,.fx-list .tx-cell-date{width:196px}
+.tx-card .fx-venc{white-space:nowrap;vertical-align:middle}
+.fx-venc .fx-dia+*{display:inline-block;margin:0 0 0 8px;vertical-align:1px}
+.fx-venc .tag-venc{margin-left:8px;padding:1px 8px}
+.fx-venc .fx-dia+*{min-width:106px;text-align:center;box-sizing:border-box}
+@media(min-width:861px){.fx-venc .fx-dia{display:inline-block;min-width:44px;text-align:right}}
+@media(max-width:860px){
+  .fx-list .tx-ch-date,.fx-list .tx-cell-date{width:auto}
+  .fx-list .tx-card .fx-venc{flex-direction:column;align-items:flex-end;gap:3px}
+  .fx-list .tx-card .fx-venc .fx-dia+*{margin-left:0}
+}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
@@ -2138,9 +2151,7 @@ html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:
   </button>
   <nav class="tabs" style="position:relative">
     <div class="nav-sec">Visão geral</div>
-    <button class="tab on"  onclick="go('painel',this)"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg> Início</button>
-    <button class="tab" onclick="go('projecao',this)"><svg class="ic" aria-hidden="true"><use href="#i-trending-up"/></svg> Projeção</button>
-    <button class="tab" onclick="go('relatorio',this)"><svg class="ic" aria-hidden="true"><use href="#i-chart-column"/></svg> Relatórios</button>
+    <button class="tab on"  onclick="go('painel',this)"><svg class="ic" aria-hidden="true"><use href="#i-house"/></svg> Dashboard</button>
     <div class="nav-sec">Movimento</div>
     <div class="nav-group" id="nav-transacoes">
       <button class="tab tab-parent" id="transacoes-parent-btn" onclick="toggleTransMenu()">
@@ -2154,6 +2165,9 @@ html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:
       </div>
     </div>
     <button class="tab" onclick="go('contas',this)"><svg class="ic" aria-hidden="true"><use href="#i-landmark"/></svg> Contas</button>
+    <div class="nav-sec">Análises</div>
+    <button class="tab" onclick="go('projecao',this)"><svg class="ic" aria-hidden="true"><use href="#i-trending-up"/></svg> Projeção</button>
+    <button class="tab" onclick="go('relatorio',this)"><svg class="ic" aria-hidden="true"><use href="#i-chart-column"/></svg> Relatórios</button>
     <div class="nav-sec">Ajustes</div>
     <div class="nav-group cfg" id="nav-config">
       <button class="tab tab-parent" id="config-parent-btn" onclick="toggleConfigMenu()">
@@ -3600,7 +3614,7 @@ function topSetMesSel(mm){
   render();
 }
 // Título da tela atual na barra do topo (e na aba do navegador)
-const PAGE_TITLES={cartoes:['Cartões','credit-card'],painel:['Início','house'],lanc:['Extrato','list'],fixas:['Contas Fixas','repeat'],projecao:['Projeção','trending-up'],
+const PAGE_TITLES={cartoes:['Cartões','credit-card'],painel:['Dashboard','house'],lanc:['Extrato','list'],fixas:['Contas Fixas','repeat'],projecao:['Projeção','trending-up'],
   relatorio:['Relatórios','chart-column'],contas:['Contas','landmark'],senhas:['Senhas','key-round'],controles:['Controles','folder'],
   armazenamento:['Armazenamento','hard-drive'],parametros:['Parâmetros','sliders-horizontal']};
 function _setPageTitle(t){
@@ -7041,7 +7055,7 @@ async function _opfsRead() {
 // ── Parâmetros: regras de comportamento que o usuário cria e tira ──
 // Cada regra do catálogo pode ser criada uma vez. Sem a regra, vale o "padrao".
 const PARAMS=[
-  {k:'saldoPrevistoEscopo', titulo:'Saldo previsto', icone:'target', onde:'Início › Saldo previsto',
+  {k:'saldoPrevistoEscopo', titulo:'Saldo previsto', icone:'target', onde:'Dashboard › Saldo previsto',
    desc:'Define de quais controles vêm as contas, as contas fixas e as faturas usadas no Saldo previsto do fim do mês.',
    opcoes:[{v:'controle',t:'Por controle',d:'Só o controle aberto (ou os controles somados).'},
            {v:'todos',t:'Todos os controles',d:'Soma todos os seus controles, mesmo os que não estão abertos.'}],
