@@ -633,11 +633,23 @@ html.dark .csv-regra:hover,html.dark .csv-regra.on{background:#3a2a06;color:#fbb
 .fx-baixa:hover{filter:brightness(1.1)}
 .fx-baixa .ic{width:13px;height:13px}
 .fx-list .tx-ch-cat,.fx-list .tx-cell-cat{width:180px;max-width:180px}
-.fx-list .tx-ch-date,.fx-list .tx-cell-date{width:128px}
+.fx-list .tx-ch-date,.fx-list .tx-cell-date{width:168px}
 .fx-venc{display:flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.2}
 .tx-card .fx-venc{display:table-cell}
 .fx-venc .fx-dia{font-size:13px;color:var(--color-text-secondary)}
-.fx-venc .fx-dia+*{display:block;margin-top:2px}
+.fx-venc .fx-dia+*{display:inline-block;margin-top:0}
+/* dia + situação na mesma linha, sem encavalar */
+.fx-venc-in{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;white-space:nowrap}
+.fx-venc-in .tag-venc{margin-left:0;vertical-align:0}
+/* telas médias: colunas mais estreitas para a descrição não sumir */
+@media (min-width:601px) and (max-width:1400px){
+  .fx-list .tx-ch-cat,.fx-list .tx-cell-cat{width:132px;max-width:132px}
+  .fx-list .tx-ch-acc,.fx-list .tx-cell-acc{width:92px;max-width:92px}
+  .fx-list .tx-ch-val,.fx-list .tx-cell-val{width:108px}
+  .fx-list .tx-ch-date,.fx-list .tx-cell-date{width:156px}
+  .fx-list .tx-ch-actions,.fx-list .tx-cell-actions{width:150px}
+  .fx-list .tx-cell-cat .tx-cat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;display:inline-block;vertical-align:middle}
+}
 .fx-quando{font-size:11.5px;color:var(--gray-500)}
 .fx-quando.perto{color:var(--amber);font-weight:600}
 .fx-quando.hoje{color:var(--expense);font-weight:700}
@@ -1041,6 +1053,32 @@ html.dark .acc-ic-teal{background:#08332e;color:#5EEAD4}
 .stg-hint{font-size:12px;color:var(--gray-500);line-height:1.5}
 .stg-actions{display:flex;gap:8px;flex-wrap:wrap}
 .stg-check{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--color-text-primary);cursor:pointer;line-height:1.45}
+/* ── Excluir dados ── */
+.ex-dlg{max-width:520px;width:calc(100vw - 32px);text-align:left}
+.ex-dlg .cd-icon{margin:0 auto 6px}
+.ex-dlg h3{text-align:center;margin:4px 0 6px;font-size:18px;color:var(--color-text-primary)}
+.ex-sub{font-size:13.5px;color:var(--color-text-secondary);line-height:1.5;margin:0 0 12px;text-align:center}
+.ex-lista{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;padding:2px}
+.ex-op{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:13.5px;color:var(--color-text-primary)}
+.ex-op input,.ex-acc input{margin-top:3px;accent-color:var(--red)}
+.ex-n{display:inline-block;font-size:11.5px;font-weight:700;color:var(--gray-500);background:var(--gray-100);border-radius:99px;padding:0 8px;margin-left:4px}
+.ex-det{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:-2px 0 4px 34px;font-size:13px;color:var(--color-text-secondary)}
+.ex-rd{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.ex-per{display:inline-flex;gap:6px;align-items:center}
+.ex-per input{width:132px;padding:5px 8px;border:1px solid var(--input-line);border-radius:8px;background:var(--input-bg);color:var(--color-text-primary);font:inherit;font-size:12.5px}
+.ex-per input:disabled{opacity:.5}
+.ex-accs{flex-direction:column;align-items:stretch;gap:4px}
+.ex-acc{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.ex-acc span:nth-child(2){flex:1}
+.ex-resumo{margin:12px 0 8px;font-size:13.5px;color:var(--color-text-primary)}
+.ex-bk{margin:4px 0 6px}
+.ex-aviso{display:flex;gap:8px;align-items:flex-start;background:var(--amber-light);border:1px solid var(--amber-mid);color:var(--color-text-primary);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;margin-bottom:12px}
+.ex-erro{min-height:18px;font-size:13px;font-weight:600;color:var(--red);margin:4px 0 2px}
+.ex-dlg .fr label{display:block;font-size:12.5px;font-weight:600;color:var(--color-text-secondary);margin-bottom:6px;text-transform:none;letter-spacing:0}
+.ex-dlg .fr input{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--input-line);border-radius:10px;background:var(--input-bg);color:var(--color-text-primary);font:inherit;font-size:14px}
+.ex-dlg .cd-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.ex-dlg .btn-d:disabled{opacity:.5;cursor:default}
+.ex-dlg .cd-actions button{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;padding:10px 16px}
 .stg-check input{width:16px;height:16px;margin-top:2px;accent-color:var(--expense);flex-shrink:0}
 
 /* ─── Configurações → Parâmetros ─── */
@@ -2117,19 +2155,6 @@ html.dark #ctlMultiWrap>button:hover{background:var(--gray-200)!important}
 html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:var(--blue)}
 
 .btn-r:disabled{opacity:.5;cursor:not-allowed;filter:none}
-
-/* ── Contas Fixas: vencimento numa linha só ("dia 5 · vencida há 20d") ── */
-.fx-list .tx-ch-date,.fx-list .tx-cell-date{width:196px}
-.tx-card .fx-venc{white-space:nowrap;vertical-align:middle}
-.fx-venc .fx-dia+*{display:inline-block;margin:0 0 0 8px;vertical-align:1px}
-.fx-venc .tag-venc{margin-left:8px;padding:1px 8px}
-.fx-venc .fx-dia+*{min-width:106px;text-align:center;box-sizing:border-box}
-@media(min-width:861px){.fx-venc .fx-dia{display:inline-block;min-width:44px;text-align:right}}
-@media(max-width:860px){
-  .fx-list .tx-ch-date,.fx-list .tx-cell-date{width:auto}
-  .fx-list .tx-card .fx-venc{flex-direction:column;align-items:flex-end;gap:3px}
-  .fx-list .tx-card .fx-venc .fx-dia+*{margin-left:0}
-}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
@@ -2165,7 +2190,7 @@ html.dark .senha-card .senha-ic{background:var(--surface-hover)!important;color:
       </div>
     </div>
     <button class="tab" onclick="go('contas',this)"><svg class="ic" aria-hidden="true"><use href="#i-landmark"/></svg> Contas</button>
-    <div class="nav-sec">Análises</div>
+    <div class="nav-sec">Análise</div>
     <button class="tab" onclick="go('projecao',this)"><svg class="ic" aria-hidden="true"><use href="#i-trending-up"/></svg> Projeção</button>
     <button class="tab" onclick="go('relatorio',this)"><svg class="ic" aria-hidden="true"><use href="#i-chart-column"/></svg> Relatórios</button>
     <div class="nav-sec">Ajustes</div>
@@ -2441,6 +2466,11 @@ function _makeFbApi(instance) {
       const u = auth.currentUser; if (!u || !u.email) throw { code: 'auth/no-current-user' };
       await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, atual));
       await updatePassword(u, nova);
+    },
+    // confere a senha da conta (usada para confirmar ações sensíveis, como excluir tudo)
+    verificarSenha: async (senha) => {
+      const u = auth.currentUser; if (!u || !u.email) throw { code: 'auth/no-current-user' };
+      await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, senha));
     },
     save:    async (uid, data) => {
       const clone = JSON.parse(JSON.stringify(data));
@@ -4456,7 +4486,7 @@ function rFixas(m){
       <div class="tx-cell tx-cell-acc" title="${H(accBy(f.accId).name)}">${H(accBy(f.accId).name)}</div>
       <div class="tx-cell tx-cell-cat"><span style="display:inline-flex;align-items:center;gap:4px">${catDot}<span class="tx-cat-name">${H(cat.name)}</span></span></div>
       <div class="tx-cell tx-cell-val"><span class="tx-val" style="color:${inativa?'var(--color-text-tertiary)':vc}">${f.type==='receita'?'+':'−'}${R(f.val)}</span></div>
-      <div class="tx-cell tx-cell-date fx-venc"><span class="fx-dia">dia ${f.diaVenc}</span>${vencInfo}</div>
+      <div class="tx-cell tx-cell-date fx-venc"><span class="fx-venc-in"><span class="fx-dia">dia ${f.diaVenc}</span>${vencInfo}</span></div>
       <div class="tx-cell tx-cell-actions" style="padding:6px 8px">${actions}</div>
     </div>`;
   }
@@ -7127,7 +7157,7 @@ function rParametros(m){
     <div class="prm-padroes"><div class="stg-title">Regras disponíveis</div>${PARAMS.map(p=>`<div class="prm-pd"><span>${H(p.titulo)} <span class="prm-onde">${H(p.onde)}</span></span><span>${A.params&&A.params[p.k]?`<strong>${H(p.opcoes.find(o=>o.v===_param(p.k)).t)}</strong>`:`<span class="stg-hint">padrão: ${H(p.opcoes.find(o=>o.v===p.padrao).t)}</span>`}</span></div>`).join('')}</div>
   </div>`;
 }
-const APP_VERSAO='094';
+const APP_VERSAO='105';
 function rArmazenamento(m){
   const fb=window._fbUser;
   const lastBk=(()=>{try{return localStorage.getItem(_lastTxKey().replace('pfp_last_tx_','pfp_last_backup_'));}catch(e){return null;}})();
@@ -7155,8 +7185,211 @@ function rArmazenamento(m){
       <button class="btn-g" onclick="openCsvImport()">Importar fatura PDF ou extrato</button>`)}
     ${sec('lock','Privacidade',`<label class="stg-check"><input type="checkbox" ${_wipeOnExitEnabled()?'checked':''} onchange="toggleWipeOnExit(this.checked)">
       <span><strong>Limpar dados ao sair</strong><br><span class="stg-hint">Apaga os dados deste navegador ao fechar a aba ou sair da conta. Use só em computador compartilhado e com backup ou nuvem ativos.</span></span></label>`)}
+    ${sec('trash-2','Excluir dados',`<div class="stg-text">Apague só uma parte (lançamentos de um período, contas fixas, contas, regras ou senhas) ou tudo de uma vez. Antes de excluir, o app grava um backup <strong>.json</strong> no seu computador.</div>
+      <div class="stg-actions"><button class="btn-g" onclick="abrirExcluirPartes()"><svg class="ic" aria-hidden="true"><use href="#i-square-check-big"/></svg> Excluir partes…</button>
+      <button class="btn-d" onclick="abrirExcluirTudo()"><svg class="ic" aria-hidden="true"><use href="#i-trash-2"/></svg> Excluir tudo…</button></div>
+      <div class="stg-hint">"Excluir tudo" pede a sua senha.</div>`)}
   </div>`;
 }
+// ═══ Excluir dados (partes ou tudo) — Configurações › Armazenamento ═══
+// Exclusão parcial: escolhe o que apagar no controle ativo (com backup opcional e "Desfazer").
+// Exclusão total: pede a senha da conta, grava um backup .json no computador e só então apaga.
+function _backupPayload(){
+  if(A.controleAtivo!=null){
+    if(!A.controlesCache) A.controlesCache={};
+    _compartSync();
+    A.controlesCache[A.controleAtivo]={};
+    CONTROLE_CONTENT_FIELDS.forEach(k=>{A.controlesCache[A.controleAtivo][k]=A[k];});
+  }
+  const payload={_app:'pfp',_tipo:'backup',_versao:1,_exportadoEm:new Date().toISOString()};
+  USER_FIELDS.forEach(k=>{payload[k]=A[k];});
+  try{ const vm=_vaultMetaRaw(); if(vm) payload._vaultMeta=vm; }catch(e){}
+  return payload;
+}
+// Grava o backup no computador. Com o seletor de arquivos do navegador (Chrome/Edge) dá para
+// confirmar que o arquivo foi gravado; sem ele, o arquivo vai para a pasta de downloads.
+async function _salvarBackupLocal(motivo){
+  const agora=new Date(), p=n=>String(n).padStart(2,'0');
+  const nome=`pfp_backup_${motivo||'antes_de_excluir'}_${agora.getFullYear()}-${p(agora.getMonth()+1)}-${p(agora.getDate())}_${p(agora.getHours())}${p(agora.getMinutes())}.json`;
+  const texto=JSON.stringify(_backupPayload(),null,1);
+  const marcar=()=>{ try{localStorage.setItem(_lastTxKey().replace('pfp_last_tx_','pfp_last_backup_'),agora.toISOString());}catch(e){} };
+  if(typeof window.showSaveFilePicker==='function'){
+    try{
+      const h=await window.showSaveFilePicker({suggestedName:nome,types:[{description:'Backup Minhas Finanças',accept:{'application/json':['.json']}}]});
+      const w=await h.createWritable(); await w.write(texto); await w.close();
+      const f=await h.getFile();
+      if(!f||f.size!==new Blob([texto]).size) throw new Error('O arquivo gravado ficou com tamanho diferente do esperado.');
+      marcar();
+      return {ok:true,nome:h.name||nome,via:'disco',bytes:f.size};
+    }catch(e){
+      if(e&&e.name==='AbortError') return {ok:false,cancelado:true};
+      if(e&&e.name!=='SecurityError'&&e.name!=='NotAllowedError'&&e.name!=='TypeError') return {ok:false,erro:String(e.message||e)};
+      // seletor indisponível neste contexto → cai para o download comum
+    }
+  }
+  try{
+    const blob=new Blob([texto],{type:'application/json'}), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=nome; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1500);
+    marcar();
+    return {ok:true,nome,via:'download',bytes:blob.size};
+  }catch(e){ return {ok:false,erro:String(e.message||e)}; }
+}
+function _exMsgBackup(r){
+  const kb=r.bytes?` (${(r.bytes/1024).toFixed(1).replace('.',',')} KB)`:'';
+  return r.via==='disco'
+    ? `Backup gravado com sucesso no computador: <strong>${H(r.nome)}</strong>${kb}.`
+    : `Backup salvo como <strong>${H(r.nome)}</strong>${kb} na pasta de <strong>Downloads</strong>.`;
+}
+function _exModal(html){
+  _exFechar();
+  const ov=document.createElement('div'); ov.id='ex-modal'; ov.className='confirm-overlay show'; ov.style.display='flex';
+  ov.innerHTML=`<div class="confirm-dialog ex-dlg" role="dialog" aria-modal="true" aria-labelledby="ex-tit">${html}</div>`;
+  ov.addEventListener('mousedown',e=>{ ov._dn=e.target===ov; });
+  ov.addEventListener('click',e=>{ if(e.target===ov&&ov._dn) _exFechar(); });
+  document.body.appendChild(ov); document.body.style.overflow='hidden';
+  return ov;
+}
+function _exFechar(){ const o=document.getElementById('ex-modal'); if(o){ o.remove(); document.body.style.overflow=''; } }
+function _exNomeControle(){ const c=(A.controles||[]).find(c=>c.id===A.controleAtivo); return c?c.nome:''; }
+
+/* ── Exclusão parcial ── */
+function abrirExcluirPartes(){
+  const nAcc=(A.accounts||[]).length;
+  const contas=(A.accounts||[]).map(a=>{
+    const n=(A.txs||[]).filter(t=>t.accId==a.id||t.accDest==a.id).length;
+    return `<label class="ex-acc"><input type="checkbox" class="ex-acc-ck" value="${a.id}" onchange="_exAtualizar()"><span>${H(a.name||'Conta')}</span><span class="ex-n">${n} lanç.</span></label>`;
+  }).join('');
+  const datas=(A.txs||[]).map(t=>t.date).filter(Boolean).sort();
+  const ctl=_exNomeControle();
+  _exModal(`
+    <div class="cd-icon cd-trash-2">${_ic('trash-2','lg')}</div>
+    <h3 id="ex-tit">Excluir partes dos dados</h3>
+    <p class="ex-sub">Escolha o que apagar${ctl?` no controle <strong>${H(ctl)}</strong>`:''}. O resto fica como está.</p>
+    <div class="ex-lista">
+      <label class="ex-op"><input type="checkbox" id="ex-tx" onchange="_exAtualizar()"><span><strong>Lançamentos</strong> <span class="ex-n">${(A.txs||[]).length}</span></span></label>
+      <div class="ex-det" id="ex-tx-det">
+        <label class="ex-rd"><input type="radio" name="ex-tx-modo" value="todos" checked onchange="_exAtualizar()"> Todos</label>
+        <label class="ex-rd"><input type="radio" name="ex-tx-modo" value="periodo" onchange="_exAtualizar()"> Só do período</label>
+        <span class="ex-per"><input type="date" id="ex-de" value="${datas[0]||''}" onchange="_exAtualizar()"> até <input type="date" id="ex-ate" value="${datas[datas.length-1]||today()}" onchange="_exAtualizar()"></span>
+      </div>
+      <label class="ex-op"><input type="checkbox" id="ex-fx" onchange="_exAtualizar()"><span><strong>Contas fixas</strong> <span class="ex-n">${(A.fixas||[]).length}</span></span></label>
+      <label class="ex-op"><input type="checkbox" id="ex-acc" onchange="_exAtualizar()"><span><strong>Contas e cartões</strong> <span class="ex-n">${nAcc}</span><br><span class="stg-hint">Apaga também os lançamentos e as contas fixas ligados às contas escolhidas.</span></span></label>
+      <div class="ex-det ex-accs" id="ex-acc-det">${contas||'<span class="stg-hint">Nenhuma conta.</span>'}</div>
+      <label class="ex-op"><input type="checkbox" id="ex-rg" onchange="_exAtualizar()"><span><strong>Regras de categorização</strong> <span class="ex-n">${(A.catRegras||[]).length}</span></span></label>
+      <label class="ex-op"><input type="checkbox" id="ex-sn" onchange="_exAtualizar()"><span><strong>Senhas salvas</strong> <span class="ex-n">${(A.senhas||[]).length}</span></span></label>
+    </div>
+    <div class="ex-resumo" id="ex-resumo">Nada selecionado.</div>
+    <label class="stg-check ex-bk"><input type="checkbox" id="ex-bk" checked> <span>Gravar um backup no computador antes de excluir</span></label>
+    <div class="ex-erro" id="ex-erro"></div>
+    <div class="cd-actions"><button class="btn-g" onclick="_exFechar()">Cancelar</button><button class="btn-d ex-ok" id="ex-ok" disabled onclick="_exExecutarPartes()">${_ic('trash-2','sm')} Excluir selecionados</button></div>`);
+  _exAtualizar();
+}
+function _exPlano(){
+  const $=id=>document.getElementById(id);
+  const plano={tx:new Set(),fx:new Set(),acc:new Set(),rg:false,sn:false};
+  if($('ex-tx')&&$('ex-tx').checked){
+    const modo=(document.querySelector('input[name="ex-tx-modo"]:checked')||{}).value;
+    const de=$('ex-de').value, ate=$('ex-ate').value;
+    (A.txs||[]).forEach(t=>{ if(modo!=='periodo'||(t.date&&(!de||t.date>=de)&&(!ate||t.date<=ate))) plano.tx.add(t.id); });
+  }
+  if($('ex-fx')&&$('ex-fx').checked) (A.fixas||[]).forEach(f=>plano.fx.add(f.id));
+  if($('ex-acc')&&$('ex-acc').checked){
+    document.querySelectorAll('.ex-acc-ck:checked').forEach(c=>plano.acc.add(String(c.value)));
+    (A.txs||[]).forEach(t=>{ if(plano.acc.has(String(t.accId))||plano.acc.has(String(t.accDest))) plano.tx.add(t.id); });
+    (A.fixas||[]).forEach(f=>{ if(plano.acc.has(String(f.accId))) plano.fx.add(f.id); });
+  }
+  plano.rg=!!($('ex-rg')&&$('ex-rg').checked)&&(A.catRegras||[]).length>0;
+  plano.sn=!!($('ex-sn')&&$('ex-sn').checked)&&(A.senhas||[]).length>0;
+  return plano;
+}
+function _exAtualizar(){
+  const $=id=>document.getElementById(id); if(!$('ex-ok')) return;
+  $('ex-tx-det').style.display=$('ex-tx').checked?'':'none';
+  $('ex-acc-det').style.display=$('ex-acc').checked?'':'none';
+  const per=(document.querySelector('input[name="ex-tx-modo"]:checked')||{}).value==='periodo';
+  $('ex-de').disabled=$('ex-ate').disabled=!per;
+  const p=_exPlano(), itens=[];
+  if(p.tx.size) itens.push(`${p.tx.size} lançamento${p.tx.size>1?'s':''}`);
+  if(p.fx.size) itens.push(`${p.fx.size} conta${p.fx.size>1?'s':''} fixa${p.fx.size>1?'s':''}`);
+  if(p.acc.size) itens.push(`${p.acc.size} conta${p.acc.size>1?'s':''}/cartão(ões)`);
+  if(p.rg) itens.push(`${A.catRegras.length} regra(s)`);
+  if(p.sn) itens.push(`${A.senhas.length} senha(s)`);
+  $('ex-resumo').innerHTML=itens.length?`Será excluído: <strong>${itens.join(' · ')}</strong>.`:'Nada selecionado.';
+  $('ex-ok').disabled=!itens.length;
+}
+async function _exExecutarPartes(){
+  const $=id=>document.getElementById(id);
+  const p=_exPlano(); if(!p.tx.size&&!p.fx.size&&!p.acc.size&&!p.rg&&!p.sn) return;
+  $('ex-ok').disabled=true; $('ex-erro').textContent='';
+  let bk=null;
+  if($('ex-bk').checked){
+    bk=await _salvarBackupLocal('antes_de_excluir');
+    if(!bk.ok){ $('ex-erro').textContent=bk.cancelado?'Backup cancelado: nada foi excluído.':'Não foi possível gravar o backup ('+bk.erro+'). Nada foi excluído.'; $('ex-ok').disabled=false; return; }
+  }
+  const antes=JSON.parse(JSON.stringify({txs:A.txs,fixas:A.fixas,accounts:A.accounts,catRegras:A.catRegras,senhas:A.senhas}));
+  A.txs=(A.txs||[]).filter(t=>!p.tx.has(t.id));
+  A.fixas=(A.fixas||[]).filter(f=>!p.fx.has(f.id));
+  A.accounts=(A.accounts||[]).filter(a=>!p.acc.has(String(a.id)));
+  // contas fixas que ficaram: tira a marca de "paga" dos meses cujo lançamento foi apagado
+  (A.fixas||[]).forEach(f=>{ if(!f.pagamentos) return; Object.keys(f.pagamentos).forEach(m=>{ if(p.tx.has(f.pagamentos[m])){ delete f.pagamentos[m]; if(f.pagVinc) delete f.pagVinc[m]; } }); });
+  if(p.rg) A.catRegras=[];
+  if(p.sn) A.senhas=[];
+  _exFechar(); dbSave(); render();
+  const total=p.tx.size+p.fx.size+p.acc.size+(p.rg?1:0)+(p.sn?1:0);
+  _showUndoToast(`🗑️ Dados excluídos (${total} ite${total>1?'ns':'m'}).${bk?' Backup salvo: '+bk.nome:''}`, ()=>{
+    Object.keys(antes).forEach(k=>{ A[k]=antes[k]; }); dbSave(); render(); toast('Exclusão desfeita.','var(--income)');
+  });
+}
+
+/* ── Exclusão total ── */
+function abrirExcluirTudo(){
+  const s=window._appSession||{}, nuvem=_ehContaNuvem(), u=(A.usuarios||[]).find(x=>x.id===s.id);
+  const comSenha=nuvem||!!(u&&u.senhaHash);
+  const nCtl=(A.controles||[]).length;
+  _exModal(`
+    <div class="cd-icon cd-triangle-alert">${_ic('triangle-alert','lg')}</div>
+    <h3 id="ex-tit">Excluir tudo</h3>
+    <p class="ex-sub">Apaga <strong>todas as contas, cartões, lançamentos, contas fixas, regras e senhas salvas</strong> desta conta${nCtl>1?`, em <strong>todos os ${nCtl} controles</strong>`:''}${nuvem?', neste aparelho <strong>e na nuvem</strong>':''}. Categorias, família e configurações continuam.</p>
+    <div class="ex-aviso">${_ic('hard-drive','sm')}<span>Antes de apagar, o app grava um <strong>backup .json no seu computador</strong>. Se o backup não for gravado, nada é apagado.</span></div>
+    ${comSenha
+      ?`<div class="fr"><label for="ex-senha">Confirme com a sua senha${nuvem?' da nuvem':''}</label><input id="ex-senha" type="password" autocomplete="current-password" placeholder="Sua senha" onkeydown="if(event.key==='Enter')_exExecutarTudo()"></div>`
+      :`<div class="fr"><label for="ex-frase">Esta conta não tem senha. Digite <strong>APAGAR TUDO</strong> para confirmar</label><input id="ex-frase" type="text" autocomplete="off" placeholder="APAGAR TUDO" onkeydown="if(event.key==='Enter')_exExecutarTudo()"></div>`}
+    ${nuvem&&(window._fbOffline||!window._fb)?'<div class="ex-erro">Sem conexão com a nuvem: é preciso estar on-line para conferir a senha.</div>':''}
+    <div class="ex-erro" id="ex-erro"></div>
+    <div class="cd-actions"><button class="btn-g" onclick="_exFechar()">Cancelar</button><button class="btn-d ex-ok" id="ex-ok" onclick="_exExecutarTudo()">${_ic('trash-2','sm')} Fazer backup e excluir tudo</button></div>`);
+  setTimeout(()=>{ const i=document.getElementById('ex-senha')||document.getElementById('ex-frase'); if(i) i.focus(); },60);
+}
+async function _exConferirSenha(){
+  const s=window._appSession||{}, nuvem=_ehContaNuvem();
+  const frase=document.getElementById('ex-frase');
+  if(frase) return frase.value.trim().toUpperCase()==='APAGAR TUDO' ? null : 'Digite APAGAR TUDO para confirmar.';
+  const senha=(document.getElementById('ex-senha')||{}).value||'';
+  if(!senha) return 'Digite a sua senha.';
+  if(nuvem){
+    if(!window._fb||!window._fb.verificarSenha||window._fbOffline) return 'Sem conexão com a nuvem: conecte-se à internet para conferir a senha.';
+    try{ await window._fb.verificarSenha(senha); return null; }
+    catch(e){ const c=e&&e.code||''; return /wrong-password|invalid-credential|invalid-login/.test(c)?'Senha incorreta.':/too-many-requests/.test(c)?'Muitas tentativas. Aguarde alguns minutos.':/network/.test(c)?'Sem conexão com a internet.':'Não foi possível conferir a senha ('+(c||e.message||e)+').'; }
+  }
+  const u=(A.usuarios||[]).find(x=>x.id===s.id);
+  return (u&&await _verifyPassword(u,senha)) ? null : 'Senha incorreta.';
+}
+async function _exExecutarTudo(){
+  const $=id=>document.getElementById(id), btn=$('ex-ok'); if(!btn||btn.disabled) return;
+  btn.disabled=true; $('ex-erro').textContent='Conferindo a senha…';
+  const erro=await _exConferirSenha();
+  if(erro){ $('ex-erro').textContent=erro; btn.disabled=false; return; }
+  if($('ex-senha')) $('ex-senha').value='';
+  $('ex-erro').textContent='Gravando o backup no computador…';
+  const bk=await _salvarBackupLocal('antes_de_excluir_tudo');
+  if(!bk.ok){ $('ex-erro').textContent=bk.cancelado?'Backup cancelado: nada foi excluído.':'Não foi possível gravar o backup ('+bk.erro+'). Nada foi excluído.'; btn.disabled=false; return; }
+  const VAZIOS=['accounts','txs','fixas','catRegras','senhas'];
+  VAZIOS.forEach(k=>{ A[k]=[]; });
+  if(A.controlesCache) Object.keys(A.controlesCache).forEach(id=>{ const c=A.controlesCache[id]; if(c) VAZIOS.forEach(k=>{ c[k]=[]; }); });
+  _exFechar(); dbSave(); render();
+  _showConfirm('Tudo excluído',`${_exMsgBackup(bk)}<br><br>Os dados foram apagados. Para trazê-los de volta, use <strong>Restaurar backup</strong> com esse arquivo.`,null,{icon:'🗑️'});
+}
+
 function exportBackup(){
   if(A.controleAtivo!=null){
     if(!A.controlesCache) A.controlesCache={};
@@ -13043,6 +13276,19 @@ html.dark .topbar .top-novo{background:#2563eb!important}
 html.dark .mes-nav,html.dark .seg,html.dark .rg-form,html.dark .lanc-filtros-painel,html.dark .csv-acoes.vazia{background:#0e1526!important}
 html.dark .btn-e,html.dark .tx-recur,html.dark .cat-act-btn.add,html.dark .cc-item.marcado,html.dark .rg-item.editando,html.dark .csv-acoes{background:#16223d!important;border-color:#2c3d63!important}
 html.dark .lanc-chip{background:#16223d!important;border-color:#4f8df7!important;color:#dbeafe!important}
+
+/* ═══ Menu compacto ═══ */
+.sidebar .tabs{gap:5px!important;padding:2px 12px 8px!important}
+.sidebar .tab,html.dark .sidebar .tab{min-height:40px!important;padding:0 14px!important;gap:12px!important;border-radius:11px!important;font-size:14.5px!important}
+.sidebar .tab .ic{width:18px!important;height:18px!important}
+.sidebar .nav-sec,html.dark .sidebar .nav-sec{padding:10px 6px 2px!important;font-size:11.5px!important;color:rgba(255,255,255,.5)!important}
+.sidebar .nav-sec:first-child{padding-top:4px!important}
+.sidebar .nav-submenu{gap:3px!important;margin:4px 0 2px 16px!important}
+.sidebar .sub-tab,html.dark .sidebar .sub-tab{min-height:34px!important;font-size:13.5px!important}
+.sidebar-brand{padding:14px 14px 10px!important}
+.sidebar .hub-sec{padding:10px 6px 0!important;margin:4px 4px 0!important}
+.sidebar .sb-search{margin:0 12px 8px!important;padding:7px 10px 7px 12px!important}
+.sidebar .sb-new{margin:0 12px 4px!important;padding:9px 14px!important}
 
 </style>
 </body>
